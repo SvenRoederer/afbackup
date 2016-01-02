@@ -1,0 +1,156 @@
+#!/bin/sh
+################### Start of $RCSfile: xgettext-sh,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/po/RCS/xgettext-sh,v $
+# $Id: xgettext-sh,v 1.3 2004/07/08 20:34:43 alb Exp alb $
+# $Date: 2004/07/08 20:34:43 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+find_program(){
+  for dir in `echo $PATH | tr : " "` ; do
+    if [ -x "$dir"/"$1" ] ; then
+      echo "$dir"/"$1"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+T_(){
+  # simple non-i18n-ed version
+
+  echo "$*"
+}
+
+# the solaris' and HP-UX' awk is a piece of shit
+for awk in nawk gawk awk ; do
+  AWK=`find_program $awk`
+  if [ _"$AWK" != _ ] ; then
+    break
+  fi
+done
+
+if [ _"$AWK" = _ ] ; then
+  echo `T_ "No awk ? Is this really a lovely UNIX ?"`
+  echo `T_ "Sorry. I have to exit."`
+  exit 1
+fi
+
+
+EGRPAT="("
+SEDPAT="\("
+SSEP=""
+ESEP=""
+
+ORGFILE="$1"
+shift
+CONTFILE="$1"
+shift
+
+if [ ! -r $ORGFILE ] ; then
+  ORGFILE="/dev/null"
+fi
+
+FILES=`cat "$CONTFILE" | $AWK '{
+        while(substr($0, length($0), 1) == "\\\\"){
+                getline line;
+                $0 = substr($0, 1, length($0) - 1) line;
+        }
+        print $0;
+}'`
+
+
+while [ $# -gt 0 ] ; do
+  EGRPAT="$EGRPAT$ESEP""$1"
+  SEDPAT="$SEDPAT$SSEP""$1"
+  shift
+  ESEP="|"
+  SSEP="\|"
+done
+
+EGRPAT="$EGRPAT"")"
+SEDPAT="$SEDPAT""\)"
+
+(cat $ORGFILE ; echo '#---#' ; for f in $FILES ; do echo '#-#-# '"$f" ; cat $f ; done) | \
+$AWK 'BEGIN{nmsgs = 0; need_orgmsgs = 1; nl = 0;}{
+    if(need_orgmsgs){
+	if($0 == "#---#"){
+		need_orgmsgs = 0;
+	}
+	else{
+		if(substr($0, 1, 7) == "msgid \""){
+			msgs[nmsgs] = substr($0, 7);
+			nmsgs++;
+		}
+	}
+    }
+    else{
+	nl++;
+	if($1 == "#-#-#"){
+		print $0;
+		nl = 0;
+	}
+	while(i = match($0, "'"$EGRPAT"'[ 	]+\"")){
+		if(i > 1 && match(substr($0, i - 1, 1), "[a-zA-Z0-9_]") > 0){
+			$0 = substr($0, i + 2);
+			continue;
+		}
+		while(substr($0, i, 1) != "\"")
+			i++;
+		j = i + 1;
+		while((c = substr($0, j, 1)) != "\""){
+			while(c == ""){
+				getline l;
+				nl++;
+				$0 = $0 "\\n" l;
+				j += 2;
+				c = substr($0, j, 1);
+				if(c == "\""){
+					esc = 0;
+					j--;
+					break;
+				}
+			}
+			if(c == "\\")
+				j++;
+			j++;
+		}
+
+		s = substr($0, i, j + 1 - i);
+		if(s != "\"\""){
+			havemsg = 0;
+			for(i = 0; i < nmsgs; i++){
+				if(msgs[i] == s){
+					havemsg = 1;
+					break;
+				}
+			}
+			if(! havemsg){
+				print nl, s;
+				msgs[nmsgs] = s;
+				nmsgs++;
+			}
+		}
+		$0 = substr($0, j + 1);
+	}
+    }
+}' | $AWK '{
+    if($1 == "#-#-#"){
+	filename = $2;
+    }
+    else{
+	n = length($1) + 1; 
+	while(substr($0, n, 1) == " ")
+		n++;
+	printf "\n#: %s:%d\n#, sh-format\nmsgid %s\nmsgstr \"\"\n", filename, $1, substr($0, n);
+    }
+}'
+

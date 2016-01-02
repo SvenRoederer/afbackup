@@ -1,0 +1,373 @@
+.TH AFRESTORE 8 "2001 April 1" "Debian Project"
+.SH NAME
+afrestore \- the restore utility of the afbackup package
+.SH SYNOPSIS
+.B afrestore
+[ -nltvmi ] [ -<past-backup-no> ] [ -C <root-directory> ]
+[ -h <backuphosts> ] [ -P <backup-ports> ]
+[ -c <configuration-file> ] [ -W <identity> ]
+[ -A "<after-date> [ % <after-backup-date> ]" ]
+[ -B "<before-date> [ % <before-backup-date> ]" ]
+[ -T <tapes> ]
+[ -I <indexfile-part> ] [ -V <var-directory> ]
+[ -k <encryption-key-file> ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -Z <built-in-compress-level> ] [ -F <format> ]
+[ { -N <num-indexfiles> | -O <indexfile-age-days> } ]
+[ -M <server-message-config> ]
+[ -p ] <path-pattern> [ [ -p ] <path-patterns> [ ... ] ]
+.br
+.B afrestore
+-a [ -nlvm ] [ -<past-backup-no> ] [ -C <root-directory> ]
+[ -h <backuphosts> ] [ -P <backup-ports> ]
+[ -c <configuration-file> ] [ -W <identity> ]
+[ -I <indexfile-part> ] [ -V <var-directory> ]
+[ -k <encryption-key-file> ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -Z <built-in-compress-level> ] [ -F <format> ]
+[ -M <server-message-config> ]
+.br
+.B afrestore
+-{ef} [ -evm ] [ -C <root-directory> ] [ -h <backuphosts> ]
+[ -P <backup-ports> ] [ -V <var-directory> ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -Z <built-in-compress-level> ]
+[ -k <encryption-key-file> ] [ -W <identity> ]
+[ -M <server-message-config> ]
+[ -c <configuration-file> ] < <startup-info-file>
+.br
+.B afrestore
+-E [ -Enlvm ] [ -C <root-directory> ] [ -h <backuphosts> ]
+[ -P <backup-ports> ] [ -V <var-directory> ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -Z <built-in-compress-level> ]
+[ -k <encryption-key-file> ] [ -W <identity> ]
+[ -M <server-message-config> ]
+[ -c <configuration-file> ]
+[ <cartridge-number> | <cartridge-range> ] ... ]
+.SH DESCRIPTION
+The first form can be used for restoring selected pieces of
+a certain previous backup run. If no option of the type
+.I -<past-backup-no>
+is supplied (e.g. -2 ), the most recently
+made backup is accessed. If an option like this is given,
+the backup system tries to extract the files from the backup
+before ( -1 ) or even an earlier one. This requires, that
+enough file- and directory-name-logging is provided. This
+can be done with the client-side configuration parameter
+NumIndexesToStore (See: afclient.conf(8)). The parameters
+.I <path-pattern>
+indicate, which files and directories should be restored. An
+asterisk is implicitely put before and after the
+.I <path-pattern>,
+so it is assumed to be a substring of the path. This can be
+prevented preceding the
+.I <path-pattern>
+with the option -p.
+These may be wildcards for the full path name leading to the
+file relative to the directory, to that the client changes
+before starting any backup or restore (See under the parameter
+RootDirectory under afclient.conf(8)).
+Note, that you have to put these into 
+quotes, if you are using wildcards to prevent substutition. It
+is a bad idea to restore a total backup entering: restore "*"
+This leads to a huge filelist to be processed by the client,
+what might plug up memory and/or temporary space in some
+filesystem. Instead you should use the second form with the
+option -a, what restores a total backup. The third form
+restores without looking for filename log files. Instead it
+reads the standard input for information, where to extract
+from. The format expected at standard input is the same as
+produced by incr_backup or full_backup, if the configuration
+option StartupInfoProgram is used. The given program is then
+supplied with the appropriate information and should write
+it to some place outside the local host, so that it will not
+be affected by a hard crash (see: StartupInfoProgram in
+afclient.conf(8)). The flag -e can be supplied more than one time. In
+that case the emergency restore goes back to the beginning of
+the previous full backup, if the full backup is split into
+several parts (configuration parameter NumBackupParts) and
+the last part of the current full backup has not yes run. If
+the backup parts configuration has changed after the beginning
+of the previous full backup, this option should be considered,
+as it gives additional safety, that really everything will be
+restored. The fourth form scans the cartridges (if supplied)
+on the given servers (if supplied, eventually with alternate
+given port numbers - see below for the format, how to specify
+cartridge/host/port-triples) for backups done from the host,
+where the restore program is started and restores everything
+it finds. The functionality is similar to -e, but no input has
+to be supplied. Like with option -e, the -E flag can be given
+several times, what has the same meaning like with option -e
+(see above). If the client's hostname has changed or restore
+should be done on another host, the original client ID must be
+supplied with the -W option. Otherwise nothing or the wrong
+stuff will be restored. Scanning the cartridges can take a lot
+of time, but it should be several minutes, not hours.
+Cartridges can be supplied in three forms as arguments: simple
+numbers, ranges (e. g. as 3-5 without spaces), and ranges
+relative to the current backup writing position (e. g. as -3).
+In the latter case -0 means the cartridge, that will be written
+to next time i.e. that holds the current writing point. -2 stands
+for the latest 3 cartridges. To indicate, that a cartridge is
+located at a certain backup server, maybe with a special port
+number (if there are several backup servers), the cartridge
+number or range can be followed by the at-character @, optionally
+followed by the percent character % and the port number, e. g.
+3-5@buhost%2989 . No whitespace is allowed in such a specifier.
+If no port is given, the default port is assumed (2988). If no
+hostname is given, the default backup server is used. Default
+backup server is the first one in the list, that is configured
+in the parameter file or overriden by the option -h. Any number
+of ranges or numbers can be supplied, overlapping duplicates are
+ignored. If no cartridge numbers are given, the program searches
+backward from the current writing position on each configured
+backup server until it thinks, it has enough backups found, or
+all cartridges on that server have been tried. The found backups
+are sorted in the correct order (using the stored backup time)
+and afterwards everything found is restored.
+This form of the command needs
+no information at all for an emergency restore.
+If the configuration file is not supplied
+explicitly,
+then it is searched for in the @clientlibdir@ and if not
+found there the files /etc/buclient.conf, /etc/afbuclient.conf,
+/etc/afclient.conf and
+/etc/afbackup/client.conf are tried.
+.PP
+.TP
+.B -A <date> 
+restore files modified after the given date. A second
+date may be given prefixed with a percent sign %
+telling to search only backups started after the
+given date. Either of the dates can be omitted, so
+valid specifications are "<date>" "%<backupdate>"
+or "<date> % <backupdate>" . Like shown, the argument
+should be put into quotes, cause it usually contains
+whitespace. Valid formats are e.g.:
+.br
+  MM/DD/YYYY hh:mm:ss
+.br
+  DD.MM.YYYY hh:mm:ss
+.br         
+or the formats produced by ctime(3) or date(1). The
+year may be supplied in two digits or in the non-US-
+formats be omitted, then the current year is assumed.
+The seconds may also be omitted (hh:mm), the whole
+time may be left off, then 00:00 is assumed. Thus
+the shortest valid format is DD.MM
+.TP
+.B -B <date>
+restore files modified before the given date. A second
+date may be given prefixed with a percent sign %
+telling to search only backups started before the
+given date. See
+.B -A 
+for the valid date formats
+.TP
+.B -C <rootdir>
+change to the given root-directory before restoring
+files instead of the one specified in the client
+side configuration file. If this directory does
+not exist, it will be created
+.TP
+.B -c <configfile>
+use the given file for configuration information
+.TP
+.B -e   
+restore all files from the previous backup in an
+emergency case without looking for the filename
+logfiles, which are also restored
+.TP
+.B -F <format-string>
+In combination with -l a format string for output.
+Default is: only the full paths of the stored
+files are printed, one per line. The format string
+can also contain patterns representing other file
+attributes present in the index file(s). For possible
+patterns see below under FORMAT STRING.
+.TP
+.B -f   
+restore only the filename logfiles in an emergency
+case
+.TP
+.B -h <hostnames>
+Use the given list of hosts as backup servers. This
+list is used only, if no hostname information can
+be found as associated with the current filesystem
+entry, that should be restored. The first host in
+this list is the default server, if no hostname
+information at all can be found. If -E is given
+and no cartridge number is supplied at all, all
+hosts in this list are tried one after the other.
+The hostnames in this list can be separated by
+whitespace and/or commas
+.TP
+.B -I <idx-prefix>
+The first part of the filename, the names of the
+stored files and directories are written to. The
+current total backup number is appended (that
+increments each start of a full backup). If these
+files undergo processing, .z is appended
+.TP
+.B -i
+Ignore case distinctions in the filename patterns
+.TP
+.B -k <file>
+Use the contents of the given file as encryption
+key for authenticating to the server
+.TP
+.B -l   
+Do not restore anything, just list the names of
+the files and/or directories, that fit the supplied
+path-part(s); in combination with -E: just scan the
+given tape(s) and printout the minimum restore info,
+that can be read by restore -e
+.TP
+.B -M <server-message-config>
+The configuration to output messages from the server,
+that normally are sent only via mail to a maintainer.
+The first word consisting of the letters b r v and c
+tells, whether to output messages during backup,
+restore, verify and copy-tape, respecively. The next
+words must name the service name or port number of
+the single stream servers, related to the option -P .
+For each multi stream service configured with -P or
+in the configuration file, the respective single
+stream service must be given here
+.TP
+.B -m
+Do not overwrite existing files (merge)
+.TP
+.B -n   
+do not restore anything, just printout a message,
+how many files and/or directories fit the supplied
+path-part(s); in combination with -E: just scan the
+given tape(s) and printout, what backups have been
+written there
+.TP
+.B -N <numidxs>
+The maximum number of index files, that are scanned
+for matching filenames. With each full backup, a new
+index file is created. If time restrictions are given
+(options -A or -B), all existing index files are
+read, what may take a long time, if many of them are
+kept available (see clientside configuration option
+NumIndexesToStore or option -N of full_backup). So
+using this parameter the scanning can be restricted
+to a certain number of files
+.TP
+.B -O <maxidxage>
+The maximum age of index files, that are scanned for
+matching filenames, in days. See option -N . The
+given number of days may be a floating point value
+.TP
+.B -P <portnos>
+The list of port numbers for the backup servers
+either configured in the parameter file or supplied
+with the -h option. This list is used only, if no
+port number information can be found as associated
+with the current filesystem entry, that should be
+restored. The port numbers supplied here are associated
+with the backup server names by position.
+The port numbers in this list can be separated by
+whitespace and/or commas
+.TP
+.B -T <tapes>
+Restore and list only files from the given list of
+tapes. Tapes can be specified using numbers, commas
+and dashes, e.g. 3-5,8,1
+.TP
+.B -t
+Do not restore anything, just list the tapes, that
+would be needed to restore everything that matches
+the supplied path-part(s)
+.TP
+.B -V <var-dir>
+The directory, where varying files are put
+.TP
+.B -z <proccmd> <unproccmd>
+The commands to use for process and unprocess. If
+a command comprises of several words, it must be
+put in quotes
+.PP
+I suggest to run restore with the 
+.B -l 
+option before really going
+to restore anything. So you see, what files will be generated,
+without overwriting existing ones unintendedly.
+.SH FORMAT STRING
+The following patterns will be replaced:
+.TP
+.B %n
+The filename with full path like in default output
+.TP
+.B %b
+The basename of the file, without path
+.TP
+.B %O
+The username of the file owner
+.TP
+.B %o
+The user-ID of the file owner (integer)
+.TP
+.B %m
+The modification time in seconds since epoch
+.TP
+.B %M
+The modification time in readable format
+.TP
+.B %t
+The starting time of the backup containing
+the file in seconds since epoch
+.TP
+.B %T
+Like %t, but in readable format
+.TP
+.B %h
+The hostname of the backup server, to that
+the file has been backuped
+.TP
+.B %p
+The port number of the backup server, to that
+the file has been backuped
+.TP
+.B %c
+The cartridge number on the server, the saved
+file can be found on
+.TP
+.B %f
+The tape file number on cartridge %c, where
+the saved file can be found
+.TP
+.B %%
+A percent character
+.PP
+The usual C-like backslash sequences are allowed,
+but special characters within the filenames are
+still printed as escape sequences, e.g. \\n .
+A newline at the end must be given explicitly as
+backslash n (\\n), otherwise no new line will start.
+Double quotes should be written as \" within the
+argument enclosed in single quotes. To see several
+versions of a saved filesystem entry in the indexes
+the option -B or -A must be given, maybe with a
+condition, that is always true, e.g. -B 23:59, what
+means: before today, 23:59.
+.SH FILES
+.IP @clientconfdir@/@clientconf@
+Client configuration file
+.IP @clientlogdir@
+The directory for logging the client backups
+.IP @clientvardir@
+Some internal state information of the client backups.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8),
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8),
+tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de).

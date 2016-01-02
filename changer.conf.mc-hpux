@@ -1,0 +1,54 @@
+################### Start of $RCSfile: changer.conf.mc-hpux,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/changer.conf.mc-hpux,v $
+# $Id: changer.conf.mc-hpux,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#  Configuration file for media changer devices using the mc command on HP-UX
+#
+####################################################################
+#
+# Author: Virgil Chereches
+#
+# Replacements in the commands:
+#
+# pattern replaced with
+#
+# %d streamer device filename
+# %D changer device filename
+# %n the origin number, if counting starts with 1
+# %m the origin number, if counting starts with 0
+# %N the target number, if conuting starts with 1
+# %M the target number, if counting starts with 0
+#
+# Commands to move cartridges
+# (moves, that are not supported, should be commented out)
+#
+Move Drive To Slot Command: /usr/sbin/mc -p %D -s D%n -d S%N > /dev/null
+
+Move Slot To Drive Command: /usr/sbin/mc -p %D -s S%n -d D%N > /dev/null
+
+#Move Drive To Loadport Command:
+
+#Move Loadport To Drive Command:
+
+#Move Slot To Loadport Command:
+
+#Move Loadport To Slot Command:
+
+#Move Drive To Drive Command:
+
+Move Slot To Slot Command: /usr/sbin/mc -p %D -s S%n -d S%N >/dev/null;
+
+#Move Loadport To Loadport Command:
+
+#
+# Commands to find free resources
+#
+ListEmpty Slots Command: /usr/sbin/mc -p %D -r S |grep '^ST_slot_[0-9] EMPTY$'|cut -d "_" -f3|cut -c1
+
+#ListEmpty Loadports Command:

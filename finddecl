@@ -1,0 +1,45 @@
+#!/bin/sh
+
+exec perl -e '
+open(CPP, "'"$CPP"' '$2'|grep -v ^#|");
+while(<CPP>){
+  chop($_);
+  if($_ =~ /[ \t]+'$1'[ \t]*\(/){
+    $decl=$_;
+    until ($decl =~ /'$1'[ \t]*\(.*\)[ \t]*;/){
+      $decl .= <CPP>;
+      chop($decl);
+    }
+
+    $decl =~ /[ \t]*(.*)[ \t]*'$1'[ \t]*\((.*)\)[ \t]*;/;
+    $rettype = $1;
+    $args = $2;
+    if($rettype =~ /^[ \t]*$/){
+      $rettype = "int";
+    }
+
+    $rettype =~ s/[ \t]*extern[ \t]*//;
+    $rettype =~ s/^[ \t]*//;
+    $rettype =~ s/[ \t]*$//;
+
+    @argv = split(",", $args);
+
+    print "$rettype\n";
+
+    foreach $arg (@argv){
+      $arg =~ s/^[ \t]*//;
+      $arg =~ s/[ \t]*$//;
+
+      print "$arg\n";
+    }
+
+    close(CPP);
+    exit(0);
+  }
+}
+
+close(CPP);
+
+print "Not found.\n";
+exit(1);'
+

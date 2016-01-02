@@ -1,0 +1,120 @@
+
+Summary: A network backup system
+Name: afbackup
+Version: 3.3.1
+Release: 1
+Copyright: GPL
+Group: System Environment/Base
+Source: http://www.afbackup.org/downloads/afbackup-3.3.1.tar.gz
+Patch: -
+BuildRoot: /home/alb/backup/afbackup-3.3.1/root
+
+%description
+No description currently, sorry. See documentation or www.afbackup.org
+
+%prep
+
+%build
+echo rpm build not supported, sorry. Run ./Install and ./build_local_inst $RPM_BUILD_ROOT/usr/local/afbackup instead.
+
+%install
+cd $RPM_BUILD_ROOT/..
+./build_local_inst $RPM_BUILD_ROOT/usr/local/afbackup
+
+%clean
+echo should rm -rf $RPM_BUILD_ROOT/../root
+
+%files
+%defattr(-,root,root)
+%doc $RPM_BUILD_ROOT/../CONFIG
+%doc $RPM_BUILD_ROOT/../INSTALL
+%doc $RPM_BUILD_ROOT/../INTRO
+%doc $RPM_BUILD_ROOT/../HOWTO.FAQ.DO-DONT
+%doc $RPM_BUILD_ROOT/../PROGRAMS
+%doc $RPM_BUILD_ROOT/../README
+%doc $RPM_BUILD_ROOT/../UPGRADE
+%doc $RPM_BUILD_ROOT/../ChangeLog
+
+/usr/local/afbackup/client/man/man8/afclient.8
+/usr/local/afbackup/client/man/man8/afrestore.8
+/usr/local/afbackup/client/man/man8/afverify.8
+/usr/local/afbackup/client/man/man8/full_backup.8
+/usr/local/afbackup/client/man/man8/incr_backup.8
+/usr/local/afbackup/client/man/man8/copy_tape.8
+/usr/local/afbackup/client/man/man8/xafrestore.8
+/usr/local/afbackup/client/man/man8/update_indexes.8
+/usr/local/afbackup/client/man/man8/afclient.conf.8
+/usr/local/afbackup/client/bin/afclient
+/usr/local/afbackup/client/bin/afbackup
+/usr/local/afbackup/client/bin/full_backup
+/usr/local/afbackup/client/bin/incr_backup
+/usr/local/afbackup/client/bin/afverify
+/usr/local/afbackup/client/bin/copy_tape
+/usr/local/afbackup/client/bin/afbackout
+/usr/local/afbackup/client/bin/afrestore
+/usr/local/afbackup/client/bin/afclientconfig
+/usr/local/afbackup/client/bin/clientconfig
+/usr/local/afbackup/client/bin/update_indexes
+/usr/local/afbackup/client/bin/xafclientconfig
+/usr/local/afbackup/client/bin/xclientconfig
+/usr/local/afbackup/client/bin/xafrestore
+/usr/local/afbackup/client/bin/xrestore
+/usr/local/afbackup/client/bin/autocptapes
+/usr/local/afbackup/client/bin/__packpats
+/usr/local/afbackup/client/bin/__piper
+/usr/local/afbackup/client/bin/__descrpt
+/usr/local/afbackup/client/bin/__z
+/usr/local/afbackup/common/share/locale/it/LC_MESSAGES/afbackup.mo
+/usr/local/afbackup/common/share/locale/de/LC_MESSAGES/afbackup.mo
+/usr/local/afbackup/common/share/lib/aftcllib.tcl
+/usr/local/afbackup/server/man/man8/afserver.8
+/usr/local/afbackup/server/man/man8/afmserver.8
+/usr/local/afbackup/server/man/man8/cartis.8
+/usr/local/afbackup/server/man/man8/cartready.8
+/usr/local/afbackup/server/man/man8/label_tape.8
+/usr/local/afbackup/server/man/man8/cart_ctl.8
+/usr/local/afbackup/server/man/man8/afserver.conf.8
+/usr/local/afbackup/server/bin/afserver
+/usr/local/afbackup/server/bin/afmserver
+/usr/local/afbackup/server/bin/cartready
+/usr/local/afbackup/server/bin/cartis
+/usr/local/afbackup/server/bin/label_tape
+/usr/local/afbackup/server/bin/__mt
+/usr/local/afbackup/server/bin/__inc_link
+/usr/local/afbackup/server/bin/cart_ctl
+/usr/local/afbackup/server/bin/afserverconfig
+/usr/local/afbackup/server/bin/serverconfig
+/usr/local/afbackup/server/bin/xafserverconfig
+/usr/local/afbackup/server/bin/xserverconfig
+/usr/local/afbackup/server/bin/__numset
+/usr/local/afbackup/server/bin/cartagehandler
+/usr/local/afbackup/server/var/readonly_tapes
+
+%dir /usr/local/afbackup
+%dir /usr/local/afbackup/client
+%dir /usr/local/afbackup/client/man
+%dir /usr/local/afbackup/client/man/man8
+%dir /usr/local/afbackup/client/bin
+%dir /usr/local/afbackup/client/lib
+%dir /usr/local/afbackup/client/var
+%dir /usr/local/afbackup/common
+%dir /usr/local/afbackup/common/share
+%dir /usr/local/afbackup/common/share/lib
+%dir /usr/local/afbackup/common/share/locale
+%dir /usr/local/afbackup/common/share/locale/de
+%dir /usr/local/afbackup/common/share/locale/de/LC_MESSAGES
+%dir /usr/local/afbackup/common/share/locale/it
+%dir /usr/local/afbackup/common/share/locale/it/LC_MESSAGES
+%dir /usr/local/afbackup/server
+%dir /usr/local/afbackup/server/man
+%dir /usr/local/afbackup/server/man/man8
+%dir /usr/local/afbackup/server/bin
+%dir /usr/local/afbackup/server/var
+%dir /usr/local/afbackup/server/lib
+%dir /usr/local/afbackup/server/rexec
+
+%config /usr/local/afbackup/client/lib/backup.conf
+%config /usr/local/afbackup/server/lib/backup.conf
+%config /usr/local/afbackup/server/lib/changer.conf
+
+%changelog

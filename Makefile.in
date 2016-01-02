@@ -1,0 +1,788 @@
+################### Start of $RCSfile: Makefile.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/Makefile.in,v $
+# $Id: Makefile.in,v 1.21 2014/05/14 19:33:46 alb Exp alb $
+# $Date: 2014/05/14 19:33:46 $
+# $Author: alb $
+#
+####################################################################
+
+SHELL		=	/bin/sh
+
+top_builddir	=	@abs_top_builddir@
+INSTTOP		=	$(DESTDIR)
+
+CC		=	@CC@
+LIBTOOL		=	@LIBTOOL@
+
+MAKECMD		=	make
+
+STRIP		=	@STRIP@
+
+OSNAME		=	@osname@
+
+PACKAGE		=	@PACKAGE@
+VERSION		=	@VERSION@
+
+SUBDIRS		=	intl po
+
+X_INCLUDE	=	.
+X_LIBS		=	.
+
+OPTIMIZE	=	@OPTIMIZE@
+DEBUG		=	
+
+INCLUDES	=	-I$(X_INCLUDE) @INCLUDES@ @DESINCLUDEPATH@ \
+				@ZLIB_INCLUDEPATH@ @OPENSSL_INC_FLAGS@
+DEFINES		=	-D$(OSNAME) -DOSNAME=$(OSNAME) @SYSDEFINES@ \
+				@DESDEFINES@ @ZLIB_DEFINES@
+
+CPPFLAGS	=	$(INCLUDES) $(DEFINES) -DLOCALEDIR=\"$(LOCALEDIR)\" 
+
+CFLAGS		=	$(DEBUG) $(OPTIMIZE) $(EXTRA_CFLAGS) @EXTRACFLAGS@
+
+UTILSLIB	=	x_utils
+
+X_HEADERS	=	crptauth.h	\
+			fileutil.h	\
+			mvals.h		\
+			netutils.h	\
+			afpacker.h	\
+			sysutils.h	\
+			genutils.h	\
+			x_data.h	\
+			x_defs.h	\
+			x_errno.h	\
+			x_regex.h	\
+			x_timer.h	\
+			x_types.h	\
+			zutils.h	\
+			opensslx.h	\
+			albiapps.h	
+
+X_LIBTOOLS	=	prosname.sh	\
+			prosspec.sh
+
+
+BULIB		=	@PACKAGE@
+
+LIBRARIES	=	-l$(BULIB) -l$(UTILSLIB) @LIBS@ @DESLIBPATH@ \
+			@DESLIB@ @ZLIB_LIBPATH@ @ZLIB_LIB@ -lm @INTLLIBS@
+
+LDFLAGS		=	-L$(X_LIBS) @LDFLAGS@ $(LIBRARIES) $(EXTRA_LD_FLAGS)
+
+X_LIBSRCS	=	crptauth.c	\
+			pack.c		\
+			unpack.c	\
+			genutils.c	\
+			goptions.c	\
+			fileutil.c	\
+			x_regex.c	\
+			mutils.c	\
+			sysutils.c	\
+			netutils.c	\
+			timeutil.c	\
+			typeutil.c	\
+			safemem.c	\
+			strlist.c	\
+			ranges.c	\
+			vars.c		\
+			safewrap.c	\
+			zutils.c	\
+			base64.c	\
+			opensslx.c	\
+			albiapps.c	
+
+X_LIBOBJS	=	$(X_LIBSRCS:.c=.o)
+
+BULIBSRCS	=	buutil.c	\
+			prot.c
+
+BULIBHEADERS	=	afbackup.h	\
+			budefs.h	\
+			prot.h		\
+			server.h
+
+BULIBOBJS	=	$(BULIBSRCS:.c=.o)
+
+CRYPTKEY	=	cryptkey.h
+
+CL_HELPERS	=	__piper __packpats @DESCRPT@ @ZIP@
+SV_HELPERS	=	__numset __mt __inc_link
+
+RESTRCLNTPROGS	=	afclient full_backup @DESCRPT@
+CLIENTPROGS	=	$(RESTRCLNTPROGS) autocptapes clientconfig \
+			xclientconfig xrestore $(CL_HELPERS)
+CLIENTCALLABLES	=	$(CLIENTPROGS) afbackup incr_backup afbackout \
+			afrestore afverify afclientconfig copy_tape \
+			update_indexes xafrestore xafclientconfig
+
+RESTRSVRPROGS	=	afmserver afserver cartready label_tape
+SERVERPROGS	=	$(RESTRSVRPROGS) $(SV_HELPERS) serverconfig \
+			cartagehandler xserverconfig xserverstatus
+SERVERCALLABLES	=	$(SERVERPROGS) cart_ctl cartis changerready \
+			afserverconfig xafserverconfig xafserverstatus
+
+PROGS		=	$(CLIENTPROGS) $(SERVERPROGS)
+
+X_LIBRARY	=	lib$(UTILSLIB).a
+BACKUPLIB	=	lib$(BULIB).a
+
+BASELIBS	=	intllibs
+
+TESTMAINSRCS	=	testmain.c
+TESTMAINOBJS	=	$(TESTMAINSRCS:.c=.o)
+
+SERVERSRCS	=	server.c
+SERVEROBJS	=	$(SERVERSRCS:.c=.o)
+
+MSERVERSRCS	=	mserver.c
+MSERVEROBJS	=	$(MSERVERSRCS:.c=.o)
+
+CARTRDYSRCS	=	cartready.c
+CARTRDYOBJS	=	$(CARTRDYSRCS:.c=.o)
+
+LABELTAPESRCS	=	label_tape.c
+LABELTAPEOBJS	=	$(LABELTAPESRCS:.c=.o)
+
+CLIENTSRCS	=	client.c
+CLIENTOBJS	=	$(CLIENTSRCS:.c=.o)
+
+FULLBUSRCS	=	full_backup.c
+FULLBUOBJS	=	$(FULLBUSRCS:.c=.o)
+
+TESTCLIENTSRCS	=	testclient.c
+TESTCLIENTOBJS	=	$(TESTCLIENTSRCS:.c=.o)
+
+SERVERCONFFILE	=	server.conf
+CLIENTCONFFILE	=	client.conf
+
+CHANGERCONFFILE	=	changer.conf
+
+CLIENTLIBDIR	=	$(INSTTOP)@clientlibdir@
+CLIENTBINDIR	=	$(INSTTOP)@clientbindir@
+CLIENTVARDIR	=	$(INSTTOP)@clientvardir@
+CLIENTMANDIR	=	$(INSTTOP)@clientmandir@
+CLIENTCONFDIR	=	$(INSTTOP)@clientconfdir@
+SERVERLIBDIR	=	$(INSTTOP)@serverlibdir@
+SERVERBINDIR	=	$(INSTTOP)@serverbindir@
+SERVERVARDIR	=	$(INSTTOP)@servervardir@
+SERVERMANDIR	=	$(INSTTOP)@servermandir@
+SERVERCONFDIR	=	$(INSTTOP)@serverconfdir@
+SERVERINITDIR	=	$(INSTTOP)@initrddir@
+SERVERREXECDIR	=	$(INSTTOP)@REXECDIR@
+COMMONDIR	=	$(INSTTOP)@commondir@
+COMMONDATADIR	=	$(INSTTOP)@commondatadir@
+COMMONSHLIBDIR	=	$(INSTTOP)@commonshlibdir@
+COMMONLIBDIR	=	$(COMMONDIR)/lib
+COMMONINCDIR	=	$(COMMONDIR)/include
+
+# Where to install locale stuff
+prefix		=	$(INSTTOP)@prefix@
+datadir		=	$(COMMONDATADIR)
+DOCDIR		=	$(COMMONDATADIR)/doc
+LOCALEDIR	=	$(datadir)/locale
+
+CLIENTMANFILES	=	afclient.X	\
+			afrestore.X	\
+			afverify.X	\
+			full_backup.X	\
+			incr_backup.X	\
+			copy_tape.X	\
+			update_indexes.X	\
+			xafrestore.X	\
+			afclient.conf.X
+SERVERMANFILES	=	afserver.X	\
+			afmserver.X	\
+			cartis.X	\
+			cartready.X	\
+			label_tape.X	\
+			cart_ctl.X	\
+			afserver.conf.X
+
+SRCMANSUFFIX	=	8
+DESTMANSUFFIX	=	8
+CLIENTMANSRCS	=	$(CLIENTMANFILES:.X=.8)
+SERVERMANSRCS	=	$(SERVERMANFILES:.X=.8)
+#					     ^ this must be $(SRCMANSUFFIX)
+
+UTILSINCDIR	=	$(INSTTOP)@utilsincdir@
+UTILSLIBDIR	=	$(INSTTOP)@utilslibdir@
+UTILSBINDIR	=	$(INSTTOP)@utilsbindir@
+
+DOCFILES	=	CONFIG HOWTO FAQ DO-DONT INTRO README PROGRAMS \
+				LICENSE ChangeLog COPYING
+
+INSTALL		=	/bin/cp
+
+AU_GTKPROGRAMS	=	
+AU_PROGRAMS	=	ssu af-lockfile choice ttywrap bufrate numset udf \
+			rotor datebysec secbydate base64dec base64enc get_ent \
+			@DESCRYPT@ $(AU_GTKPROGRAMS)
+AU_REALPROGRAMS	=	@DESCRYPT@ af-lockfile $(AU_GTKPROGRAMS)
+
+AU_MANFILES	=	ssu.X af-lockfile.X choice.X bufrate.X descrypt.X \
+			numset.X ttywrap.X udf.X rotor.X
+AU_MANSRCS	=	$(AU_MANFILES:.X=.8)
+
+BINDIR		=	$(prefix)/bin
+MANDIR		=	$(prefix)/man
+AU_DOCDIR	=	$(prefix)/doc
+
+BUILT_PROGS	=	afclient full_backup @DESCRPT@ autocptapes clientconfig \
+			xclientconfig xrestore afserver afmserver cartready \
+			label_tape serverconfig xserverconfig xserverstatus \
+			__piper __packpats __numset @ZIP@ $(AU_REALPROGRAMS)
+
+.c.o:
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $<
+
+all::	server client
+
+server:	$(SERVERPROGS) potfiles
+	@-
+
+$(BUILT_PROGS):	$(BACKUPLIB) $(X_LIBRARY) $(BASELIBS)
+
+$(SERVEROBJS) $(CLIENTOBJS) $(MSERVEROBJS) __descrpt.o:	$(CRYPTKEY)
+
+afserver:	$(SERVEROBJS)
+	$(CC) -o afserver $(SERVEROBJS) $(LDFLAGS)
+
+afmserver:	$(MSERVEROBJS)
+	$(CC) -o afmserver $(MSERVEROBJS) $(LDFLAGS)
+
+cartready:	$(CARTRDYOBJS)
+	$(CC) -o cartready $(CARTRDYOBJS) $(LDFLAGS)
+
+label_tape:	$(LABELTAPEOBJS)
+	$(CC) -o label_tape $(LABELTAPEOBJS) $(LDFLAGS)
+
+client:	$(CLIENTPROGS) potfiles
+	@-
+
+afclient:	$(CLIENTOBJS)
+	$(CC) -o afclient $(CLIENTOBJS) $(LDFLAGS)
+
+full_backup:	$(FULLBUOBJS)
+	$(CC) -o full_backup $(FULLBUOBJS) $(LDFLAGS)
+
+__piper:	__piper.o
+	$(CC) -o __piper __piper.o $(LDFLAGS)
+
+__packpats:	__packpats.o
+	$(CC) -o __packpats __packpats.o $(LDFLAGS)
+
+__numset:	__numset.o
+	$(CC) -o __numset __numset.o $(LDFLAGS)
+
+__descrpt:	$(CRYPTKEY) __descrpt.o
+	$(CC) -o __descrpt __descrpt.o $(LDFLAGS)
+
+__z:	__z.o $(BACKUPLIB)
+	$(CC) -o __z __z.o $(LDFLAGS)
+
+$(CRYPTKEY):	ask_for_key
+	@sh ./ask_for_key
+
+potfiles: intllibs
+	(cd po && $(MAKE) datadir=\"$(datadir)\" all)
+	touch potfiles
+
+intllibs:
+	(cd intl && $(MAKE) CFLAGS="$(OPTIMIZE) $(DEBUG)" all)
+	touch intllibs
+
+$(BACKUPLIB):	$(BULIBOBJS)
+	ar rcv $(BACKUPLIB) $(BULIBOBJS)
+	if [ _@ranlib@ != _ ] ; then @ranlib@ $(BACKUPLIB) ; fi
+
+$(X_LIBRARY):	$(CRYPTKEY) $(X_LIBOBJS)
+	ar rcv $(X_LIBRARY) $(X_LIBOBJS)
+	if [ _@ranlib@ != _ ] ; then @ranlib@ $(X_LIBRARY) ; fi
+
+$(UTILSLIB)::	$(X_LIBRARY) $(BASELIBS)
+
+xclientconfig: xcc
+	./build_shwish xcc > $@
+	chmod +x $@
+
+xserverconfig: xsc
+	./build_shwish xsc > $@
+	chmod +x $@
+
+xserverstatus: xss
+	./build_shwish xss > $@
+	chmod +x $@
+
+xrestore: xrs
+	./build_shwish xrs > $@
+	chmod +x $@
+
+install.$(UTILSLIB): $(UTILSLIB)
+	- mkdir -p $(UTILSINCDIR) $(UTILSINCDIR)/$(OSNAME) $(UTILSLIBDIR) \
+		$(UTILSLIBDIR)/$(OSNAME) $(UTILSBINDIR)
+	for i in $(X_HEADERS) ; do /bin/rm -f $(UTILSINCDIR)/$$i ; \
+		$(INSTALL) $$i $(UTILSINCDIR)/$$i ; done
+	for i in $(X_LIBRARY) ; do /bin/rm -f $(UTILSLIBDIR)/$(OSNAME)/$$i ; \
+		$(INSTALL) $$i $(UTILSLIBDIR)/$(OSNAME)/$$i ; done
+	/bin/rm -f $(UTILSINCDIR)/lconf.h $(UTILSINCDIR)/$(OSNAME)/lconf.h
+	$(INSTALL) lconf.h $(UTILSINCDIR)/$(OSNAME)/lconf.h
+	$(INSTALL) lconf.gen.h $(UTILSINCDIR)/lconf.h
+	for i in $(X_LIBTOOLS) ; do /bin/rm -f $(UTILSBINDIR)/$$i ; \
+		$(INSTALL) $$i $(UTILSBINDIR)/$$i ; done
+	if [ _"@INTLLIBS@" != _ ] ; then \
+		mkdir -p $(UTILSLIBDIR)/$(OSNAME)/gnuintl && \
+		INTLLIBS="@INTLLIBS@" && \
+		for L in $$INTLLIBS ; do \
+			if echo _"$$L" | grep '^_-' >/dev/null ; then \
+				$(INSTALL) $$L $(UTILSLIBDIR)/$(OSNAME)/gnuintl/`basename $$L` ; \
+			fi \
+		done \
+	fi
+	if [ _"@INTL_HEADER@" != _ ] ; then \
+		mkdir -p $(UTILSINCDIR)/$(OSNAME)/gnuintl/intl && \
+		$(INSTALL) @INTL_HEADER@ $(UTILSINCDIR)/$(OSNAME)/gnuintl/intl/`basename @INTL_HEADER@` ; \
+	fi
+
+uninstall.$(UTILSLIB):
+	if [ _"@INTL_HEADER@" != _ ] ; then \
+		/bin/rm -f $(UTILSINCDIR)/$(OSNAME)/gnuintl/@INTL_HEADER@ ; \
+		rmdir `dirname $(UTILSINCDIR)/$(OSNAME)/gnuintl/@INTL_HEADER@` >/dev/null 2>&1 ; \
+	fi
+	-rmdir $(UTILSINCDIR)/$(OSNAME)/gnuintl >/dev/null 2>&1
+	if [ _"@INTLLIBS@" != _ ] ; then \
+		for L in @INTLLIBS@ ; do \
+			if echo _"$$L" | grep '^_-' >/dev/null ; then \
+				/bin/rm -f $(UTILSLIBDIR)/$(OSNAME)/gnuintl/`basename $$L` ; \
+			fi \
+		done
+		rmdir $(UTILSLIBDIR)/$(OSNAME)/gnuintl >/dev/null 2>&1 ; \
+	fi
+	-rmdir $(UTILSLIBDIR)/$(OSNAME)/gnuintl ) >/dev/null 2>&1
+	for i in $(X_LIBTOOLS) ; do \
+		/bin/rm -f $(UTILSBINDIR)/$$i ; \
+	done
+	- rm -f $(UTILSINCDIR)/lconf.h $(UTILSINCDIR)/$(OSNAME)/lconf.h
+	for i in $(X_LIBRARY) ; do \
+		/bin/rm -f $(UTILSLIBDIR)/$(OSNAME)/$$i ; \
+	done
+	for i in $(X_HEADERS) ; do \
+		/bin/rm -f $(UTILSINCDIR)/$$i ; \
+	done
+	- rmdir $(UTILSBINDIR)		>/dev/null 2>&1
+	- rmdir $(UTILSLIBDIR)/$(OSNAME)	>/dev/null 2>&1
+	- rmdir $(UTILSLIBDIR)		>/dev/null 2>&1
+	- rmdir $(UTILSINCDIR)/$(OSNAME)	>/dev/null 2>&1
+	- rmdir $(UTILSINCDIR)		>/dev/null 2>&1
+
+install:: install.client install.server install.client.man install.server.man
+
+uninstall:: uninstall.client uninstall.server uninstall.client.man uninstall.server.man uninstall.$(UTILSLIB) uninstall.common
+
+install.client: client full_backup install.client.man install.l10n
+	- mkdir -p $(CLIENTBINDIR) $(CLIENTLIBDIR) $(CLIENTVARDIR) $(CLIENTCONFDIR) $(COMMONSHLIBDIR)
+	- rm -f $(CLIENTBINDIR)/afclient
+	$(INSTALL) afclient $(CLIENTBINDIR)/afclient
+	- $(STRIP) $(CLIENTBINDIR)/afclient
+	- rm -f $(CLIENTBINDIR)/backup $(CLIENTBINDIR)/afbackup
+	ln -s afclient $(CLIENTBINDIR)/afbackup
+	$(INSTALL) full_backup $(CLIENTBINDIR)/full_backup
+	- $(STRIP) $(CLIENTBINDIR)/full_backup
+	- rm -f $(CLIENTBINDIR)/incr_backup $(CLIENTBINDIR)/print_errors \
+		$(CLIENTBINDIR)/afrestore $(CLIENTBINDIR)/afbackout \
+		$(CLIENTBINDIR)/afverify $(CLIENTBINDIR)/copy_tape \
+		$(CLIENTBINDIR)/update_indexes \
+		$(CLIENTBINDIR)/clientconfig \
+		$(CLIENTBINDIR)/afclientconfig \
+		$(CLIENTBINDIR)/xclientconfig \
+		$(CLIENTBINDIR)/xafclientconfig \
+		$(CLIENTBINDIR)/xafrestore \
+		$(CLIENTBINDIR)/xrestore \
+		$(CLIENTBINDIR)/autocptapes
+	ln -s full_backup $(CLIENTBINDIR)/incr_backup
+	ln -s full_backup $(CLIENTBINDIR)/afverify
+	ln -s full_backup $(CLIENTBINDIR)/copy_tape
+	ln -s full_backup $(CLIENTBINDIR)/afbackout
+	ln -s full_backup $(CLIENTBINDIR)/update_indexes
+	ln -s afbackout $(CLIENTBINDIR)/afrestore
+	$(INSTALL) clientconfig $(CLIENTBINDIR)/afclientconfig
+	ln -s afclientconfig $(CLIENTBINDIR)/clientconfig
+	$(INSTALL) xclientconfig $(CLIENTBINDIR)/xafclientconfig
+	ln -s xafclientconfig $(CLIENTBINDIR)/xclientconfig
+	$(INSTALL) xrestore $(CLIENTBINDIR)/xafrestore
+	ln -s xafrestore $(CLIENTBINDIR)/xrestore
+	$(INSTALL) autocptapes $(CLIENTBINDIR)/autocptapes
+	- rm -f $(CLIENTBINDIR)/__packpats $(CLIENTBINDIR)/__piper
+	$(INSTALL) __packpats $(CLIENTBINDIR)/__packpats
+	$(INSTALL) __piper $(CLIENTBINDIR)/__piper
+	$(STRIP) $(CLIENTBINDIR)/__piper $(CLIENTBINDIR)/__packpats
+	if [ ! -z "@DESCRPT@" ] ; then \
+		rm -f $(CLIENTBINDIR)/@DESCRPT@ ; \
+		$(INSTALL) "@DESCRPT@" $(CLIENTBINDIR)/@DESCRPT@ ; \
+		$(STRIP) $(CLIENTBINDIR)/@DESCRPT@ ; fi
+	if [ ! -z "@ZIP@" ] ; then \
+		rm -f $(CLIENTBINDIR)/@ZIP@ ; \
+		$(INSTALL) "@ZIP@" $(CLIENTBINDIR)/@ZIP@ ; \
+		$(STRIP) $(CLIENTBINDIR)/@ZIP@ ; fi
+	- rm -f $(COMMONSHLIBDIR)/aftcllib.tcl $(CLIENTLIBDIR)/aftcllib.tcl
+	$(INSTALL) aftcllib.tcl $(COMMONSHLIBDIR)/aftcllib.tcl
+	chmod 644 $(COMMONSHLIBDIR)/aftcllib.tcl
+	if [ -f $(CLIENTLIBDIR)/@clientconf@ ] ; then \
+		if [ `ls -ld $(CLIENTLIBDIR)/@clientconf@ | cut -c1` != l ] ; then \
+			/bin/mv $(CLIENTLIBDIR)/@clientconf@ $(CLIENTCONFDIR)/@clientconf@ ; \
+		fi \
+	fi
+	if [ ! -f $(CLIENTCONFDIR)/@clientconf@ ] ; then $(INSTALL) $(CLIENTCONFFILE) $(CLIENTCONFDIR)/@clientconf@ ; fi
+	for cp in $(CLIENTPROGS) ; do \
+		if [ -f $(CLIENTBINDIR)/$$cp ] ; then \
+		    chmod 755 $(CLIENTBINDIR)/$$cp ; fi ; done
+	for cp in $(RESTRCLNTPROGS) ; do \
+		if [ -f $(CLIENTBINDIR)/$$cp ] ; then \
+		    chmod 700 $(CLIENTBINDIR)/$$cp ; fi ; done
+	- rm -f $(CLIENTCONFDIR)/.postinstall $(CLIENTCONFDIR)/.preremove
+	$(INSTALL) postinstall $(CLIENTCONFDIR)/.postinstall
+	chmod 755 $(CLIENTCONFDIR)/.postinstall
+	ln -s .postinstall $(CLIENTCONFDIR)/.preremove
+
+uninstall.client: uninstall.client.man
+	- rm -f $(COMMONSHLIBDIR)/aftcllib.tcl
+	if [ ! -z "@ZIP@" ] ; then rm -f $(CLIENTBINDIR)/@ZIP@ ; fi
+	if [ ! -z "@DESCRPT@" ] ; then rm -f $(CLIENTBINDIR)/@DESCRPT@ ; fi
+	- rm -f $(CLIENTBINDIR)/__packpats $(CLIENTBINDIR)/__piper
+	- rm -f $(CLIENTBINDIR)/autocptapes
+	- rm -f $(CLIENTBINDIR)/xrestore
+	- rm -f $(CLIENTBINDIR)/xafrestore
+	- rm -f $(CLIENTBINDIR)/xclientconfig
+	- rm -f $(CLIENTBINDIR)/xafclientconfig
+	- rm -f $(CLIENTBINDIR)/clientconfig
+	- rm -f $(CLIENTBINDIR)/afclientconfig
+	- rm -f $(CLIENTBINDIR)/afrestore
+	- rm -f $(CLIENTBINDIR)/update_indexes
+	- rm -f $(CLIENTBINDIR)/afbackout
+	- rm -f $(CLIENTBINDIR)/copy_tape
+	- rm -f $(CLIENTBINDIR)/afverify
+	- rm -f $(CLIENTBINDIR)/incr_backup
+	- rm -f $(CLIENTBINDIR)/print_errors
+	- rm -f $(CLIENTBINDIR)/full_backup
+	- rm -f $(CLIENTBINDIR)/afbackup
+	- rm -f $(CLIENTBINDIR)/backup
+	- rm -f $(CLIENTBINDIR)/afclient
+	- rmdir $(CLIENTBINDIR) 
+	- rmdir $(CLIENTVARDIR) 
+	if [ -f $(CLIENTCONFDIR)/@clientconf@ ] ; then \
+		cp -ip $(CLIENTCONFDIR)/@clientconf@ /tmp/@clientconf@.cl.bak ; \
+		/bin/rm -f $(CLIENTCONFDIR)/@clientconf@ ; \
+		echo "INFO: A backup of your client configuration is in /tmp/@clientconf@.cl.bak" ; \
+	  fi
+	if [ -f $(CLIENTLIBDIR)/@clientconf@ ] ; then \
+		cp -ip $(CLIENTLIBDIR)/@clientconf@ /tmp/@clientconf@.cl.lbak ; \
+		/bin/rm -f $(CLIENTLIBDIR)/@clientconf@ ; \
+		echo "INFO: A backup of your client configuration is in /tmp/@clientconf@.cl.lbak" ; \
+	  fi
+	- rm -f $(CLIENTCONFDIR)/.postinstall $(CLIENTCONFDIR)/.preremove >/dev/null 2>&1
+	- rmdir $(CLIENTCONFDIR) >/dev/null 2>&1
+	- rmdir $(CLIENTLIBDIR) >/dev/null 2>&1
+	- D="$(CLIENTBINDIR)" ; \
+	  while [ "$$D" != / ] ; do \
+	    D=`dirname "$$D"` ; \
+	    rmdir "$$D" >/dev/null 2>&1 ; \
+	  done
+
+install.server: server cartready label_tape install.server.man install.l10n
+	- mkdir -p $(SERVERBINDIR) $(SERVERVARDIR) $(SERVERLIBDIR) $(SERVERCONFDIR) $(SERVERINITDIR) $(COMMONSHLIBDIR) $(SERVERREXECDIR)
+	- rm -f $(SERVERBINDIR)/afserver $(SERVERBINDIR)/afmserver \
+		$(SERVERBINDIR)/cartready $(SERVERBINDIR)/cartis \
+		$(SERVERBINDIR)/label_tape $(SERVERBINDIR)/cart_ctl \
+		$(SERVERBINDIR)/changerready \
+		$(SERVERBINDIR)/__mt \
+		$(SERVERBINDIR)/__inc_link \
+		$(SERVERBINDIR)/serverconfig \
+		$(SERVERBINDIR)/afserverconfig \
+		$(SERVERBINDIR)/xafserverconfig \
+		$(SERVERBINDIR)/xserverconfig \
+		$(SERVERBINDIR)/xserverstatus
+	$(INSTALL) afserver $(SERVERBINDIR)/afserver
+	$(INSTALL) afmserver $(SERVERBINDIR)/afmserver
+	$(INSTALL) cartready label_tape __mt __inc_link $(SERVERBINDIR)
+	ln -s label_tape $(SERVERBINDIR)/cart_ctl
+	ln -s label_tape $(SERVERBINDIR)/cartis
+	ln -s cartready $(SERVERBINDIR)/changerready
+	$(INSTALL) serverconfig $(SERVERBINDIR)/afserverconfig
+	ln -s afserverconfig $(SERVERBINDIR)/serverconfig
+	$(INSTALL) xserverconfig $(SERVERBINDIR)/xafserverconfig
+	ln -s xafserverconfig $(SERVERBINDIR)/xserverconfig
+	$(INSTALL) xserverstatus $(SERVERBINDIR)/xafserverstatus
+	ln -s xafserverstatus $(SERVERBINDIR)/xserverstatus
+	- rm -f $(COMMONSHLIBDIR)/aftcllib.tcl $(SERVERLIBDIR)/aftcllib.tcl
+	$(INSTALL) aftcllib.tcl $(COMMONSHLIBDIR)/aftcllib.tcl
+	chmod 644 $(COMMONSHLIBDIR)/aftcllib.tcl
+	chmod u+s $(SERVERBINDIR)/cartready
+	$(INSTALL) init.@PACKAGE@ $(SERVERINITDIR)/@PACKAGE@
+	chmod 755 $(SERVERINITDIR)/@PACKAGE@
+	- rm -f $(SERVERBINDIR)/__numset
+	$(INSTALL) __numset $(SERVERBINDIR)/__numset
+	- $(STRIP) $(SERVERBINDIR)/afserver $(SERVERBINDIR)/afmserver $(SERVERBINDIR)/cartready $(SERVERBINDIR)/label_tape $(SERVERBINDIR)/__numset
+	if [ ! -f $(SERVERBINDIR)/cartagehandler ] ; then $(INSTALL) cartagehandler $(SERVERBINDIR)/cartagehandler ; fi
+	for sp in $(SERVERPROGS) ; do \
+		if [ -f $(SERVERBINDIR)/$$sp ] ; then \
+		    chmod 755 $(SERVERBINDIR)/$$sp ; fi ; done
+	for sp in $(RESTRSVRPROGS) ; do \
+		if [ -f $(SERVERBINDIR)/$$sp ] ; then \
+		    chmod 700 $(SERVERBINDIR)/$$sp ; fi ; done
+	if [ -f $(SERVERLIBDIR)/@serverconf@ ] ; then \
+		if [ `ls -ld $(SERVERLIBDIR)/@serverconf@ | cut -c1` != l ] ; then \
+			/bin/mv $(SERVERLIBDIR)/@serverconf@ $(SERVERCONFDIR)/@serverconf@ ; \
+		fi \
+	fi
+	if [ ! -f $(SERVERCONFDIR)/@serverconf@ ] ; then $(INSTALL) $(SERVERCONFFILE) $(SERVERCONFDIR)/@serverconf@ ; fi
+	if [ ! -f $(SERVERCONFDIR)/$(CHANGERCONFFILE) ] ; then $(INSTALL) $(CHANGERCONFFILE) $(SERVERCONFDIR)/$(CHANGERCONFFILE) ; fi
+	- rm -f $(SERVERCONFDIR)/.postinstall $(SERVERCONFDIR)/.preremove
+	$(INSTALL) postinstall $(SERVERCONFDIR)/.postinstall
+	chmod 755 $(SERVERCONFDIR)/.postinstall
+	ln -s .postinstall $(SERVERCONFDIR)/.preremove
+
+uninstall.server: uninstall.rclient uninstall.server.man
+	if [ -f $(SERVERBINDIR)/cartagehandler ] ; then /bin/rm -f $(SERVERBINDIR)/cartagehandler ; fi
+	- rm -f $(SERVERBINDIR)/__numset
+	- rm -f $(COMMONSHLIBDIR)/aftcllib.tcl
+	- rm -f $(SERVERLIBDIR)/aftcllib.tcl
+	- rm -f $(SERVERBINDIR)/xserverstatus
+	- rm -f $(SERVERBINDIR)/xafserverstatus
+	- rm -f $(SERVERBINDIR)/xserverconfig
+	- rm -f $(SERVERBINDIR)/xafserverconfig
+	- rm -f $(SERVERBINDIR)/serverconfig
+	- rm -f $(SERVERBINDIR)/afserverconfig
+	- rm -f $(SERVERBINDIR)/changerready
+	- rm -f $(SERVERBINDIR)/cartis
+	- rm -f $(SERVERBINDIR)/cart_ctl
+	- rm -f $(SERVERBINDIR)/cartready 
+	- rm -f $(SERVERBINDIR)/label_tape 
+	- rm -f $(SERVERBINDIR)/__mt 
+	- rm -f $(SERVERBINDIR)/__inc_link
+	- rm -f $(SERVERBINDIR)/afmserver
+	- rm -f $(SERVERBINDIR)/afserver
+	- rmdir $(SERVERBINDIR) >/dev/null 2>&1
+	- rmdir $(SERVERVARDIR) >/dev/null 2>&1
+	- rm -f $(SERVERINITDIR)/@PACKAGE@ >/dev/null 2>&1
+	- rmdir $(SERVERINITDIR)
+	if [ -f $(SERVERCONFDIR)/$(CHANGERCONFFILE) ] ; then /bin/rm -f $(SERVERCONFDIR)/$(CHANGERCONFFILE) ; fi
+	if [ -f $(SERVERCONFDIR)/@serverconf@ ] ; then \
+		cp -ip $(SERVERCONFDIR)/@serverconf@ /tmp/@serverconf@.sv.bak ; \
+		/bin/rm -f $(SERVERCONFDIR)/@serverconf@ ; \
+		echo "INFO: A backup of your server configuration is in /tmp/@serverconf@.sv.bak" ; \
+	  fi
+	if [ -f $(SERVERLIBDIR)/@serverconf@ ] ; then \
+		cp -ip $(SERVERLIBDIR)/@serverconf@ /tmp/@serverconf@.sv.lbak ; \
+		/bin/rm -f $(SERVERLIBDIR)/@serverconf@ ; \
+		echo "INFO: A backup of your server configuration is in /tmp/@serverconf@.sv.lbak" ; \
+	  fi
+	- rmdir $(SERVERLIBDIR) >/dev/null 2>&1
+	- rm -f $(SERVERCONFDIR)/.postinstall $(SERVERCONFDIR)/.preremove >/dev/null 2>&1
+	- rmdir $(SERVERCONFDIR) >/dev/null 2>&1
+	- rmdir $(SERVERREXECDIR) >/dev/null 2>&1
+	- D="$(SERVERBINDIR)" ; \
+	  while [ "$$D" != / ] ; do \
+	    D=`dirname "$$D"` ; \
+	    rmdir "$$D" >/dev/null 2>&1 ; \
+	  done
+
+install.rclient: install.server install.client install.rexeclinks
+
+uninstall.rclient: uninstall.rexeclinks
+
+install.userrestore: install.client
+	/bin/rm -f $(CLIENTBINDIR)/afrestore $(CLIENTBINDIR)/afbackout \
+		$(CLIENTBINDIR)/update_indexes
+	/bin/cp $(CLIENTBINDIR)/full_backup $(CLIENTBINDIR)/afrestore
+	ln -s afrestore $(CLIENTBINDIR)/afbackout
+	ln -s afrestore $(CLIENTBINDIR)/update_indexes
+	chmod 755 $(CLIENTBINDIR)/afrestore $(CLIENTBINDIR)/xafrestore
+	chmod u+s $(CLIENTBINDIR)/afrestore
+
+uninstall.userrestore:
+	rm -f $(CLIENTBINDIR)/update_indexes
+	rm -f $(CLIENTBINDIR)/afbackout
+	rm -f $(CLIENTBINDIR)/afrestore
+
+install.rexeclinks:
+	REL=`./mkrel $(CLIENTBINDIR) $(SERVERREXECDIR)` && \
+		for i in full_backup incr_backup afverify afrestore copy_tape update_indexes ; do \
+			rm -f $(SERVERREXECDIR)/"$$i" ; \
+			ln -s "$$REL"/"$$i" $(SERVERREXECDIR)/"$$i" ; \
+		done
+
+uninstall.rexeclinks:
+	for i in full_backup incr_backup afverify afrestore copy_tape update_indexes ; do rm -f $(SERVERREXECDIR)/"$$i" ; done
+
+install.client.man: $(CLIENTMANSRCS)
+	- mkdir -p $(CLIENTMANDIR)/man$(DESTMANSUFFIX)
+	for mansrc in $(CLIENTMANSRCS) ; do destfile=`echo $$mansrc|sed 's/[.]'$(SRCMANSUFFIX)'$$/.'$(DESTMANSUFFIX)/g` ; $(INSTALL) $$mansrc $(CLIENTMANDIR)/man$(DESTMANSUFFIX)/$$destfile ; done
+
+uninstall.client.man:
+	for mansrc in $(CLIENTMANSRCS) ; do destfile=`echo $$mansrc|sed 's/[.]'$(SRCMANSUFFIX)'$$/.'$(DESTMANSUFFIX)/g` ; /bin/rm -f $(CLIENTMANDIR)/man$(DESTMANSUFFIX)/$$destfile ; done
+	- rmdir $(CLIENTMANDIR)/man$(DESTMANSUFFIX) $(CLIENTMANDIR) >/dev/null 2>&1
+
+install.server.man: $(SERVERMANSRCS)
+	- mkdir -p $(SERVERMANDIR)/man$(DESTMANSUFFIX)
+	for mansrc in $(SERVERMANSRCS) ; do destfile=`echo $$mansrc|sed 's/[.]'$(SRCMANSUFFIX)'$$/.'$(DESTMANSUFFIX)/g` ; $(INSTALL) $$mansrc $(SERVERMANDIR)/man$(DESTMANSUFFIX)/$$destfile ; done
+
+uninstall.server.man:
+	for mansrc in $(SERVERMANSRCS) ; do destfile=`echo $$mansrc|sed 's/[.]'$(SRCMANSUFFIX)'$$/.'$(DESTMANSUFFIX)/g` ; /bin/rm -f $(SERVERMANDIR)/man$(DESTMANSUFFIX)/$$destfile ; done
+	- rmdir $(SERVERMANDIR)/man$(DESTMANSUFFIX) $(SERVERMANDIR) >/dev/null 2>&1
+
+install.l10n: potfiles
+	(cd po; $(MAKE) datadir=\"$(datadir)\" install)
+
+uninstall.common: uninstall.l10n
+	- rmdir $(COMMONSHLIBDIR)
+	- D="$(COMMONSHLIBDIR)" ; \
+	  while [ "$$D" != / ] ; do \
+	    D=`dirname "$$D"` ; \
+	    rmdir "$$D" >/dev/null 2>&1 ; \
+	  done
+	-find $(COMMONDIR) $(COMMONDATADIR) $(COMMONSHLIBDIR) -depth -type d \
+		-exec rmdir {} \; >/dev/null 2>&1
+
+uninstall.l10n:
+	(cd po; $(MAKE) datadir=\"$(datadir)\" uninstall)
+
+install.devel:	install.$(UTILSLIB) $(BACKUPLIB)
+	mkdir -p $(COMMONLIBDIR) $(COMMONINCDIR)
+	chmod 755 $(COMMONLIBDIR) $(COMMONINCDIR)
+	$(INSTALL) $(BACKUPLIB) $(COMMONLIBDIR)/$(BACKUPLIB)
+	for f in $(BULIBHEADERS) ; do \
+		$(INSTALL) $$f $(COMMONINCDIR) \
+		 && chmod 644 $(COMMONINCDIR)/$$f ; \
+		done
+
+install.doc::
+	mkdir -p $(DOCDIR)
+	chmod 755 $(DOCDIR)
+	for DOCFILE in $(DOCFILES) ; do \
+		$(INSTALL) $$DOCFILE $(DOCDIR)/$$DOCFILE \
+		 && chmod 644 $(DOCDIR)/$$DOCFILE ; \
+		done
+
+albiutils.install.doc::
+	mkdir -p $(AU_DOCDIR)
+	chmod 755 $(AU_DOCDIR)
+	for DOCFILE in $(AU_DOCFILES) ; do \
+		$(INSTALL) $$DOCFILE $(AU_DOCDIR)/$$DOCFILE \
+		 && chmod 644 $(AU_DOCDIR)/$$DOCFILE ; \
+		done
+
+rpms::
+	mkdir -p RPM
+	/bin/rm -rf root
+	make install install.rclient install.userrestore install.devel install.doc INSTTOP=`pwd`/root
+	SUBDIRDIRLIST="" ; \
+	for subdir in $(SUBDIRS) ; do \
+		SUBDIRDIRLIST="$$SUBDIRDIRLIST "`cd $$subdir && make -s dirlist` ; \
+		done ; \
+	./basedirs -i @PACKAGE@ @clientbindir@ @clientlibdir@ @clientvardir@ @clientconfdir@ @commonshlibdir@ @clientmandir@/man$(DESTMANSUFFIX) $(DOCDIR) $(LOCALEDIR) $$SUBDIRDIRLIST | grep -v '/[*]$$' | sed 's#^#%dir #g' > client.autodirs~ ; \
+	./basedirs -i @PACKAGE@ @serverbindir@ @servervardir@ @serverlibdir@ @serverconfdir@ @initrddir@ @commonshlibdir@ @REXECDIR@ @servermandir@/man$(DESTMANSUFFIX) $(DOCDIR) $(LOCALEDIR) $$SUBDIRDIRLIST | grep -v '/[*]$$' | sed 's#^#%dir #g' > server.autodirs~
+	( ./basedirs -i @PACKAGE@ @commondir@/lib @commondir@/include @utilsincdir@/$(OSNAME) @utilslibdir@/$(OSNAME) @utilsbindir@ ; \
+	  if [ _"@INTLLIBS@" != _ ] ; then \
+		./basedirs -i @PACKAGE@ @utilslibdir@/$(OSNAME)/gnuintl ; \
+	  fi ; \
+	  if [ _"@INTL_HEADER@" != _ ] ; then \
+		./basedirs -i @PACKAGE@ @utilsincdir@/$(OSNAME)/gnuintl/intl ; \
+	  fi ; \
+	) | sort -u | grep -v '/[*]$$' | sed 's#^#%dir #g' > devel.autodirs~
+	rpmbuild --buildroot=@CURWD@/root -bb @PACKAGE@.spec
+
+debs::
+	echo $(CLIENTCONFDIR)/@clientconf@ > debian.tmpl/conffiles.client
+	echo $(SERVERCONFDIR)/@serverconf@ > debian.tmpl/conffiles.server
+	echo $(SERVERCONFDIR)/$(CHANGERCONFFILE) >> debian.tmpl/conffiles.server
+	./mk-deb-pkgs
+
+@AU_PACKAGE@.debs::
+	./mk-au-deb-pkgs
+
+@AU_PACKAGE@: $(AU_REALPROGRAMS)
+	@true
+
+af-lockfile: albiutils.o $(X_LIBRARY) $(BASELIBS) $(BACKUPLIB)
+	$(CC) -o $@ albiutils.o $(LDFLAGS)
+
+descrypt: __descrpt
+	/bin/cp -p __descrpt $@
+
+@AU_PACKAGE@.install: @AU_PACKAGE@.install.programs @AU_PACKAGE@.install.man
+
+@AU_PACKAGE@.install.programs:	@AU_PACKAGE@
+	- mkdir -p $(BINDIR)
+	for i in $(AU_PROGRAMS) ; do \
+		/bin/rm -f $(BINDIR)/$$i ; \
+		done
+	for i in $(AU_REALPROGRAMS) ; do \
+		/bin/rm -f $(BINDIR)/$$i \
+		 && $(INSTALL) $$i $(BINDIR) \
+		 && chmod 755 $(BINDIR)/$$i \
+		 && strip $(BINDIR)/$$i ; \
+		done
+	for i in $(AU_PROGRAMS) ; do \
+		if [ ! -f $(BINDIR)/$$i ] ; then \
+			ln -s af-lockfile $(BINDIR)/$$i ; \
+			fi \
+		done
+
+@AU_PACKAGE@.install.man: $(AU_MANSRCS)
+	- mkdir -p $(MANDIR)/man$(DESTMANSUFFIX)
+	( for mansrc in $(AU_MANSRCS) ; do destfile=`echo $$mansrc|sed 's/[.]'$(SRCMANSUFFIX)'$$/.'$(DESTMANSUFFIX)/g` ; $(INSTALL) $$mansrc $(MANDIR)/man$(DESTMANSUFFIX)/$$destfile ; done )
+
+@AU_PACKAGE@.mindirs~: Makefile
+	./basedirs -i @AU_PACKAGE@ $(BINDIR) $(MANDIR)/man$(DESTMANSUFFIX) > @AU_PACKAGE@.autodirs~
+	grep -v '/[*]$$' @AU_PACKAGE@.autodirs~ | sed 's#^#%dir #g' > @AU_PACKAGE@.autodirs.spec~
+	./mindirs < @AU_PACKAGE@.autodirs~ | sed 's#^/*##g' > @AU_PACKAGE@.mindirs~
+
+@AU_PACKAGE@.dirlists: @AU_PACKAGE@.mindirs~
+
+@AU_PACKAGE@.rpms: @AU_PACKAGE@.dirlists
+	mkdir -p RPM
+	/bin/rm -rf root
+	make @AU_PACKAGE@.install INSTTOP=`pwd`/root
+	rpmbuild --buildroot=@CURWD@/root -bb @AU_PACKAGE@.spec
+
+@AU_PACKAGE@.solpkg::
+	make @AU_PACKAGE@.install INSTTOP=`pwd`/root
+	mkdir -p pkgs
+	sed 's/%AU_PACKAGE%/@AU_PACKAGE@/g;s/%ARCH%/'`uname -p`'/g;s/%VERSION%/@VERSION@/g' @AU_PACKAGE@.pkginfo.raw > root/pkginfo
+	pkgmk -o -d pkgs -f @AU_PACKAGE@.proto @AU_PACKAGE@
+	touch pkgs/@AU_PACKAGE@.pkg
+	pkgtrans pkgs pkgs/@AU_PACKAGE@.pkg @AU_PACKAGE@
+
+@AU_PACKAGE@.tar: @AU_PACKAGE@.dirlists
+	/bin/rm -rf root
+	make @AU_PACKAGE@.install INSTTOP=`pwd`/root
+	( cd root && tar cf - `sort -u ../@AU_PACKAGE@.mindirs~` ) > @AU_PACKAGE@.tar
+
+@AU_PACKAGE@.tar.gz: @AU_PACKAGE@.tar
+	/bin/rm -f @AU_PACKAGE@.tar.gz
+	gzip -9 @AU_PACKAGE@.tar
+
+clean::
+	- for subdir in $(SUBDIRS) ; do (cd $$subdir && $(MAKE) clean ) ; done
+	- rm -f *% *.o *.a *.lo *.la *~ core* *_ intllibs potfiles
+	- rm -rf .libs
+
+veryclean: clean
+	- rm -f $(BUILT_PROGS)
+
+distclean: veryclean
+	- for subdir in $(SUBDIRS) ; do (cd $$subdir && $(MAKE) distclean ) ; done
+	- rm -f config.cache config.log config.status config.setup confdef2sed.sed
+	- rm -f $(CRYPTKEY) Install.cache aclocal.m4 libtool configure.lineno
+	- rm -f `/bin/ls *.in|sed 's/[.]in$$//g'|grep -v configure` confdefs.h
+	- rm -f conftest.* config.status.lineno debian.tmpl/conffiles*
+	- rm -rf autom4te.cache root RPM pkgs debian po/debian
+	@/bin/cp -p @PACKAGE@.spec.rh @PACKAGE@.spec.rh.tmp \
+		&& sed 's/^Version: .*$$/Version: '"`pwd | sed 's/^.*-//g'`"/g @PACKAGE@.spec.rh > @PACKAGE@.spec.rh.tmp \
+		&& mv @PACKAGE@.spec.rh.tmp @PACKAGE@.spec.rh
+	@cp -p @AU_PACKAGE@.spec.rh @AU_PACKAGE@.spec.rh.tmp \
+		&& sed 's/^Version: .*$$/Version: '"`pwd | sed 's/^.*-//g'`"/g @AU_PACKAGE@.spec.rh > @AU_PACKAGE@.spec.rh.tmp \
+		&& mv @AU_PACKAGE@.spec.rh.tmp @AU_PACKAGE@.spec.rh
+# The last lines are for updating the version string before submitting a new release
+

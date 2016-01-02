@@ -1,0 +1,2362 @@
+#!/bin/sh
+################### Start of $RCSfile: Install,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/Install,v $
+# $Id: Install,v 1.9 2011/12/14 20:27:29 alb Exp alb $
+# $Date: 2011/12/14 20:27:29 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+if [ _"$1" = _--testonly ] ; then
+  shift
+  adminprefix=/tmp
+  for f in services inetd.conf xinetd.conf passwd group ; do
+    ( test -f $adminprefix/$f || cp /etc/$f $adminprefix ; chmod u+w $adminprefix/$f ) >/dev/null 2>&1
+  done
+fi
+
+#### some basic settings
+
+OSNAME=`uname -s|sed 's/[^a-zA-Z1-9]//g'`
+
+umask 22
+
+servicename="afbackup"
+
+varstosave="servinstdir username userid groupid defdev servvarinstdir clntinstdir clntvarinstdir port use_des des_header des_include des_lib des_libdir disable_threads orduserrestore runclientconfig runserverconfig servicename activate_mserver mservicename mport add_mservice use_zlib zlib_include zlib_libdir usegcc chown_server_var libdesbug_enabled do_install optimizer_flags servnamalias"
+
+
+#### read the cache file overriding defaults
+
+if [ -r Install.cache ] ; then
+  grep '^[ 	]*set[ 	]' Install.cache >/dev/null
+  if [ $? -eq 0 ] ; then
+    # the old csh-syntax
+    CACHE=`sed 's/^[ 	]*set[	 ][	 ]*//g' Install.cache | sed 's/=(/="/g;s/)$/"/g'`
+  else
+    CACHE=`cat Install.cache`
+  fi
+  eval "$CACHE"
+fi
+
+#### set defaults as not obtained from the cache file
+
+if [ _"$servinstdir" = _ ] ; then
+  servinstdir="/usr/local/afbackup"
+fi
+if [ _"$clntinstdir" = _ ] ; then
+  clntinstdir="/usr/local/afbackup"
+fi
+if [ _"$port" = _ ] ; then
+  port=2988
+fi
+if [ _"$mport" = _ ] ; then
+  mport=`expr $port + 1`
+fi
+if [ _"$servnamalias" = _ ] ; then
+  servnamalias="Yes"
+fi
+if [ _"$orduserrestore" = _ ] ; then
+  orduserrestore="Yes"
+fi
+if [ _"$use_des" = _ ] ; then
+  use_des="No"
+fi
+if [ _"$des_header" = _ ] ; then
+  des_header="des.h"
+fi
+if [ _"$des_include" = _ ] ; then
+  des_include="../libdes"
+fi
+if [ _"$libdesbug_enabled" = _ ] ; then
+  libdesbug_enabled="No"
+fi
+if [ _"$use_zlib" = _ ] ; then
+  use_zlib="No"
+fi
+if [ _"$zlib_include" = _ ] ; then
+  zlib_include="/usr/local/include"
+fi
+if [ _"$zlib_libdir" = _ ] ; then
+  if [ _"$zlib_include" = _ ] ; then
+    zlib_libdir="/usr/local/lib"
+  fi
+fi
+if [ _"$servvarinstdir" = _ ] ; then
+  servvarinstdir="/var/logs/backup"
+fi
+if [ _"$clntvarinstdir" = _ ] ; then
+  clntvarinstdir="/var/logs/backup"
+fi
+if [ _"$activate_mserver" = _ ] ; then
+  activate_mserver="Yes"
+fi
+if [ _"$add_mservice" = _ ] ; then
+  add_mservice="Yes"
+fi
+if [ _"$mservicename" = _ ] ; then
+  mservicename="afmbackup"
+fi
+if [ _"$chown_server_var" = _ ] ; then
+  chown_server_var="Yes"
+fi
+if [ _"$disable_threads" = _ ] ; then
+  disable_threads="No"
+fi
+if [ _"$optimizer_flags" = _ ] ; then
+  optimizer_flags="-O2"
+fi
+if [ _"$do_install" = _ ] ; then
+  do_install="Yes"
+fi
+if [ _"$runclientconfig" = _ ] ; then
+  runclientconfig="Yes"
+fi
+if [ _"$runserverconfig" = _ ] ; then
+  runserverconfig="Yes"
+fi
+
+
+##########################################################################
+#
+#  Utilities
+#
+##########################################################################
+
+AWKCOMMSEP='		comm = "";
+		cs = index(line, "#");
+		if(cs > 0){
+		  while(cs > 1 && substr(line, cs - 1, 1) ~ /^[ 	]/)
+		    cs--;
+		  comm = substr(line, cs);
+		  line = substr(line, 1, cs - 1);
+		}
+
+'
+AWKSPLITLINE='
+		l = length(line);
+		nf = 0;
+		for(ci = 1; ci <= l;){
+		  s[nf + 1] = "";
+		  while((cn = substr(line, ci, 1)) ~ /^[ 	]/){
+		    s[nf + 1] = s[nf + 1] cn;
+		    ci++;
+		  }
+		  if(ci <= l){
+		    nf++;
+		    f[nf] = "";
+		    while((cn = substr(line, ci, 1)) ~ /^[^ 	]/){
+		      f[nf] = f[nf] cn;
+		      ci++;
+		    }
+		  }
+		}
+'
+
+matches(){
+  echo "$1" | egrep -i "$2" >/dev/null
+}
+
+tolowercase(){
+  sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/'
+}
+
+###########################################################################
+
+yes_no(){
+  while true ; do
+    echo " "
+    echo_n 'Your choice (Yes/No) ['"$1"']: '
+    read yesno
+    if [ _"$yesno" = _ ] ; then
+      yesno="$1"
+    fi
+    if matches "$yesno" '^(ye?s?|no?)$' ; then
+      break
+    else
+      echo ' '
+      echo 'This is not a valid choice. Please try again.'
+    fi
+  done
+
+  if matches "$yesno" '^ye?s?$' ; then
+    yesno="yes"
+  else
+    yesno="no"
+  fi
+
+  test $yesno = yes
+}
+
+
+issymlink(){
+  return `/bin/ls -l1 "$1" |grep '^l' | wc -l`
+}
+
+save_cache_vars(){
+  echo_n "Saving cache, please wait ..."
+
+  /bin/rm -f Install.cache
+  touch Install.cache
+  for var in $varstosave ; do
+    set | grep '^'"$var"= >/dev/null
+    if [ $? -eq 0 ] ; then
+      eval valuestr='$'"$var"
+      echo "$var""='$valuestr'" >> Install.cache
+    fi
+  done
+
+  echo dummy | awk '{printf "\r                                                                       \r"}'
+}
+
+#
+# with exit status as argument
+#
+do_exit(){
+  save_cache_vars
+
+  exit $1
+}
+
+#
+# which as sh function
+#
+find_program(){
+  for dir in `echo $PATH | tr : " "` ; do
+    if [ -x "$dir"/"$1" ] ; then
+      echo "$dir"/"$1"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+#
+# get xinetd entry stanza
+#
+get_xinetd_entry(){
+  sed -n '/^\([ 	]\)\?service[	 ][	 ]*'"$1"'\([	 ].*\)\?/,/^[	 ]*[}][	 ]*/ p' "$2"
+}
+
+#
+# get xinetd param value
+#
+get_xinetd_param(){
+  sed -n '/^\([ 	]\)\?service[	 ][	 ]*'"$1"'\([	 ].*\)\?/,/^[	 ]*[}][	 ]*/ p' "$3"|grep '^[ 	]*'"$2"'[ 	]*=[ 	]*'|sed 's/^[^=]*=[	 ]*//g'
+}
+
+#
+# remove named xinetd entry from data stream
+#
+strip_xinetd_entry(){
+  sed '/^\([ 	]\)\?service[	 ][	 ]*'"$1"'\([	 ].*\)\?/,/^[	 ]*[}][	 ]*/ d' "$2"
+}
+
+#
+# combine empty lines to one empty line
+#
+comb_empty_lines(){
+  awk 'BEGIN{s = 0;}{if(NF = 0){if(s = 0)print; s = 1}else{s = 0; print}}'
+}
+
+# return signal number by signal name
+#
+# seems csh is the only thing to print the signals without any scrolls
+#
+SIGNALLIST=`csh -f -c 'kill -l' | grep -v '^[ 	]$' | awk '{ for(i = 1; i <= NF; i++) print $i }' | fgrep -vx NULL | sed 's/^SIG//g'`
+
+signalbyname(){
+  echo "$SIGNALLIST" | egrep -n '^(SIG)?'"$1" | sed 's/:.*$//g'
+}
+
+
+####### add afbackup entry to /etc/services interactively
+
+add_backup_service(){
+  servnamvar="$1"
+  eval servnam='"$'"$servnamvar"'"'
+  protnam="$2"
+  if [ _"$3" != _ ] ; then
+    portnumvar="$3"
+    eval portnum='"$'"$portnumvar"'"'
+  fi
+
+  echo ' '
+  echo 'An entry for the backup service is necessary in the system'
+  echo "file $adminprefix/services."
+  # add_service:
+  while true ; do
+    cont=no
+    servicesline=`egrep '^[ 	]*('"$servnam"'[ 	][ 	]*[0-9][0-9]*/[Tt][Cc][Pp]|[^ 	][^ 	]*[ 	][ 	]*[0-9][0-9]*/[Tt][Cc][Pp].*[ 	]'"$servnam"')([ 	].*)?$' $adminprefix/services`
+    serviceslinen=`echo $servicesline | wc -w`
+    if [ $serviceslinen -gt 0 ] ; then
+      while true ; do
+	echo "There exists an entry for this service in $adminprefix/services."
+	echo "It looks like this:"
+	echo ' '
+	echo "$servicesline"
+	echo ' '
+	echo 'Should we remove this entry and create a new one, or add another ?'
+	echo '(If no is chosen, the existing entry will be used)'
+	echo ' '
+	echo_n 'Your choice (Yes/No/Add) [No]: '
+	read c
+	echo ' '
+	if [ _"$c" = _ ] ; then
+	  c="no"
+	fi
+	if matches "$c" '^(ye?s?|no?|ad?d?)$' ; then
+	  break
+	else
+	  echo "Invalid choice. Please try again."
+	  echo ' '
+	fi
+      done
+
+      if matches "$c" '^ad?d?' ; then
+ 	# newservname:
+	while true ; do
+	  echo " "
+	  echo_n "Enter a name for the new service: "
+	  read c
+	  if matches "$c" '^[a-zA-Z0-9_-]*$' ; then
+	    break
+	  fi
+	  echo " "
+	  echo "A service name should contain only A-Z, a-z, 0-9, _ or -"
+	  echo "Please try again."
+	done
+	servnam="$c"
+	continue
+      fi
+
+      if matches "$c" '^ye?s?$' ; then
+	panic=0
+	cp -p $adminprefix/services $adminprefix/services.$$
+	CPST=$?
+
+	saved_files="$saved_files $adminprefix/services.$$"
+
+	if [ ! -f $adminprefix/services.$$ -o $CPST -ne 0 ] ; then
+	  echo "Panic: cannot make backup copy of $adminprefix/services."
+	  echo "I'll not go on to add the entry. You have to do it yourself."
+	  panic=1
+	else
+	  NEWSRVF=`awk 'BEGIN{servnam="'"$servnam"'"}
+		{
+		line = $0;
+		'"$AWKCOMMSEP
+		$AWKSPLITLINE"'
+		delline = 0;
+		for(i = 3; i <= nf; i++){
+		  if(f[i] == servnam){
+		    if(comm != "")
+		      comm = s[i] comm;
+		    for(j = i; j < nf; j++){
+		      f[j] = f[j + 1];
+		      s[j] = s[j + 1];
+		    }
+		    nf--;
+		    i--;
+		  }
+		}
+		if(f[1] == servnam){
+		  if(nf > 2){
+		    f[1] = f[3];
+		    if(comm != "")
+		      comm = s[3] comm;
+		    for(j = 3; j < nf; j++){
+		      f[j] = f[j + 1];
+		      s[j] = s[j + 1];
+		    }
+		    nf--;
+		    i--;
+		  }
+		  else{
+		    delline = 1;
+		  }
+		}
+		if(!delline){
+		  for(i = 1; i <= nf; i++)
+		    printf("%s%s", s[i], f[i]);
+		  printf("%s\n", comm);
+		}
+		}' "$adminprefix"/services`
+	  cp -p "$adminprefix"/services "$adminprefix"/services.tmp.$$ \
+	   && echo "$NEWSRVF" > "$adminprefix"/services.tmp.$$ \
+	   && /bin/mv "$adminprefix"/services.tmp.$$ "$adminprefix"/services
+	  if [ $? -ne 0 ] ; then
+	    echo "Error: removing entry from the system file failed."
+	    panic=1
+	  fi
+	fi
+	if [ $panic -ne 0 ] ; then
+	  echo "The following line of $adminprefix/services '$servnam' must be removed"
+	  echo ' '
+	  egrep '^[ 	]*('"$servnam"'|[^ 	][^ 	]*[ 	][ 	]*[^ 	].*[ 	]'"$servnam"')([ 	].*)?$' "$adminprefix"/services
+	  echo " "
+	  echo "Please hit enter when you are done with it."
+	  read a
+	fi
+	continue
+      fi    
+      if [ `matches "$c" '^no?$'` ] ; then
+	portnum=`echo "$servicesline"|awk '{print $2}'|cut -d/ -f1|awk '{print $1}'`
+      fi
+    else
+      while [ `grep -i "$portnum"/"$protnam" "$adminprefix"/services|grep -v $servnam|wc -l` -gt 0 ] ; do
+	portnum=`expr $portnum + 1`
+      done
+      # portserviceselection:
+      while true ; do
+	if [ $portnum = 2988 ] ; then
+	  hint=' (hex 0xbac)'
+	else
+	  hint=''
+	fi
+	echo ' '
+	echo "Should we add an entry to $adminprefix/services for this"
+	echo 'service ? Default port number is '"$portnum$hint"'. If'
+	echo 'you do not want to add an entry, just enter no. If you'
+	echo 'would like to use a different port number, enter it. If'
+	echo 'you want a service name different from '"$servnam"','
+	echo 'enter it (all lowercase letters, numbers or -, please).'
+	echo 'If everything is ok, enter yes.'
+	while true ; do
+	  echo " "
+	  echo_n 'Your choice (Yes/No/port/servicename) [Yes]: '
+	  read c
+	  if [ _"$c" = _ ] ; then
+	    c='Yes'
+	  fi
+	  if matches "$c" '^(ye?s?|no?|[0-9][0-9]*|[a-z][a-z0-9-]*)$' ; then
+	    break
+	  fi
+	  echo ' '
+	  echo 'This is not a valid choice. Please try again.'
+	done
+	if matches "$c" '^[0-9][0-9]*$' ; then
+	  portnum="$c"
+	  echo " "
+	  echo "Ok, port number changed to $c."
+	  SERVENTRY=`grep '^[ 	]*[a-z][a-z0-9-]*[ 	][ 	]*'"$c/"'[tT][Cc][Pp]' $adminprefix/services`
+	  if [ $? -eq 0 ] ; then
+	    echo "Warning: Port number $c is already used in $adminprefix/services:"
+	    echo "$SERVENTRY"
+	    echo "Service $servname will be added as alias name."
+	  fi
+	  continue
+	fi
+	matches "$c" '^(ye?s?|no?)$'
+	M=$?
+	if test $M -ne 0 && matches "$c" '^[a-z][a-z0-9-]*$' ; then
+	  servnam="$c"
+	  echo " "
+	  echo "Ok, service name changed to $c."
+	  if [ `egrep '^[ 	]*('"$c"'[ 	][ 	]*[1-9][0-9]*/[tT][Cc][Pp]|[^ 	][^ 	]*[ 	][ 	]*[1-9][0-9]*/[tT][Cc][Pp].*[ 	]'"$c"')([ 	].*)?$' $adminprefix/services|wc -l` -gt 0 ] ; then
+	    echo "Hm, service name $c is already used in $adminprefix/services."
+	    cont=yes
+	    break
+	  fi
+	  continue
+	fi
+	if matches "$c" '^no?$' ; then
+	  :
+	else
+	  servicesline=`egrep '^[ 	]*[a-z][a-z0-9-]*[ 	][ 	]*'"$portnum/"'[tT][Cc][Pp]([ 	].*)?$' $adminprefix/services | egrep -v '^(.*[ 	])?'"$servnam"'([ 	].*)?$'`
+	  lineadded="no"
+	  if [ `echo $servicesline | wc -w` -gt 0 ] ; then
+	    echo ' '
+	    echo "Warning: The port number $portnum is already used in $adminprefix/services,"
+	    echo "but without an entry for the name $servnam. It looks like this:"
+	    echo ' '
+	    echo "$servicesline"
+	    echo ' '
+	    echo "Should the existing entry be extended with $servnam as an alias name ?"
+	    if yes_no $servnamalias ; then
+	      servnamalias=Yes
+	      cp -p $adminprefix/services $adminprefix/services.$$
+	      CPST=$?
+	      saved_files="$saved_files $adminprefix/services.$$"
+
+	      if [ ! -f $adminprefix/services.$$ -o $CPST -ne 0 ] ; then
+	        echo "Panic: cannot make backup copy of $adminprefix/services."
+		echo "I'll not go on to add the entry. Please do it yourself"
+		echo "and press Return, when done."
+		read v
+	      else
+		servlineentry=`egrep '^[ 	]*[a-z][a-z0-9-]*[ 	][ 	]*'"$portnum/"'[tT][Cc][Pp]([ 	].*)?$' $adminprefix/services | egrep -v '^(.*[ 	])?'"$servnam"'([ 	].*)?$'`
+		servlineno=`egrep -n '^[ 	]*[a-z][a-z0-9-]*[ 	][ 	]*'"$portnum/"'[tT][Cc][Pp]([ 	].*)?$' "$adminprefix"/services | sed 's/:.*$//g'`
+		thebeef=`echo "$servlineentry"|sed 's/[ 	]*#.*//g'`
+		beefend=`echo "$thebeef" | awk '{print length($0) + 1}'`
+		comment=`echo "$servlineentry"|cut -c"$beefend"- | awk '
+			{
+			l = length("'"$servnam"'");
+			line = $0;
+			for(i = 0; i < l;){
+			  if(substr(line, 1, 1) == " "){
+			    if(substr(line, 2, 1) == "#")
+				break;
+			    line = substr(line, 2);
+			    i++;
+			  }
+			  else{
+			    if(substr(line, 1, 1) == "	"){
+			      if(substr(line, 2, 1) == "#")
+				break;
+			      line = substr(line, 2);
+			      i += 8;
+			    }
+			  }
+			}
+			print line;
+			}'`
+		cp -p "$adminprefix"/services $adminprefix/services.$$.2
+		awk '{if(NR == '"$servlineno"') printf "%s '"$servnam"'%s\n","'"$thebeef"'","'"$comment"'"; else print $0}' $adminprefix/services.$$ > $adminprefix/services.$$.2
+		NDIFF1=`diff $adminprefix/services.$$ $adminprefix/services.$$.2 | grep '^< ' | wc -l`
+		NDIFF2=`diff $adminprefix/services.$$ $adminprefix/services.$$.2 | grep '^> ' | wc -l`
+		if [ $NDIFF1 = 1 -a $NDIFF2 = 1 ] ; then
+		  /bin/mv $adminprefix/services.$$.2 $adminprefix/services
+		else
+		  /bin/rm -f $adminprefix/services.$$.2
+		  echo "Error: Could not modify $adminprefix/services correctly."
+		  echo "Please do it manually and press Return afterwards."
+		  read v
+		fi
+	      fi
+
+	      lineadded="yes"
+	    else
+	      continue
+	    fi
+	  fi
+	  if [ $lineadded = no ] ; then
+ 	    echo "$servnam		$portnum/$protnam" >> $adminprefix/services
+	  fi
+	fi
+	break
+      done
+    fi
+    if [ _"$cont" != _yes ] ; then
+      break
+    fi
+  done
+
+  eval "$servnamvar"='"'"$servnam"'"'
+  eval "$portnumvar"='"'"$portnum"'"'
+}
+
+################### add entry to /etc/inetd.conf file
+
+add_inetd_entry(){
+  servnam="$1"
+  waitforexit="$2"
+  prognam="$3"
+  protnam=tcp
+
+  waityesno="no"
+  if [ $waitforexit = "wait" ] ; then
+    waityesno="yes"
+  fi
+
+  if [ _"$inetdfile" = _ ] ; then
+    echo "No (x)inetd configuration file in place. Starting the service cannot be set up"
+    return 0
+  fi
+
+  echo 'An entry for this service is necessary in the system'
+  echo "file $inetdfile."
+  while true ; do
+    # add_inetdentry:
+    if [ $use_xinetd -ne 0 ] ; then
+      inetdentry=`get_xinetd_entry $servnam $inetdfile`
+    else
+      inetdentry=`egrep '^[ 	]*'"$servnam"'([ 	].*)?$' $inetdfile`
+    fi
+    inetdentryn=`echo $inetdentry|wc -w`
+    if [ $inetdentryn -gt 0 ] ; then
+      configured_user="$username"
+      echo "There exists an entry in $inetdfile."
+      echo "It looks like this:"
+      echo ' '
+      if [ $use_xinetd -ne 0 ] ; then
+	get_xinetd_entry $servnam $inetdfile
+      else
+	echo "$inetdentry"
+      fi
+      echo ' '
+      def="No"
+      if [ $use_xinetd -eq 0 ] ; then
+	I=1
+	N=`echo "$inetdentry" | wc -w`
+	while [ $I -le $N ] ; do
+	  eval i"$I"='"'`echo "$inetdentry" | awk '{print $'"$I"'}'`'"'
+	  I=`expr $I + 1`
+	done
+	if matches "$i6""/" ^"$servinstdir""/" ; then
+	  :
+	else
+	  echo 'The directory path in this entry seems to be wrong (It'
+	  echo 'should be '"$servinstdir"'/... )'
+	  def="Yes"
+	fi
+	if matches "$i6" /"$prognam"'$' && matches "$i7" /"$prognam"'$' ; then
+	  :
+	else
+	  echo "The program name in this entry is wrong (it must be $prognam)."
+	  def="Yes"
+	fi
+	if matches "$i7""/" '^'"$servinstdir""/" ; then
+	  :
+	else
+	  echo 'The program path in this entry is wrong ('"it must be $servinstdir/$prognam"').'
+	  def="Yes"
+	fi
+	if [ _"$i5" != _"$username" ] ; then
+	  echo 'The username in this entry is wrong (should be '$username').'
+	  def="Yes"
+	  configured_user="$i5"
+	fi
+	i3=`echo "$i3" | tolowercase`
+	if [ "$i3" != "$protnam" -o "$i4" != "$waitforexit" -o "$i2" != stream ] ; then
+	  echo 'The protocol in this entry is wrong (we are allowing'
+	  if [ "$waitforexit" = "nowait" ] ; then
+	    echo 'several server processes).'
+	  else
+	    echo 'only one server process)'
+	  fi
+	  def="Yes"
+	fi
+      else
+	# xinetd
+	server=`get_xinetd_param "$servnam" server "$inetdfile"`
+	if matches "$server""/" '^'"$servinstdir""/" ; then
+	  :
+	else
+	  echo 'The directory path in this entry seems to be wrong (It'
+	  echo 'should be '"$servinstdir"'/... )'
+	  def="Yes"
+	fi
+	server_args=`get_xinetd_param "$servnam" server_args "$inetdfile"`
+	I=1
+	N=`echo "$server_args" | wc -w`
+	while [ $I -le $N ] ; do
+	  eval server_args"$I"='"'`echo "$server_args" | awk '{print $'"$I"'}'`'"'
+	  I=`expr $I + 1`
+	done
+	if matches "$server" /"$prognam"'$' && matches "$server_args1" /"$prognam"'$' ; then
+	  :
+	else
+	  echo "The program name in this entry is wrong (it must be $prognam)."
+	  def="Yes"
+	fi
+	if matches "$server_args1""/" ^"$servinstdir""/" ; then
+	  :
+	else
+	  echo 'The program path in this entry is wrong (it must be '$servinstdir'/$prognam).'
+	  def="Yes"
+	fi
+	user=`get_xinetd_param $servnam user $inetdfile`
+	if [ "$user" != "$username" ] ; then
+	  echo 'The username in this entry is wrong (should be '"$username"').'
+	  def="Yes"
+	  configured_user="$user"
+	fi
+	prot=`get_xinetd_param "$servnam" protocol "$inetdfile" | tolowercase`
+	wait=`get_xinetd_param "$servnam" wait "$inetdfile"`
+	sockt=`get_xinetd_param "$servnam" socket_type "$inetdfile"`
+	if [ "$prot" != "$protnam" -o "$wait" != "$waityesno" -o "$sockt" != "stream" ] ; then
+	  echo 'The protocol in this entry is wrong (we are allowing'
+	  if [ "$waitforexit" = "nowait" ] ; then
+	    echo 'several server processes).'
+	  else
+	    echo 'only one server process)'
+	  fi
+	  def="Yes"
+	fi
+	flags=`get_xinetd_param "$servnam" flags "$inetdfile"`
+	echo "$flags" | egrep '^(.* )?REUSE( .*$)?' >/dev/null
+	reuse="$?"
+	echo "$flags" | egrep '^(.* )?NAMEINARGS( .*$)?' >/dev/null
+	nameinargs="$?"
+	if [ $nameinargs -ne 0 -o $reuse -ne 0 ] ; then
+	  echo 'The flags in this entry are wrong (REUSE and NAMEINARGS must be set)'
+	  def="Yes"
+	fi
+      fi
+
+      if [ $def != "No" ] ; then
+	echo " "
+      fi
+      echo 'Should we remove this entry and create a new one ?'
+      if yes_no "$def" ; then
+	panic=0
+	cp -p "$inetdfile" "$inetdfile.$$"
+	saved_files="$saved_files $inetdfile.$$"
+
+	if [ ! -f "$inetdfile.$$" ] ; then
+	  echo "Panic: cannot make backup copy of $inetdfile."
+	  echo "I'll not go on to add the entry. You have to do it yourself."
+	  panic=1
+	else
+	  if [ $use_xinetd -ne 0 ] ; then
+	    NEWINETDF=`strip_xinetd_entry "$servnam" "$inetdfile" | comb_empty_lines`
+	  else
+	    NEWINETDF=`egrep -v '^[ 	]*'"$servnam"'([ 	].*)?$' "$inetdfile"`
+	  fi
+	  echo "$NEWINETDF" > "$inetdfile".tmp.$$ \
+	   && /bin/mv "$inetdfile".tmp.$$ "$inetdfile"
+	  if [ $? -ne 0 ] ; then
+	    echo "Error: removing entry from the system file failed."
+	    panic=1
+	  fi
+	fi
+	if [ $panic -ne 0 ] ; then
+	  echo "The following line must be removed from $inetdfile"
+	  echo ' '
+	  echo "$inetdline"
+	  echo " "
+	  echo "Please hit enter when you are done with it."
+	  read a
+	fi
+	continue
+      else
+	username="$configured_user"
+      fi
+    else
+      echo ' '
+      echo "Should we add an entry to $inetdfile for this"
+      echo 'service ? Default username is '$username'. If you do not'
+      echo 'want to add an entry, just enter no. If you would like'
+      echo 'to run the server under a different username, enter it.'
+      echo 'If everything is ok, enter yes.'
+      # askaddinetd:
+      echo ' '
+      echo_n "Your choice (Yes/No/username) [Yes]: "
+      c=""
+      read c
+      if [ _"$c" = _ ] ; then
+	c="Yes"
+      fi
+      if matches "$c" '^(ye?s?|no?)$' ; then
+	:
+      else
+	username="$c"
+      fi
+      if matches "$c" '^no?$' ; then
+	:
+      else
+	if [ $use_xinetd -ne 0 ] ; then
+	  cut -c14- >> $inetdfile << EOF
+           > 
+           > service $servnam
+           > {
+           >         flags           = REUSE NAMEINARGS
+           >         socket_type     = stream
+           >         protocol        = $protnam
+           >         wait            = $waityesno
+           >         user            = $username
+           >         server          = $servinstdir/server/bin/$prognam
+           >         server_args     = $servinstdir/server/bin/$prognam $servinstdir/server/etc/backup.conf
+           > }
+EOF
+	else
+	  echo "$servnam	stream	$protnam	$waitforexit	$username	$servinstdir/server/bin/$prognam $servinstdir/server/bin/$prognam $servinstdir/server/etc/backup.conf" >> $inetdfile
+	fi
+      fi
+    fi
+    break
+  done
+}
+
+####### add user and group entry to /etc/passwd and /etc/group
+
+add_user_group(){
+  myusername="$1"
+  userid="$2"
+  groupid="$3"
+
+  passwdfile="$adminprefix/passwd"
+  if [ `matches "$OSNAME" OpenBSD` ] ; then
+    passwdfile="$adminprefix/master.passwd"
+  fi
+
+  if [ `grep -c '[ 	]*'"$myusername": $passwdfile` -lt 1 ] ; then
+    echo "No user entry found for $myusername in $passwdfile."
+    echo ' '
+    echo_n 'Should we add an entry ? '
+    if yes_no Yes ; then
+      if [ _"$userid" = _ ] ; then
+	userid=2988
+      fi
+      while [ `cut -f3 -d: $passwdfile|grep -c "^$userid"'$'` -gt 0 ] ; do
+	userid=`expr $userid + 1`
+      done
+      echo " "
+      echo "The default user-ID is $userid. If this is ok, just"
+      echo "enter yes. If not, enter the desired ID."
+      # askforuserid:
+      while true ; do
+	echo " "
+	echo_n 'Your choice (Yes/No/userid) [Yes]: '
+	read c
+	if [ _"$c" = _ ] ; then
+	  c='Yes'
+	fi
+	if matches "$c" '^(ye?s?|no?|[0-9][0-9]*)$' ; then
+	  if matches "$c" '^[0-9][0-9]*$' ; then
+	    userid="$c"
+	  elif matches "$c" '^n' ; then
+	    echo "Please enter the desired user-ID."
+	    continue
+	  fi
+	  break
+	fi
+	echo ' '
+	echo 'This is not a valid choice. Please try again.'
+      done
+      if [ `cut -f3 -d: $passwdfile|grep -c "^$userid"'$'` -gt 0 ] ; then
+	echo "Warning: A user entry with the user-ID $userid already exists"
+	echo "     on the system. Using it nonetheless."
+      fi
+
+      if [ _"$groupid" = _ ] ; then
+	groupid=14
+      fi
+      while [ `cut -f3 -d: $adminprefix/group|grep -c "^$groupid"'$'` -lt 1 ] ; do
+	groupid=`expr $groupid - 1`
+	if [ $groupid -eq 0 ] ; then
+	  break
+	fi
+      done
+      while [ `cut -f3 -d: $adminprefix/group|grep -c "^$groupid"'$'` -lt 1 ] ; do
+	groupid=`expr $groupid + 1`
+      done
+      echo " "
+      echo "The default group-ID is $groupid. If this is ok, just"
+      echo "enter yes. If not, enter the desired ID."
+      # askforgroupid:
+      while true ; do
+	echo " "
+	echo_n 'Your choice (Yes/No/groupid) [Yes]: '
+	read c
+	if [ _"$c" = _ ] ; then
+	  c='Yes'
+	fi
+	if matches "$c" '^(ye?s?|no?|[0-9][0-9]*)$' ; then
+	  if matches "$c" '^[0-9][0-9]*$' ; then
+	    groupid="$c"
+	    if [ `cut -f3 -d: "$adminprefix"/group|grep -c "^$groupid"'$'` -lt 1 ] ; then
+	      echo "Warning: A group entry with this group-ID does not exist"
+	      echo "    in the system. Using it nonetheless."
+	    fi
+	  elif matches "$c" '^n' ; then
+	    echo "Please enter the desired group-ID."
+	    continue
+	  fi
+	  break
+	fi
+	echo ' '
+	echo 'This is not a valid choice. Please try again.'
+      done
+
+      panic=0
+      /bin/cp -p $passwdfile $passwdfile.$$
+      saved_files="$saved_files $passwdfile.$$"
+      tmppasswdfile="$passwdfile.tmp.$$"
+
+      if [ ! -f $passwdfile.$$ ] ; then
+	echo "Panic: cannot make backup copy of $passwdfile."
+	echo "I'll not go on to add the user. You have to do it yourself."
+	panic=1
+      else
+	if [ `grep -c '^+' $passwdfile` -gt 0 ] ; then
+	  /bin/rm -f $tmpfile
+	  echo "/^+/ i\\" > $tmpfile
+	  echo "$myusername":x:"$userid":"$groupid":"Backup Server:$servinstdir/server:" \
+  		>>$tmpfile
+	  NEWPASSWDF=`sed -f $tmpfile $passwdfile`
+	  if [ $? -ne 0 ] ; then
+	    echo "Error: adding the user to the system file failed."
+  	    panic=1
+	  else
+	    if matches "$OSNAME" OpenBSD ; then
+	      echo "$NEWPASSWDF" > $tmppasswdfile \
+	       && pwd_mkdb $tmppasswdfile \
+	       && echo "$NEWPASSWDF" > $tmppasswdfile \
+	       && pwd_mkdb -p $tmppasswdfile \
+	       && /bin/rm -f $tmppasswdfile # just in case pwd_mkdb forgets it
+	      EST=$?
+	    else
+  	      echo "$NEWPASSWDF" > $passwdfile
+	      EST=$?
+	    fi
+	    if [ $EST -ne 0 ] ; then
+	      echo "Error: adding the user to the system file failed."
+	      panic=1
+	    fi
+	  fi
+	else
+	  if matches "$OSNAME" OpenBSD ; then
+	    /bin/rm -f $tmpfile \
+	     && /bin/cp -p $passwdfile $tmpfile \
+	     && echo "$myusername":x:"$userid":"$groupid":"Backup Server:$servinstdir/server:" \
+		>> $tmpfile \
+	     && /bin/cp -p $tmpfile $tmppasswdfile \
+	     && pwd_mkdb $tmppasswdfile \
+	     && /bin/cp -p $tmpfile $tmppasswdfile \
+	     && pwd_mkdb -p $tmppasswdfile # just in case pwd_mkdb forgets it
+	    EST=$?
+	  else
+	    echo "$myusername":x:"$userid":"$groupid":"Backup Server:$servinstdir/server:" \
+		>> $passwdfile
+	    EST=$?
+	  fi
+          if [ $EST -ne 0 ] ; then
+  	    echo "Error: adding the user to the system file failed."
+  	    panic=1
+	  fi
+	fi
+      fi
+    fi
+
+    if [ $panic -ne 0 ] ; then
+      echo "The following line must be added to $passwdfile"
+      echo '(before the line starting with a +, if present):'
+      echo ' '
+      echo "$myusername":x:"$userid":"$groupid":"Backup Server:$servinstdir/server:"
+      echo " "
+      echo "Please hit enter when you are done with it."
+      read a
+    fi
+  fi
+  username="$myusername"
+}
+
+################################################################################
+
+intrexit(){
+  echo ' '
+  save_cache_vars
+  exit `expr 128 + $1`
+}
+
+#############################################################################
+#
+# resolve all symlinks in path, the only argument
+#
+
+resolvepath(){
+  oldpath="$1"
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo "$oldpath"|sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  if [ _`echo "$oldpath"|cut -c1` = _"/" ] ; then
+    oldhead="/"`echo "$oldpath"|cut -c2-|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|cut -c2-|sed 's#^[^/]*/##'`
+  else
+    oldhead=`echo "$oldpath"|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|sed 's#^[^/]*/##'`
+  fi
+  if [ _"$oldpath" = _"$oldhead" ] ; then
+    oldtail=""
+  fi
+
+  while true ; do
+    if [ _"$oldhead" = _ ] ; then
+      oldhead="."
+    fi
+    if [ ! -f "$oldhead" -a ! -d "$oldhead" ] ; then
+      echo ""
+      return 0
+    fi
+
+    linkchar=`ls -ld "$oldhead"|cut -c1`
+    if [ $linkchar = 'l' ] ; then
+      points_to=`ls -ld "$oldhead"|sed 's#^.*->[ 	]*##g'`
+
+      if [ `echo "$points_to"|cut -c1` = '/' ] ; then
+        newpath="$points_to"/"$oldtail"
+      else
+        newpath=`dirname "$oldhead"`/"$points_to"/"$oldtail"
+      fi
+
+      echo `resolvepath "$newpath"`
+      return $?
+    fi
+
+    if [ _"$oldtail" = _ ] ; then
+      oldpath="$oldhead"
+      break
+    fi
+
+    oldhead="$oldhead"/`echo "$oldtail"|sed 's#/.*$##g'`
+    if [ `echo "$oldtail"|grep /|wc -l` -lt 1 ] ; then
+      oldtail=''
+    else
+      oldtail=`echo "$oldtail"|sed 's#^[^/]*/##g'`
+    fi
+  done
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo $oldpath|sed 's#[^/][^/]*/\.\./##g;s#[^/][^/]*/\.\.$##g;s#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  echo "$newpath"
+  return 0
+}
+
+#########################
+# returns 1 if GNU make, 0 if vendor non-GNU make
+#
+which_make(){
+  gmake=`find_program gmake`
+  if [ `echo $gmake | wc -w` -gt 0 ] ; then
+    if matches "$gmake" "^/" ; then
+      echo $gmake
+      return 1
+    fi
+  fi
+
+  make=`find_program make`
+  if [ `echo $make | wc -w` -gt 0 ] ; then
+    $make -v -n >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then
+      echo $make
+      return 0
+    fi
+  fi
+
+  # GNU make in disguise
+  if [ `make -v -n 2>&1 | grep GNU | wc -l` -gt 0 ] ; then
+    echo make
+    return 1
+  fi
+
+  echo gmake
+  return 1
+}
+
+### SERVER ONLY ###
+
+server_only(){
+  echo " "
+  echo "Ok, we're going to install only the server side on this"
+  echo_n "machine. "
+
+  server_install
+}
+
+### CLIENT ONLY ###
+
+client_only(){
+  echo " "
+  echo "Ok, we're going to install only the client side on this"
+  echo_n "machine. "
+
+  client_install
+}
+
+### REMOTELY STARTED CLIENT ###
+
+remclient(){
+  echo " "
+  echo "Ok, we're going to install the client with remote start"
+  echo_n "option. "
+
+  server_install
+}
+
+### CLIENT, SERVER AND REMOTE START OPTION ###
+
+all(){
+  echo " "
+  echo "Ok, we will install the client, server and remote start"
+  echo_n "option. "
+
+  server_install
+}
+
+################## CLIENT INSTALLATION ##################
+
+client_install(){
+
+  while true ; do
+    # ask_for_clntinstdir:
+    echo "First you have to choose where we should install"
+    echo "the files and programs. Please enter a directory"
+    echo 'of your choice (you may supply the same directory'
+    echo 'as for the server side).'
+    echo 'Enter yes if '"$clntinstdir"' is ok.'
+    echo 'Otherwise please enter an alternate directory.'
+
+    # choose_clntinstdir:
+    while true ; do
+      echo ' '
+      echo_n 'Your choice (Yes/No/path) [Yes]: '
+      read choice
+      if [ _"$choice" = _ ] ; then
+	choice="yes"
+      fi
+      if matches "$choice" 'no?' ; then
+	echo_n "Please enter the directory: "
+	read choice
+	if matches "$choice" '^/' ; then
+	  clntinstdir="$choice"
+	  break
+	fi
+      fi
+      if matches "$choice" '^/' ; then
+	clntinstdir="$choice"
+      fi
+      if matches "$choice" '^(ye?s?|no?|/.*)$' ; then
+	break
+      fi
+      echo " "
+      echo "That's no valid choice. Please Try again."
+    done
+
+    choose_DES
+    echo " "
+
+    choose_ZLIB
+    echo " "
+
+    choose_optimization
+
+    echo " "
+    echo "Do you want ordinary users to be able to restore their"
+    echo "own files and/or directories without administrator help ?"
+    # orduserclnt:
+    yes_no $orduserrestore
+    orduserrestore=$yesno
+
+    echo " "
+    echo "Now we have to build the programs. Please stand by"
+    echo "and watch for error messages. If any occur you have"
+    echo "a problem. Warnings can usually be ignored. If errors"
+    echo "occur, drop a mail to the author"
+    echo '(af@muc.de)'
+    echo 'with the fault message(s) of make or try to patch the'
+    echo "stuff yourself. If you succeed, please also drop a"
+    echo "mail to the author, so your changes can be added to the"
+    echo "distribution."
+    echo " "
+    echo "Running configure now ..."
+    echo " "
+    $CONF_INTERPR ./configure -prefix="$clntinstdir" --without-prefixext \
+		--with-rexecdir="$clntinstdir"/server/rexec \
+		$configure_options
+    s="$?"
+    echo " "
+    if [ $s -ne 0 ] ; then
+      echo "Damn. Something went wrong. Please contact the author."
+      echo "Stopping here."
+      do_exit 1
+    fi
+
+    if matches "$libdesbug_enabled" '^yes$' ; then
+      if [ `grep -c LIBDESBUG_COMPATIBILITY des_aux.h` -lt 1 ] ; then
+	echo '#define	LIBDESBUG_COMPATIBILITY	1' >> des_aux.h
+      fi
+    fi
+
+    echo "Running make now ..."
+    echo " "
+    $MAKECMD client $MAKEOPTS OPTIMIZE="$optimizer_flags"
+    s="$?"
+    echo " "
+    if [ $s -ne 0 ] ; then
+      echo "Damn. Something went wrong. Please contact the author."
+      echo "Stopping here."
+      do_exit 1
+    fi
+
+    ask_install
+
+    echo " "
+    echo "We're now going to install the files and programs."
+    echo " "
+    $MAKECMD install.client $MAKEOPTS OPTIMIZE="$optimizer_flags"
+    s="$?"
+
+    if [ $s -eq 0 ] && matches "$orduserrestore" 'ye?s?' ; then
+      $MAKECMD install.userrestore $MAKEOPTS OPTIMIZE="$optimizer_flags"
+      s="$?"
+#      /bin/rm -f $clntinstdir/client/bin/afrestore \
+#		$clntinstdir/client/bin/afbackout \
+#		$clntinstdir/client/bin/backout \
+#		$clntinstdir/client/bin/restore
+#      cp $clntinstdir/client/bin/full_backup \
+#		$clntinstdir/client/bin/afrestore
+#      ln $clntinstdir/client/bin/afrestore $clntinstdir/client/bin/afbackout
+#      ln -s afbackout $clntinstdir/client/bin/backout
+#      ln -s afrestore $clntinstdir/client/bin/restore
+#      chmod 4755 $clntinstdir/client/bin/afrestore
+#      chmod 755 $clntinstdir/client/bin/xafrestore $clntinstdir/client/bin/__packpats
+    fi
+
+    echo " "
+    if [ $s -ne 0 ] ; then
+      echo "Oops, something went wrong.  Maybe your directory choice is"
+      echo "somewhat problematic. Choose one of: Abort, Retry (A/R)"
+      mult_choice R '[AaRr]'
+      if [ _"$the_choice" = _ ] ; then
+	the_choice="r"
+      fi
+      if matches "$the_choice" '^a' ; then
+        do_exit 1
+      else
+	continue
+      fi
+    fi
+
+    break
+  done
+
+  add_backup_service servicename tcp port
+
+  echo ' '
+  echo 'Do you want to add an entry to '"$adminprefix/services"
+  echo 'for the multi stream server ?'
+
+  yes_no "$add_mservice"
+  add_mservice=$yesno
+  if [ "$add_mservice" = "yes" ] ; then
+    add_backup_service mservicename tcp mport
+  fi
+
+  echo " "
+  echo "You might now want to move the variable part of the"
+  echo "client side installation to the /var-directory. The"
+  echo "default directory is $clntvarinstdir. If you want to"
+  echo "do this and this directory is ok, just enter yes. If"
+  echo 'the directory is not ok, enter the desired one (you'
+  echo 'may supply the same as for the server side). If you'
+  echo "want to skip this step, just enter no."
+  # mvclntvar:
+  while true ; do
+    echo ' '
+    echo_n 'Your choice (Yes/No/path) [No]: '
+    read c
+    if [ "$c" = "" ] ; then
+      c="no"
+    fi
+    if matches "$c" '^(ye?s?|no?|/.*)$' ; then
+      break
+    fi
+    echo ' '
+    echo "Invalid choice. Please try again."
+  done
+  if matches "$c" '^/' ; then
+    clntvarinstdir="$c"
+  fi
+  if matches "$c" '^no?$' ; then
+    :
+  else
+    mkdir -p "$clntvarinstdir"
+    curwd=`pwd`
+    cd "$clntinstdir"/client
+    if issymlink var ; then
+      echo " "
+      echo "Warning: The directory seems to have been moved already."
+      echo "         Please check where $clntinstdir/client/var"
+      echo "         points to. Not moving anything."
+    else
+      tar cf - var | (cd "$clntvarinstdir"; tar xf -)
+      mv "$clntvarinstdir"/var "$clntvarinstdir"/client
+      /bin/rm -rf var
+      ln -s "$clntvarinstdir"/client var
+    fi
+  fi
+
+  echo ' '
+  echo "Now we may run the program $clntinstdir/client/bin/clientconfig"
+  echo "so you can configure the client side of the backup system. Would"
+  echo 'you like to do this now ?'
+  yes_no "$runclientconfig"
+  runclientconfig="$yesno"
+  if matches "$runclientconfig" 'ye?s?' ; then
+    "$clntinstdir"/client/bin/clientconfig
+  fi
+}
+
+################ SERVER INSTALLATION #################
+
+server_install(){
+  while true ; do
+    echo "First you have to specify where to install the"
+    echo "files and programs. Please enter a directory of"
+    echo 'your choice (you may supply the same directory'
+    echo 'as for the client side).'
+    echo "If '$servinstdir' is fine enter yes."
+    echo 'Otherwise enter an alternate directory, please.'
+
+    while true ; do
+      echo ' '
+      echo_n 'Your choice (Yes/No/path) [Yes]: '
+      read choice
+      if [ _"$choice" = _ ] ; then
+	choice="yes"
+      fi
+      if matches "$choice" 'no?' ; then
+	echo_n "Please enter the directory: "
+	read choice
+	if matches "$choice" '^/' ; then
+	  serverinstdir="$choice"
+	  break
+	fi
+      fi
+      if matches "$choice" '^/' ; then
+	servinstdir="$choice"
+      fi
+      if matches "$choice" '^(ye?s?|no?|/.*)$' ; then
+	break
+      fi
+      echo " "
+      echo "That's no valid choice. Please Try again."
+    done
+
+    clntinstdir="$servinstdir"
+
+    choose_DES
+    echo " "
+
+    choose_ZLIB
+    echo " "
+
+    if [ $mode != "clntrem" -a $mode != "servonly" ] ; then
+      echo " "
+      echo "Do you want ordinary users to be able to restore their"
+      echo "own files and/or directories without administrator help ?"
+      yes_no $orduserrestore
+      orduserrestore=$yesno
+    fi
+
+    choose_threads
+
+    choose_optimization
+
+    echo " "
+    echo "Now we have to build the programs. Please stand by"
+    echo "and watch for error messages. If any occur you have"
+    echo "a problem. Warnings can usually be ignored. If errors"
+    echo 'occur, drop a mail to the author (af@muc.de)'
+    echo 'with the fault message(s) of make or try to patch the'
+    echo "stuff yourself. If you succeed, please also drop a"
+    echo "mail to the author, so your changes can be added to the"
+    echo "distribution."
+    echo " "
+    echo "Running configure now ..."
+    echo " "
+    $CONF_INTERPR ./configure -prefix="$servinstdir" --without-prefixext \
+		--with-rexecdir="$servinstdir"/server/rexec \
+		$configure_options
+    s="$?"
+    echo " "
+    if [ $s -ne 0 ] ; then
+      echo "Damn. Something went wrong. Please contact the author."
+      echo "Stopping here."
+      do_exit 1
+    fi
+
+    if matches "$libdesbug_enabled" '^yes$' ; then
+      if [ `grep -c LIBDESBUG_COMPATIBILITY des_aux.h` -lt 1 ] ; then
+	echo '#define	LIBDESBUG_COMPATIBILITY	1' >> des_aux.h
+      fi
+    fi
+
+    echo "Running make now ..."
+    echo " "
+    if [ $mode = "all" -o $mode = "clntrem" ] ; then
+      $MAKECMD $MAKEOPTS OPTIMIZE="$optimizer_flags"
+      s="$?"
+    else
+      $MAKECMD server $MAKEOPTS OPTIMIZE="$optimizer_flags"
+      s="$?"
+    fi
+
+    echo " "
+    if [ $s -ne 0 ] ; then
+      echo "Damn. Something went wrong. Please contact the author."
+      echo "Stopping here."
+      do_exit 1
+    fi
+
+    ask_install
+
+    echo " "
+    echo "We're now going to install the files and programs."
+    echo " "
+    if [ $mode = "all" -o $mode = "clntrem" ] ; then
+      $MAKECMD install install.rclient $MAKEOPTS OPTIMIZE="$optimizer_flags"
+      s="$?"
+    else
+      $MAKECMD install.server $MAKEOPTS OPTIMIZE="$optimizer_flags"
+      s="$?"
+    fi
+
+    if test $s -eq 0 && matches "$orduserrestore" 'ye?s?' ; then
+      $MAKECMD install.userrestore $MAKEOPTS OPTIMIZE="$optimizer_flags"
+      s="$?"
+#    /bin/rm -f $servinstdir/client/bin/afrestore \
+#		$servinstdir/client/bin/afbackout \
+#		$servinstdir/client/bin/backout \
+#		$servinstdir/client/bin/restore
+#    cp $servinstdir/client/bin/full_backup \
+#		$servinstdir/client/bin/afrestore
+#    ln $servinstdir/client/bin/afrestore $servinstdir/client/bin/afbackout
+#    ln -s afbackout $servinstdir/client/bin/backout
+#    ln -s afrestore $servinstdir/client/bin/restore
+#    chmod 4755 $servinstdir/client/bin/afrestore
+#    chmod 755 $servinstdir/client/bin/xafrestore $servinstdir/client/bin/__packpats
+    fi
+
+    echo " "
+    if [ $s -ne 0 ] ; then
+      echo "Oops, something went wrong.  Maybe your directory choice is"
+      echo "somewhat problematic. Choose one of: Abort, Retry (A/R)"
+      mult_choice R '[AaRr]'
+      if [ _"$the_choice" = _ ] ; then
+	the_choice="r"
+      fi
+      if matches "$the_choice" '^a' ; then
+        do_exit 1
+      else
+	continue
+      fi
+    fi
+
+    break
+  done
+
+  /bin/rm -f $tmpfile
+
+  add_backup_service servicename tcp port
+
+  if [ _"$username" = _ ] ; then
+    if [ $mode = "all" -o $mode = "clntrem" ] ; then
+      username="root"
+    else
+      username="afbackup"
+    fi
+  fi
+
+  echo ' '
+
+  add_inetd_entry "$servicename" nowait afserver
+
+  echo ' '
+
+  echo 'Do you want to activate the multi stream server ?'
+  yes_no "$activate_mserver"
+  activate_mserver="$yesno"
+
+  if [ "$activate_mserver" = "yes" ] ; then
+    echo ' '
+    echo 'The multi-stream server must use a different port than the'
+    echo 'normal server, so we now configure the appropriate entries'
+    echo 'for the system files.'
+
+    add_backup_service mservicename tcp mport
+
+    echo ' '
+    add_inetd_entry "$mservicename" wait afmserver
+  fi
+
+  echo ' '
+
+  add_user_group "$username" "$userid" "$groupid"
+
+  RESTRSERVERFILES="afmserver afserver label_tape cartready"
+  for SF in $RESTRSERVERFILES ; do
+    chown "$username" "$servinstdir"/server/bin/$SF
+  done
+
+  if [ "$username" != "root" ] ; then
+    echo ' '
+    echo "The user ID the server will run under is not root."
+    echo "So we are now going do change the ownership of the"
+    echo "directory containing varying serverside files and"
+    echo "storing persistent information for the server to the"
+    echo "user $username. Furthermore all the files residing in"
+    echo "this directory will change the owner the same way. If"
+    echo "we wouldn't do so, the server would not be able to modify"
+    echo "these files. That could result in really bad situations."
+    echo "If you consider this as dangerous or disadvantageous, or "
+    echo "if there's any reason to not like it then enter no now."
+    echo ' '
+    echo "Change owner of $servinstdir/server/var/* to $username ?"
+    yes_no "$chown_server_var"
+    chown_server_var="$yesno"
+    if [ "$chown_server_var" = yes ] ; then
+      chown "$username" "$servinstdir"/server/var "$servinstdir"/server/var/*
+      if [ $? -ne 0 ] ; then
+	echo ' '
+	echo "Whoaaa, this failed, probably it must be done by the superuser."
+	echo "Please press Return after having entered"
+	echo ' '
+	echo " chown $username $servinstdir/server/var $servinstdir/server/var/*"
+	echo ' '
+	echo "or if you want to skip this step"
+	read a
+      fi
+    fi
+    echo ' '
+   fi
+
+  if [ $mode != "clntrem" ] ; then
+    echo " "
+    echo "Now we should change the owner of your tape device"
+    echo "to user $username and grant him exclusive access to it."
+    echo "You may now enter a filename pattern or no if you"
+    echo "want to skip this step. Here are the usual streamer"
+    echo "device name patterns for some OS-es:"
+    echo " "
+    echo "Solaris:          /dev/rmt/[0-9]*"
+    echo "AIX:              /dev/rmt[0-9]*"
+    echo "IRIX:             /dev/rmt/tps[0-9]*"
+    echo "HP-UX:            /dev/rmt/[0-9]*"
+    echo "Linux:            /dev/st[0-9]* /dev/nst[0-9]*"
+    echo "Digital UNIX:     /dev/rmt[0-9]* /dev/nrmt[0-9]*"
+    echo "FreeBSD:          /dev/rst[0-9]* /dev/nrst[0-9]*"
+    echo "OpenBSD:          /dev/rst[0-9]* /dev/nrst[0-9]*"
+    echo "Darwin (MacOS-X): /dev/rst[0-9]* /dev/nrst[0-9]*"
+
+    case $OSNAME in
+	SunOS)
+		osdefdev="/dev/rmt/0*"
+		;;
+	AIX)
+		osdefdev="/dev/rmt0*"
+		;;
+	IRIX)
+		osdefdev="/dev/rmt/tps0d4*"
+		;;
+	HPUX)
+		osdefdev="/dev/rmt/0*"
+		;;
+	Linux)
+		osdefdev="/dev/st0* /dev/nst0*"
+		;;
+	OSF1)
+		osdefdev="/dev/rmt0* /dev/nrmt0*"
+		;;
+	FreeBSD)
+		osdefdev="/dev/sa0* /dev/nsa0*"
+		;;
+	OpenBSD)
+		osdefdev="/dev/rst0* /dev/nrst0*"
+		;;
+	Darwin)
+		osdefdev="/dev/sa0* /dev/nsa0*"
+		;;
+	*)
+		osdefdev=""
+    esac
+
+    if [ _"$defdev" = _ ] ; then
+	defdev="$osdefdev"
+    fi
+
+    echo " "
+    echo_n "Your choice [$defdev]: "
+    read c
+    if [ _"$c" = _ ] ; then
+      c="$defdev"
+    fi
+    if matches _"$c" '^_ye?s?' ; then
+      c="$osdefdev"
+    fi
+    if matches "$c" '^no?$' ; then
+      :
+    else
+      chown "$username" $c
+      r=$?
+      chmod 600 $c
+      r2=$?
+      if [ $r -ne 0 -o $r2 -ne 0 ] ; then
+	echo "Oops, this did not work. Please do it manually by "
+	echo 'entering the following lines:'
+	echo " "
+	echo " chown $username $c"
+	echo " chmod 600 $c"
+	echo " "
+	echo "Please hit return when you are done with it or"
+	echo "want to skip this step."
+	read c
+      fi
+    fi
+    defdev="$c"
+  fi
+
+  echo ' '
+
+  skip_reinit_inetd=no
+  inetdline=`PS1|grep -v grep|egrep '[ 	/]'"$inetd_name"'([ 	].*)?$'`
+  running_inetds=`echo "$inetdline"|awk 'NF > 0 {print}' |wc -l`
+  if [ $running_inetds -eq 0 ] ; then
+    echo "Sorry, i'm unable to determine the process ID of "
+    echo "$inetd_name. Would you do me a favour and enter it here ?"
+    echo "Or enter No to skip this."
+    # askforinetdpid:
+    while true ; do
+      echo ' '
+      echo_n 'Process ID: '
+      read pid
+      if matches "$pid" '^([0-9][0-9]*|no?)$' ; then
+	:
+      else
+	echo "Invalid input. Please try again."
+	continue
+      fi
+      if matches "$pid" 'no?' ; then
+	skip_reinit_inetd=yes
+	break
+      else
+	PS2 $pid |grep -v grep|egrep '[ 	/]'"$inetd_name"'([ 	].*)?$' >/dev/null 2>&1
+	if [ $? -eq 0 ] ; then
+	  break
+	else
+	  echo "This is not the pid of the $inetd_name. Please try again."
+	fi
+      fi
+    done
+    inetdline=`PS2 $pid|grep -v grep|egrep '[ 	/]'"$inetd_name"'([ 	].*)?$'`
+  fi
+  if [ $running_inetds -gt 1 ] ; then
+    echo "Sorry, I found several processes looking like $inetd_name."
+    echo "Would you please give me a hint and tell me the real"
+    echo 'process ID ? You may evaluate the following lines:'
+    echo ' '
+    echo "$inetdline"
+    # askfipid2:
+    while true ; do
+      echo ' '
+      echo_n 'Process ID: '
+      read pid
+      if matches "$pid" '^[0-9][0-9]*$' ; then
+	:
+      else
+	echo ' '
+	echo "Invalid input. Please try again."
+	continue
+      fi
+      PS2 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ] ; then
+	break
+      else
+	echo ' '
+	echo "This is not the pid of the $inetd_name. Please try again."
+      fi
+    done
+    inetdline=`PS2 $pid|grep -v grep|egrep '[ 	/]'"$inetd_name"'([ 	].*)?$'`
+  fi
+  inetdline=`echo "$inetdline"|sed 's/[?*\[]/_/g;s/\]/_/g'`
+  if [ $running_inetds -eq 1 ] ; then
+    pid=`echo "$inetdline" | awk '{print $2}'`
+  fi
+
+  if [ $skip_reinit_inetd = no ] ; then
+    echo ' '
+    echo "The process ID of the $inetd_name seems to be $pid, the"
+    echo "respective entry in the process list is:"
+    echo ' '
+    echo "$inetdline"
+    echo ' '
+    echo "To activate the backup service we can now send a $inetd_signal signal"
+    echo_n "to $inetd_name"'. Do you want to do this ? '
+    yes_no Yes
+    c="$yesno"
+    if [ $c = yes ] ; then
+      sh -c "kill -$inetd_signal $pid"
+      if [ $? -ne 0 ] ; then
+	echo " "
+	echo "Heyaa, couldn't send signal to the $inetd_name. Probably this"
+	echo "should be done as the superuser. Please press Return after"
+	echo "having done it manually by entering  'kill -$inetd_signal $pid'"
+	echo "or if you want to skip this step."
+	read a
+      fi
+    fi
+  else
+    echo " "
+    echo "The multi stream backup server can be started as daemon"
+    echo "by the script $servinstdir/server/etc/init.d/afbackup"
+    echo "instead of being run by (x)inetd on demand. If this is"
+    echo "what you want, you may copy this script to the appropriate"
+    echo "directory of your system (typically /etc/init.d) or create"
+    echo "a symbolic link over there. Then create additional symbolic"
+    echo "links to start and stop the daemon (typically something"
+    echo "like /etc/rc3.d/S95afbackup and /etc/rc3.d/K05afbackup)"
+    echo "or on redhat you may call 'chkconfig --add afbackup' and"
+    echo "'chkconfig afbackup on'."
+  fi
+
+  echo " "
+  echo "You might now want to move the variable part of the"
+  if [ $mode = "all" -o $mode = "clntrem" ] ; then
+    echo_n "backup service"
+  else
+    echo_n "server side"
+   fi
+  echo " installation to the /var-directory. The"
+  echo "default directory is $servvarinstdir. If you want to"
+  echo "do this and this directory is ok, just enter yes. If"
+  echo 'the directory is not ok, enter the desired one (you'
+  echo 'may supply the same as for the client side). If you'
+  echo "want to skip this step, just enter no."
+  # mvservvar:
+  while true ; do
+    echo ' '
+    echo_n 'Your choice (Yes/No/path) [No]: '
+    read c
+    if [ "$c" = "" ] ; then
+      c="no"
+    fi
+    if matches "$c" '^(ye?s?|no?|/.*)$' ; then
+      break
+    fi
+    echo ' '
+    echo "Invalid choice. Please try again."
+  done
+  if matches "$c" '^/' ; then
+    servvarinstdir="$c"
+  fi
+  if matches "$c" '^no?$' ; then
+    :
+  else
+    mkdir -p "$servvarinstdir"
+    curwd=`pwd`
+    cd "$servinstdir"/server
+    if issymlink var ; then
+      echo "Warning: The directory seems to have already been moved."
+      echo "         Please check where $servinstdir/server/var"
+      echo "         points to. Not moving anything."
+    else
+      tar cf - var | (cd "$servvarinstdir"; tar xf -)
+      mv "$servvarinstdir"/var "$servvarinstdir"/server
+      /bin/rm -rf var
+      ln -s "$servvarinstdir"/server var
+    fi
+
+    if [ $mode = "all" -o $mode = "clntrem" ] ; then
+      cd "$servinstdir"/client
+      if issymlink var ; then
+	echo "Warning: The directory seems to have already been moved."
+	echo "         Please check, where $servinstdir/client/var"
+	echo "         points to. Not moving anything."
+      else
+	tar cf - var | (cd "$servvarinstdir"; tar xf -)
+	mv "$servvarinstdir"/var "$servvarinstdir"/client
+	/bin/rm -rf var
+	ln -s "$servvarinstdir"/client var
+      fi
+    fi
+
+    cd "$curwd"
+  fi
+
+  if [ $mode = "all" -o $mode = "servonly" ] ; then
+    echo ' '
+    echo "Now we may run the program $servinstdir/server/bin/serverconfig"
+    echo "so you can configure the server side of the backup system. Would"
+    echo 'you like to do this now ?'
+    yes_no "$runserverconfig"
+    runserverconfig="$yesno"
+    if matches "$runserverconfig" 'ye?s?' ; then
+      "$servinstdir"/server/bin/serverconfig
+    fi
+  fi
+
+  if [ $mode = "all" -o $mode = "clntrem" ] ; then
+    echo ' '
+    echo "Now we may run the program $servinstdir/client/bin/clientconfig"
+    echo "so you can configure the client side of the backup system. Would"
+    echo 'you like to do this now ?'
+    yes_no "$runclientconfig"
+    runclientconfig="$yesno"
+    if matches "$runclientconfig" 'ye?s?' ; then
+      "$servinstdir"/client/bin/clientconfig
+    fi
+  fi
+}
+
+###########################################################################
+
+mult_choice(){
+  defaultsel="$1"
+  shift
+  validchre="$1"
+  shift
+  validchoices="$@"
+
+  while true ; do
+    echo " "
+    echo_n 'Your choice ['"$defaultsel"']: '
+    read the_choice
+    if [ _"$the_choice" = _ ] ; then
+      the_choice="$defaultsel"
+    fi
+    if [ _"$validchre" != _ -a _"$validchre" != _- ] ; then
+      if matches "$the_choice" '^'"$validchre"'$' ; then
+	break
+      fi
+    else
+      foundch=no
+      for ch in $validchoices ; do
+	if [ _"$ch" = _"$the_choice" ] ; then
+	  foundch=yes
+	fi
+      done
+      if [ $foundch = yes ] ; then
+	break
+      fi
+    fi
+
+    echo ' '
+    echo 'This is not a valid choice. Please try again.'
+  done
+}
+
+###########################################################################
+
+choose_DES(){
+  echo " "
+  echo "Will we use 128 Bit DES encryption for authenticating the"
+  echo "client to the server ? (Eric Young's DES library (version"
+  echo "4.04b or higher) is required and by default expected in the"
+  echo "directory ../libdes. Alternative is the libcrypto from the"
+  echo "openssl project (see www.openssl.org). The defaults can be"
+  echo "modified in the following section, when answering yes. If"
+  echo "no, the old style encryption is performed."
+
+  yes_no $use_des
+  use_des=$yesno
+  if [ $use_des = "no" ] ; then
+    return
+  fi
+
+  configure_options="$configure_options --with-des"
+
+  echo " "
+  echo "Please enter the name of the DES-library's header file"
+  echo "(When using openssl, this is des.h )"
+  mult_choice "$des_header" '[^ 	]*'
+  des_header="$the_choice"
+
+  echo " "
+  echo "Please enter the directory where "$des_header" can be found or no,"
+  echo "if it resides in a place where it is found by default (do not"
+  echo "supply /usr/include, when comiling with gcc). If an openssl"
+  echo "installation is available, the included des.h header can be"
+  echo "used (often in /usr/include/openssl )."
+  mult_choice "$des_include" '[^ 	]*'
+  des_include="$the_choice"
+
+  if matches "$des_include" '^no?$' ; then
+    des_include="."
+  else
+    if [ ! -f $des_include/$des_header ] ; then
+      echo " "
+      echo "Warning: File '$des_include/$des_header' does not exist."
+    fi
+  fi
+
+  configure_options="$configure_options --with-des-include=$des_include"
+  configure_options="$configure_options --with-des-header=$des_header"
+
+  if [ _"$des_lib" = _ ] ; then
+    if echo "$des_include/$des_header" | grep -i openssl >/dev/null ; then
+      des_lib="-lcrypto"
+    else
+      des_lib="-ldes"
+    fi
+  fi
+  echo " "
+  echo "Please enter the specifier of the DES-library for linking"
+  echo "(When using openssl, enter -lcrypto , otherwise -ldes )"
+  mult_choice "$des_lib" '[^ 	]*'
+  des_lib="$the_choice"
+  if matches "$des_lib" '^lib' ; then
+    des_lib=`echo $des_lib|sed 's#^lib#-l#g;s#[.].*##g'`
+  fi
+  deslibfile=`echo $des_lib|sed 's#^-l#lib#g'`'.*'
+
+  if [ _"$des_libdir" = _ ] ; then
+    if [ _"$des_include" != _ ] ; then
+      if [ $des_include = "." ] ; then
+	des_libdir="no"
+      else
+	des_libdir=`echo $des_include|sed 's#/include$#/lib#g'`
+      fi
+    else
+      des_libdir="../libdes"
+    fi
+  fi
+
+  echo " "
+  echo "Please enter the directory where the DES library can be found,"
+  echo "or no if it resides in a place, where it is found by default"
+
+  mult_choice "$des_libdir" '[^ 	]*'
+  des_libdir="$the_choice"
+
+  if matches "$des_libdir" '^no?$' ; then
+    des_libdir="."
+  else
+    /bin/ls $des_libdir/$deslibfile >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then
+      echo " "
+      echo "Warning: File '$des_libdir/$deslibfile' does not exist."
+    else
+      deslibfile=`basename $des_libdir/$deslibfile`
+    fi
+  fi
+
+  configure_options="$configure_options --with-des-libdir=$des_libdir"
+  configure_options="$configure_options --with-des-ldflag=$des_lib"
+
+  echo " "
+  echo "Changes in the encryption routines were necessary due to a bug"
+  echo "in all libdes versions. Thus the newly built programs are unable"
+  echo "to authenticate successfully with existing installations."
+  echo "Furthermore if the __descrpt program was used to encrypt files,"
+  echo "they cannot be decrypted with this program any longer."
+  echo "Nonetheless it is possible to build the package using the buggy"
+  echo "function, so backward compatibility for existing installations"
+  echo "is provided. Should the buggy function be used ?"
+
+  yes_no $libdesbug_enabled
+  libdesbug_enabled=$yesno
+}
+
+###########################################################################
+
+choose_ZLIB(){
+  echo " "
+  echo "Will we use the libz compression library to have"
+  echo "built-in compression available ?"
+
+  yes_no "$use_zlib"
+  use_zlib="$yesno"
+
+  if [ $yesno = "no" ] ; then
+    return
+  fi
+
+  configure_options="$configure_options --with-zlib"
+
+  echo " "
+  echo "Please enter the directory where zlib.h can be found or no,"
+  echo "if it resides in a place where it is found by default (don't"
+  echo "supply /usr/include when comiling with gcc)"
+
+  mult_choice $zlib_include '[^ 	]*'
+  zlib_include="$the_choice"
+
+  if matches "$zlib_include" '^no?$' ; then
+    zlib_include="."
+  else
+    if [ ! -f $zlib_include/zlib.h ] ; then
+      echo " "
+      echo "Warning: File '$zlib_include/zlib.h' does not exist."
+    fi
+  fi
+
+  configure_options="$configure_options --with-zlib-include=$zlib_include"
+
+  if [ _"$zlib_libdir" = _ ] ; then
+    if [ _"$zlib_include" != _ ] ; then
+      if [ $zlib_include = "." ] ; then
+	zlib_libdir="no"
+      else
+	zlib_libdir=`echo $zlib_include|sed 's#/include$#/lib#g'`
+      fi
+    else
+      zlib_libdir="/usr/local/lib"
+    fi
+  fi
+
+  echo " "
+  echo "Please enter the directory where the libz library can be found"
+  echo "or no, if it resides in a place where it is found by default"
+
+  mult_choice "$zlib_libdir" '[^ 	]*'
+  zlib_libdir="$the_choice"
+
+  if matches "$zlib_libdir" '^no?$' ; then
+    zlib_libdir="."
+  else
+    ls $zlib_libdir/libz.* >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then
+      echo " "
+      echo "Warning: File '$zlib_libdir/libz.*' does not exist."
+    fi
+  fi
+
+  configure_options="$configure_options --with-zlib-libdir=$zlib_libdir"
+}
+
+###########################################################################
+
+choose_threads(){
+  echo " "
+  echo "Do you wish to disable threads even if they are"
+  echo "available on your system?  If unsure enter no."
+
+  yes_no $disable_threads
+  disable_threads="$yesno"
+  if [ $yesno = yes ] ; then
+    configure_options="$configure_options --disable-threads"
+  fi
+}
+
+###########################################################################
+
+choose_optimization(){
+  echo " "
+  echo "On some systems with some compilers high optimization seems to"
+  echo "corrupt the coded algorithms, so the behaviour of the program is"
+  echo "not like intended by the programmer. Then it might be desirable"
+  echo "to reduce the level of optimization. Performance loss should"
+  echo "be small as most of the time the CPU spends in system calls or"
+  echo "library functions (e.g. libz calls). Please enter the desired"
+  echo "compiler flags, if different from the default:"
+
+
+  mult_choice "$optimizer_flags" '.*'
+  optimizer_flags="$the_choice"
+
+  echo ."$optimizer_flags" | grep '^.-' >/dev/null
+  if [ $? -ne 0 ] ; then
+    optimizer_flags="-$optimizer_flags"
+  fi
+}
+
+##########################################################################
+
+ask_install(){
+  echo ' '
+  echo 'Now we are going to install the software. If you want to'
+  echo 'stop here for whatever reason, enter no.'
+  echo ' '
+  echo_n 'Install the software now ? '
+  yes_no "$do_install"
+  do_install="$yesno"
+
+  if [ $do_install = no ] ; then
+    do_exit 0
+  fi
+}
+
+####################################################################
+#
+# choose appropriate routines for PS1 (display all processes)
+# and PS2 (display a certain process)
+#
+
+ps -uxawwww >/dev/null 2>&1
+if [ $? -eq 0 ] ; then
+  ps -uxawwww 2>&1 | egrep -i 'bad.*syntax.*bogus' >/dev/null
+  if [ $? -eq 0 ] ; then
+    PS1(){
+      ps uxawwww
+    }
+  else
+    PS1(){
+      ps -uxawwww
+    }
+  fi
+else
+  ps uxawwww >/dev/null 2>&1
+  if [ $? -eq 0 ] ; then
+    PS1(){
+      ps uxawwww
+    }
+  else
+    PS1(){
+      ps -ef
+    }
+  fi
+fi
+PS2(){
+  PS1 | awk '$2 = '"$1"' { print $0 }'
+}
+
+#################################################################
+#
+# choose an appropriate routine for echo_n (echo without newline)
+#
+
+if [ _`find_program printf` != _ ] ; then
+  echo_n(){
+    printf "%s" "$@"
+  }
+else
+  ( echo -n hallo ; echo _ ) | grep '^hallo' >/dev/null
+  if [ $? -eq 0 ] ; then
+    echo_n(){
+      echo -n "$@"
+    }
+  else
+    ( echo 'hallo\c' ; echo _ ) | grep 'hallo_$' >/dev/null
+    if [ $? -eq 0 ] ; then
+      echo_n(){
+	echo "$@"'\c'
+      }
+    else
+      echoprog=`find_program echo`
+      ( $echoprog -n hallo ; $echoprog _ ) | grep '^hallo' >/dev/null
+      if [ $? -eq 0 ] ; then
+	echo_n(){
+	  $echoprog -n "$@"
+	}
+      else
+	( $echoprog 'hallo\c' ; $echoprog _ ) | grep 'hallo_$' >/dev/null
+	if [ $? -eq 0 ] ; then
+	  echo_n(){
+	    $echoprog "$@"'\c'
+	  }
+	else
+	  echo_n(){	# the final crutch
+	    echo "$@" | head -1 | awk '{printf "%s", $0}'
+	  }
+	fi
+      fi
+    fi
+  fi
+fi
+
+######################################################################
+#
+# extend the path by some directories that according to experience
+# contain useful programs
+#
+
+pathext="	/usr/bin
+		/bin
+		/usr/ccs/bin
+		/usr/ccs/lib
+		/opt/gnu/bin
+		/usr/local/bin
+		/usr/local/gnu/bin
+		/opt/bin
+		/opt/gnu
+		/opt/GNU/bin
+		/opt/GNU
+		/opt/TWWfsw/bin"
+
+for newdir in $pathext ; do
+  if [ ! -d $newdir ] ; then
+    continue
+  fi
+
+  found=0
+  for dir in `echo "$PATH" | tr : ' '` ; do
+    if [ "$dir" = "$newdir" ] ; then
+      found=1
+      break
+    fi
+  done
+  if [ $found  -lt 1 ] ; then
+    PATH="$PATH"":$newdir"
+  fi
+done
+
+export PATH
+
+
+######################################################
+#
+# main program
+#
+
+CONF_INTERPR=""
+if matches "$OSNAME" HPUX ; then
+  CONF_INTERPR="ksh"
+fi
+
+if [ _"$adminprefix" = _ ] ; then
+  adminprefix="/etc"
+fi
+
+if [ ! -f "$adminprefix/inetd.conf" -a ! -f "$adminprefix/xinetd.conf" ] ; then
+  echo "WARNING: Neither inetd nor xinetd seems to be configured. Server cannot be setup." >&2
+fi
+
+use_xinetd=0
+inetdfile=""
+
+if [ -f "$adminprefix/inetd.conf" ] ; then
+  inetdfile=`resolvepath "$adminprefix/inetd.conf"`
+  inetd_running=`PS1 | grep -v grep | grep inetd | wc -l`
+  inetd_name=inetd
+  inetd_signal=HUP
+elif [ -f "$adminprefix/xinetd.conf" ] ; then
+  inetdfile=`resolvepath "$adminprefix/xinetd.conf"`
+  use_xinetd=1
+  inetd_running=`PS1 | grep -v grep | grep xinetd | wc -l`
+  inetd_name=xinetd
+  inetd_signal=USR2
+fi
+
+tmpfile="/tmp/core.tmp.$$"
+
+saved_files=""
+
+modes="servonly clntonly clntrem all"
+
+unset GNU_MAKE
+THE_MAKE=`which_make`
+if [ $? -eq 1 ] ; then
+  GNU_MAKE="$THE_MAKE"
+fi
+
+MAKEOPTS="EXTRA_CFLAGS=-DORIG_DEFAULTS"
+MAKECMD="make"
+if [ _"$GNU_MAKE" != _ ] ; then
+  MAKEOPTS="$MAKEOPTS MAKECMD=$GNU_MAKE"
+  MAKECMD="$GNU_MAKE"
+fi
+
+configure_options=""
+
+clear
+echo " "
+echo 'Welcome to the installation procedure for'
+echo " "
+echo "AF's backup system *"
+echo '===================='
+echo " "
+echo ' '
+echo 'You can interrupt this program any time hitting Ctrl-C. For the'
+echo 'most of the following questions a default answer is offered in'
+echo "square brackets. If you don't want to change this or if you are"
+echo "unsure, it is quite safe to confirm the offered choice, so please"
+echo "feel free to just hit the Return key."
+echo " "
+echo "First you have to decide, which functionality you"
+echo 'would like to have on this machine.'
+echo " "
+echo '(1) Backup server only'
+echo '(2) Backup client only (also to start backups on other hosts)'
+echo '(3) Backup client only with remote start option'
+echo '(4) Backup server, client and client remote start option'
+echo " "
+
+sel=0
+while true ; do
+  if matches "$sel" '^[1-4]$' ; then
+    break
+  fi
+
+  echo_n 'Please enter your choice [1-4]: '
+  read sel
+  if matches "$sel" '^[1-4]$' ; then
+    :
+  else
+    echo "This is not a valid choice. Please try again."
+    echo " "
+  fi
+done
+
+mode=`echo "$modes" | awk '{print $'$sel'}'`
+
+if matches "$OSNAME" SunOS || matches "$OSNAME" HPUX ; then
+  the_gcc=`find_program gcc`
+  echo ' '
+  echo 'Shall we use gcc to build afbackup (strongly recommended) ?'
+  defaultusegcc="Yes"
+  if [ `echo $the_gcc | wc -w` -lt 1 ] ; then
+    echo '(Unfortunately gcc is not found in the current $PATH)'
+    defaultusegcc="No"
+  fi
+  if [ _"$usegcc" = _ ] ; then
+    usegcc="$defaultusegcc"
+  fi
+
+  yes_no $usegcc
+  usegcc="$yesno"
+  if [ $usegcc = yes ] ; then
+    CC="gcc"
+    export CC
+  fi
+fi
+
+for SIG in INT TERM ABRT HUP BUS PIPE ; do
+  SIGNUM=`signalbyname $SIG`
+  if [ _"$SIGNUM" != _ ] ; then
+    trap "intrexit $SIGNUM" $SIGNUM
+  fi
+done
+
+case "$sel" in
+  1)
+		server_only
+		;;
+  2)
+		client_only
+		;;
+  3)
+		remclient
+		;;
+  4)
+		all
+		;;
+esac
+
+echo " "
+
+if [ $mode = client_only -o $mode = remclient -o $mode = all ] ; then
+  echo "When the server has been configured properly, the following"
+  echo "commands can be used to do backup, verify and restore (all"
+  echo "in $clntinstdir/client/bin):"
+  echo " full_backup        to make a full backup"
+  echo " incr_backup        to make an incremental backup"
+  echo " afverify           to verify the latest backup"
+  echo " afrestore ...      to make restores"
+  echo "For more information see the INTRO file and the manual pages."
+fi
+
+echo 'All done. The input supplied during this installation procedure'
+echo 'is saved in the file "Install.cache". This file can be copied'
+echo 'somewhere else to have the input present as default for the next'
+echo 'upgrade or installation on other architectures. The file will be'
+echo 'erased when you do a "make distclean".'
+
+if [ `echo $saved_files | wc -w` -gt 0 ] ; then
+  echo " "
+  echo "The following files are safety copies of files, that"
+  echo "are crucial for your system. If up to now everything"
+  echo "worked fine then you can safely remove them:"
+  echo " "
+  echo $saved_files
+  echo ' '
+fi
+
+do_exit 0
+

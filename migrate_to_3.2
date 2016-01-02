@@ -1,0 +1,195 @@
+#!/bin/sh
+
+echo 'This script is quite dumb, it asks you more questions'
+echo 'than you might think is necessary. However, this script'
+echo 'is meant to run exactly one time. If it fails, there is'
+echo 'some trouble ahead. See Q16 of the HOWTO.FAQ.DO-DONT of'
+echo 'the distribution how to get back out of the trouble.'
+echo 'Please supply the required information'
+echo 'so this script will succeed. Have fun.'
+echo ' '
+
+matches(){
+  RESULT=`echo "$1" | egrep -i "$2" | wc -l`
+  echo $RESULT
+}
+
+writeoutline(){
+  if [ "$SERVER"X = X ] ; then
+    SERVER="$DEFSERVER"
+  fi
+  if [ "$PORT"X = X ] ; then
+    PORT="$DEFPORT"
+  fi
+
+  echo "$BUNUM":" $SERVER $PORT $CART $FILE"
+
+  BUNUM=""
+  SERVER=""
+  PORT=""
+  CART=""
+  FILE=""
+}
+
+cleanup(){
+  /bin/rm -f $TMPFILE
+  exit $EST
+}
+
+TMPFILE=/tmp/afbu_update_mininfo.$$
+
+trap cleanup 2
+trap cleanup 15
+
+DEFPORT=2988
+
+echo "Please enter the hostname of your default backup server:"
+read DEFSERVER
+echo ' '
+echo "Please enter the port number of your default backup service"
+echo '(normally this is 2988):'
+read DEFPORT
+echo ' '
+
+echo "Please enter the full path of the .../var directory of your"
+echo "clientside installation:"
+EXISTS=no
+while [ $EXISTS = no ] ; do
+  read DN
+
+  STARTPOSFILE="$DN/start_positions"
+  if [ -f "$STARTPOSFILE" ] ; then
+    echo " "
+    echo "The file $STARTPOSFILE already esists."
+    echo "It contains `wc -l < $STARTPOSFILE` lines."
+    echo "Please check and possibly remove or rename"
+    echo "this file before proceeding. Please try again:"
+    continue
+  fi
+
+  if [ ! -f $DN/num ] ; then
+    echo "Error: The file $DN/num is not present. Please check and try again."
+    continue
+  fi
+
+  touch "$STARTPOSFILE"
+  if [ $? -ne 0 ] ; then
+    echo ' '
+    echo "Could not create file $STARTPOSFILE (necessary),"
+    echo "please try again:"
+  else
+    EXISTS=yes
+  fi
+done
+
+
+echo ' '
+echo "Please enter the filename with your pre-3.2 style"
+echo "Minimum restore info:"
+
+EXISTS=no
+while [ $EXISTS = no ] ; do
+  read FN
+  if [ ! -r $FN ] ; then
+    echo " "
+    echo "This file does not exist or is not readable."
+    echo "Please try again:"
+  else
+    EXISTS=yes
+  fi
+done
+
+echo " "
+
+BUNUM=""
+CART=""
+FILE=""
+SERVER=""
+PORT=""
+
+echo " "
+echo "Writing $STARTPOSFILE, this may take a while ..."
+
+/bin/rm -f $TMPFILE
+if [ -f $TMPFILE ] ; then
+  echo "Security alert: Could not remove file $TMPFILE. Exiting."
+  exit 3
+fi
+
+grep '^~~' $FN > $TMPFILE
+
+NLINES=`wc -l < $TMPFILE`
+N=0
+
+while read line ; do
+  case "$line" in
+   ~~Backup*)
+    if [ "$BUNUM"X != X -a "$CART"X != X -a "$FILE"X != X ] ; then
+      writeoutline >> $STARTPOSFILE
+    fi
+
+    BUNUM=`echo $line | awk '{print $NF}'`
+    NUM="$BUNUM"
+    ;;
+   ~~Cartridge*)
+    CART=`echo $line | awk '{print $NF}'`
+    ;;
+   ~~File*)
+    FILE=`echo $line | awk '{print $NF}'`
+    ;;
+   ~~Server*)
+    SERVER=`echo $line | awk '{print $NF}'`
+    ;;
+   ~~Port*)
+    PORT=`echo $line | awk '{print $NF}'`
+    ;;
+  esac
+
+  N=`expr $N + 1`
+
+  echo dummy|awk '{printf "%d %% done\r",'"$N * 100 / $NLINES"'}'
+
+done < $TMPFILE
+
+if [ "$BUNUM"X != X -a "$CART"X != X -a "$FILE"X != X ] ; then
+  writeoutline >> $STARTPOSFILE
+fi
+
+echo "Wrote `wc -l < $STARTPOSFILE` lines."
+
+if [ "$NUM"X = X ] ; then
+  echo "Error: No old style minimum restore info found."
+  exit 1
+fi
+
+echo " "
+echo "Checking current backup number ..."
+FNUM=`cat $DN/num`
+if [ $FNUM -ne $NUM ] ; then
+  echo "File $DN/num contains `cat $DN/num` while the last"
+  echo "found backup number in your old style minimum restore"
+  echo "file is $NUM. This is an error, exiting."
+  exit 2
+fi
+
+
+echo " "
+echo "Now to write this file to disk and to create the"
+echo "minimum restore information we must run a short"
+echo "full backup saving only this file. Please enter the"
+echo "full path to the version 3.2 full_backup program:"
+EXISTS=no
+while [ $EXISTS = no ] ; do
+  read FB
+  if [ ! -x $FB ] ; then
+    echo " "
+    echo "$FB is not executable. Please try again:"
+  else
+    EXISTS=yes
+  fi
+done
+
+echo " "
+$FB -va $STARTPOSFILE
+
+cleanup

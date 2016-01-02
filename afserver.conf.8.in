@@ -1,0 +1,431 @@
+.TH AFSERVER.CONF 8 "2001 April 1" "Debian Project"
+.SH NAME
+@serverconf@ \- server side configuration file for afbackup
+.SH DESCRIPTION
+This file needs not be edited by hand with an editor,
+instead the program @serverbindir@/afserverconfig
+can be used. If you are 
+running X, the programs are the same, but start with an 'x';
+(Tcl/Tk must be installed): 
+and @serverbindir@/xafserverconfig.
+The parameters described below are the same for both versions.
+Entries consist of lines starting with the parameter name,
+then follows a colon and the value of the parameter. Comment
+lines can be inserted as desired starting with the # character.
+.SH ENTRIES
+.TP
+.B Backup-Device
+This is the device the backup is written to. It can be any
+tape device with the capability to distinguish between several
+files on the media. It is mandatory to supply the no-rewind 
+device here, otherwise this package won't work properly. 
+Suitable device names for some OS-es:
+.br
+  AIX:          /dev/rmt0.1
+.br
+  Solaris:      /dev/rmt/0bn
+.br
+  IRIX:         /dev/rmt/tps0d4nr
+.br
+  HP-UX:        /dev/rmt/0hn
+.br
+  Linux:        /dev/nst0
+.br
+  Digital UNIX: /dev/nrmt0h
+.br
+  FreeBSD:      /dev/nsa0
+.br
+If the drive has a media handler attached, a specifier for
+this may follow the device name. The format for this
+is =<drive-count>@<device>#<num-slots>^<num-loadbays> , 
+for example =1@/dev/sg0#6^2 . Whitespace before and following
+the special
+characters = @ and # is allowed for readability. The example
+means: The drive is number 1 in the changer, /dev/sg0 is the
+changer device, that has 6 media slots and 2 loadbays. The
+parts =<drive-count> and ^<num-loadbays> are optional.
+.br
+If the server is only used for remote start and no real backup
+device should be accessed, a dash - should be configured here
+as device, so a respective warning to the server log will be
+suppressed
+
+.TP
+.B ServerIdentifier
+The identifier for the server. Default: The official hostname,
+followed by a colon and the full path to the configuration file.
+The server identifier can be used to become independent of the
+server machine name. This might be helpful, if the backup server
+should move to another machine. Whitespace characters may be
+used in this identifier, but they are replaced with asterisks *
+before comparing, so they are not significant
+.TP
+.B Tape-Blocksize
+The blocksize of the tape device. This value specifies how many
+bytes are written to tape or read from it with one system call.
+Usually this value is at least 512 or a multiple of it.
+It is not very important if the blocksize is set to 2048
+or 1024. The main thing to keep in mind is that if there is a
+minimum, it should be respected (e.g. 1024 on AIX), otherwise
+media space is wasted.
+.TP
+.B Tape-Buffer
+Three numbers and a filename can be given here. The first number
+is the desired size of the tape buffer in bytes. The optional
+second number is the high-watermark while writing in percent
+(default: 67), the optional third number is the low watermark,
+also in percent (default: 0). As long as the buffer fill rate
+does not reach the high watermark, nothing is written, but when
+it is reached, writing does not stop until the buffer fill rate
+is equal or below the low watermark. This procedure hopefully
+reduces tape wear and increases average writing speed, because
+excessive tape stops/starts are avoided. If the optional filename
+is given, buffering is done in the given file, which is mapped
+into the server's address space for that purpose. In the filename,
+patterns are replaced like with Changer-Configuration-File.
+.TP
+.B Cartridge-Handler
+This value must be 1 or 0, which means, that you either have a
+cartridge handling system (i.e. some kind of robot) (1) or
+not (0). If you don't have a robot, you may nonetheless maintain
+a set of cartridges, that you will have to manually number. 
+The backup server side will inform you via email or console output,
+whenever another cartridge has to be inserted into the drive and what
+number it requires it is.
+.TP
+.B Number Of Cartridges
+This number specifies, how many cartridges you are maintaining.
+If you have a cartridge handling system (some kind of robot),
+this is usually the number of cartridges, your system is juggling.
+.TP
+.B Cartridge-Sets
+Several cartridge sets can be used. Here they can be specified.
+The specifiers for the cartridge sets must be separated by
+whitespace. Each specifier may consist of digits, commas and
+dashes. Examples for cartridge set specifiers: 1-5 7-9,12 6,10,11 .
+This example shows how to specify three cartridge sets. If the
+access to a cartridge set should be allowed only for certain
+clients, this may specified with a colon immediately following
+the set specifier without whitespace, followed by one of three
+forms: Either a list of hostnames, separated by commas and no
+whitespace inbetween, or the full path to a file containing the
+hostnames one per line, or by a command to be executed. The
+command must start with a bar | and must be enclosed in double
+quotes, if it is containing whitespace. If %H occurres in the
+command it will be replaced with the client name, who wants to
+gain access to the cartridge set. The command must exit with a
+status of 0, if access is to be granted, otherwise with an exit
+status unequal to 0. The name of the host to be checked is also
+written to standard input of this command, so %H needs not to
+be used. Examples specifying cartridge sets with restricted
+access:
+       1-5:apollo,localhost,taurus
+       6-8,16:/usr/local/backup/etc/set2clients
+       9-15:"| fgrep .my.domain.com"
+.br
+Remember, that grep will exit with 0, if a match has been found,
+otherwise 1. Note, that localhost and the network name of the
+machine should be both given, if the server is also a client.
+The names to be supplied here are not the client IDs configured
+on the client side, but the network names of the machines.
+.br
+If this parameter is not given, there is only the default set
+number 1 with all available cartridges, access is permitted to
+any client. Not all cartridges need to be included in a set and
+sets must not overlap.
+.TP
+.B Max Bytes Per File
+The stream of data, that represents your backup, is divided into
+pieces (files on tape). This is done to find the files faster
+during a restore. This value determines, how large the pieces on
+tape may be in bytes. Some good values for a few tape technologies:
+.br
+  QIC:              20000000
+.br
+  DAT:              30000000
+.br
+  Exabyte:          50000000
+.br
+  DLT:             100000000
+.br
+.TP
+.B Max Bytes Per Tape
+With this entry the number of bytes written to a single tape
+can be limited. Serveral entries with a leading range specifier
+allow to handle certain tapes differently. The range specifier
+must end in a colon : and may contain lists of ranges and numbers.
+A given number without a leading range specifier will be valid for
+all tapes not explicitly described. Default is use of full tape
+capacity. Several entries must be separated by whitespace and may
+look like the following examples:
+.br
+4000000000 1,3-5:3500000000 7,9-:5000000000
+.br
+This means: 3.5 GB for cartridges 1 and 3 through 5, 5 GB
+for cartridges 7 and 9 up to the last cartridge, 4 GB for the
+rest.
+.TP
+.B Full Append Mode
+Normally, when the insert (writing) position is forced to
+another tape with the cartis command or with the clientside
+option -G, the rest of the current tape remains unused. When
+this option is set to 1, it will nonetheless be used to write
+data on, if there is no free tape left.
+.TP
+.B Variable Append Mode
+In default mode, the place (tape and tapefile), where the next data
+will be written, is fix and can only manipulated using the command
+cartis or the clientside option -G. When the server wants to write
+with variable append mode enabled, any cartridge, that is in the
+drive, is belonging to the right cartridge set and is allowed to be
+written, will be accepted and appended to. Note, that this will also
+override the settings of cartis or option -G.
+.TP
+.B Reject Unlabeled Tapes
+Default is to accept an unlabeled tape as the requested one and
+to label it automatically. If this behaviour is unwanted and only
+tapes with a recognized label should be permitted for writing,
+this parameter should be set.
+.TP
+.B PreferCartInChanger
+When a tape gets full and another one must be chosen to continue
+writing, the server does not make a difference, whether a tape
+is available in a changer or not, if this flag is not set. This
+is the default. If this parameter is set, the next cartridge is
+chosen from those, that are available in the slots of a changer,
+if present and configured. If there is no tape found inside the
+changer, that is allowed to be overwritten, manual administrator
+interaction is nonetheless required.
+.TP
+.B Cart-Insert-Gracetime
+This is the time in seconds, the program waits after another
+cartridge has been put into the drive. Normal devices need a
+certain time span to mount the tape to get it ready for use.
+Normally this value is not critical. If you estimate it too
+low, the ioctl-system-call will wait until the device becomes 
+available. This time is sometimes longer than two minutes,
+so if you want to proceed quickly after a cartridge
+change, you may measure the maximum time your system needs.
+Some tried values for a few tape technologies:
+.br
+  QIC:         20
+.br
+  DAT:         30
+.br
+  Exabyte:     70
+.br
+  DLT:         70
+.br
+.TP
+.B Device-Unavailable-Send-Mail-After-Min
+If the streaming device is not accessible (i.e. an open or a
+tape handling command fails) or another backup server process
+is still running, the server process re-tries his attempts
+regularly. If it fails longer than the time in minutes
+supplied here, an e-mail is sent to the configured user in
+charge (see: User To Inform). Supplying 0 means: never send mail.
+.TP
+.B Device-Unavailable-Give-Up-After-Min
+Same as Device-Unavailable-Send-Mail-After-Min, but this time
+not an e-mail is sent, but the server process exits silently
+leaving a warning in the log file. Supplying 0 means: try
+forever, never exit.
+.TP
+.B Device-Probe Interval
+This is the interval in seconds, after that regularly the device
+is probed to be ready for reading. Thus after having ejected a
+cartridge it is automatically recognized, if a new cartridge has
+been inserted. For other media (e.g. exchangeable disks) this may
+not be suitable. Supply a 0 in these cases for no probing.
+.TP
+.B SetFile-Command
+This is the (shell-) command to run to position the tape to a
+certain file. Usually this is something like a combination
+of:  mt -f <device> rewind  and  mt -f <device> fsf <number>.
+If the command you are supplying here starts to count with
+1 for the first file on tape, you should insert %n for the
+<number>. If it starts with 0, replace <number> with %m. If
+you don't want to type the devicename again here, you may
+write %d instead.
+.TP
+.B SkipFile-Command
+This is the (shell-) command to run to skip over to a file
+later on tape. Usually this is something like
+ mt -f <device> fsf <number>
+Insert %n, where the number of files to skip over must be
+supplied in the command, in the example instead of <number>,
+and %d, where the device should appear (here: <device>).
+.TP
+.B Setcart-Command
+This is the (shell-) command to run to put a certain
+cartridge into the device. If the command you are supplying
+here starts to count with 1 for the first cartridge, you
+should insert %n in the place, where the cartridge number
+must appear. If it starts with 0, replace it with %m. If
+you don't want to type the devicename again here, you may
+write %d instead. If you don't have a command to perform
+this task, don't supply anything here. In this case you must
+set your cartridge handling system to sequential mode
+(automatically putting the next cartridge in, when the
+current one is ejected).
+.TP
+.B Changecart-Command
+This is the (shell-) command to run to eject a cartridge
+currently placed inside the streamer device. This is normally
+something like  mt -f <device> rewoffl  (but better consult
+your man-pages). You have to supply this either if you
+have no cartridge handling system (robot) or if you have no
+command to set the cartridge directly by number. In the latter
+case this package tries to maintain the number of the current
+cartridge in a file and to (hopefully) keep it consistent
+with the reality. In this case the cartridge handling system
+must be configured to sequential mode (automatically putting
+the next cartridge in, when the current one is ejected). The
+pattern %c, if used in this command, will be replaced with
+number of the current cartridge, %n with the number of the
+next one, that is expected to be put into the streamer by a
+robot in sequential mode. %b can be used instead of %c if
+counting of cartridges starts with 0 and not with 1. The
+same applies for %m, what means %n minus 1. %d is replaced
+with the device name.
+.TP
+.B Init-Media-Command
+The (shell-) command, the server runs before accessing the
+storage media for the first time or after changing it. %d
+will be replaced with the device. This command can be used
+e.g. to automatically mount a removable disk after inserting.
+This command might be called several times on the same media,
+this has to kept in mind when configuring it. %n is replaced
+with the number of the cartridge, that is expected to in the
+drive, when the next media access operation will take place.
+%m is replaced with %n - 1 i.e. assuming that the cartridge
+numbering starts with zero, not one. Note, that the cartridge,
+that will really be in the drive is not necessarily known at
+the time, the Init-Media-Command is running. Thus the term
+"expected". 
+.TP
+.B Erasetape-Command
+The (shell-) command to run, if the tape must be erased.
+(actually not needed).
+.TP
+.B Tape-Full-Command
+The (shell-) command to run, when a tape is full. %d is
+replaced with the device name, %c with the number of the
+cartridge, that became full, %n with the number of cycles,
+the cartridge has become full until now and %C with the
+full path to the configuration file.
+.TP
+.B User To Inform
+If you don't have a cartridge handling system (robot), a
+human maintainer must put the appropriate cartridge into the
+tape device. If you supply a mail program, an e-mail is sent
+to the user given here, which informs him, that and which
+cartridge (by number) must be put into the tape device.
+If a timespan is configured, after that an automatic e-mail
+should be sent due to an unaccessible tape device, it is
+directed to this user (see Device-unavail-send-mail-after-min)
+.TP
+.B Mail-Program
+The mail program used to send messages to a human maintainer.
+This is done, whenever another cartridge must be put into the
+tape device and it can't be done automatically (by a robot or
+whatever). If you don't want to type the username again here,
+you can instead write %u . The pattern %U will be replaced with
+the login name of a current user on the client side, %H with
+the name of the client host. If none could be figured out, the
+entire word containing %U or %H is deleted from the command.
+If you don't want mails to be sent, you may instead supply any
+other command, that reads the standard input and does something
+reasonable with it, e.g. redirects it to the console:
+ cat > /dev/console
+.TP
+.B Var-Directory
+The directory, where varying files should be put in. These
+files should not be deleted. The information they contain is
+necessary for the server to work properly
+.TP
+.B Tape-Pos-File
+In this file some values are stored, e.g. the number of the
+cartridge currently placed inside the streamer device.
+.TP
+.B Logging-file
+Logging information concerning errors or other notable events
+is redirected to this file. If the first word of this entry
+is starting with @, then logging is directed to the syslog as
+well. If there are characters immediately following the @,
+this word is used as the syslog identifier, otherwise the
+identifier is afbackup. If writing to the syslog is configured,
+the rest of the entry is used as additional logging file, if
+present.
+.TP
+.B Status-file
+The current status of the server is written to this file. If
+it starts with >>, then the file is created and status messages
+will be appended to it. Otherwise the file is removed before
+writing. %V in the filename is replaced with the configured
+Var-Directory
+.TP
+.B Lock-file
+To prevent the server program from being started several times
+a lock file is created and this is it's name.
+.TP
+.B Encryption-Key-Files
+Entries specifying files, that contain encryption keys for
+authenticating backup clients to the server. Each entry
+consists of a filename, optionally followed by a colon : and
+a specifier for client selection. If an entry lacks a client
+selector, this one will apply for all clients, that are not
+matched by any other entry. The client selector is either a
+list of comma-separated hostnames, a filename starting with
+a slash / containing hostnames one per line, or a command
+starting with a bar, that is stripped off before starting
+the command. The command gets the current client name as
+input on stdin, aside from arguments containing patterns
+(see below). If the command returns an exit status of 0,
+the client name will match the entry. Entries are separated
+by whitespace. If an entry must contain whitespace, it must
+be enclosed by double quotes. If colons are needed within
+the filenames, they must be escaped using a backslash. Each
+key file must contain at least 5 characters and must not
+have read permission for group or world. The pattern %H is
+replaced with the client name resolved from the IP-address.
+%h is similar to %H, but everything from and including the
+first dot is stripped off. For more pattern replacements see:
+Status-file.
+.TP
+.B Program-Directory
+If you are using the remote start option for backing up
+clients, this is the directory, where programs must reside,
+that can be started remotely. No other programs can be
+started remotely (for security reasons).
+.TP
+.B Init-Command
+Here you may supply a (shell-) command to be run, when the
+backup server side wakes up, i.e. the server process starts.
+A %p appearing in this command is replaced with the name
+of the client, that connected the backup service.
+.TP
+.B Exit-Command
+Here you may supply a (shell-) command to be run, when the
+backup server side goes to sleep, i.e. the server process ends.
+A %p appearing in this command is replaced with the name
+of the client, that connected the backup service.
+
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file
+.IP @serverlogdir@
+The directory for logging the server actions
+.IP @servervardir@
+Some internal state information of the server.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), cartis(8), cartready(8), label_tape(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

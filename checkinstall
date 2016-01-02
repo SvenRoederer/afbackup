@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# $Id: checkinstall,v 1.1 2012/11/01 09:53:02 alb Exp alb $
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/checkinstall,v $
+#
+
+PATH=/usr/bin; export PATH
+
+OS=`uname -r | sed 's/[^0-9].*//g'`
+if [ $OS != "5" ] ; then
+    echo "ERROR: This is for Solaris 2.x only!"
+    exit 1
+fi
+
+exit 0

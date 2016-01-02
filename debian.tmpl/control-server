@@ -1,0 +1,16 @@
+Source: @PACKAGE@-server
+Section: unknown
+Priority: optional
+Maintainer: Albert Fluegel <af@muc.de>
+Build-Depends: debhelper (>= 7), autotools-dev, libssl-dev, tk, mawk, gettext
+Standards-Version: 3.8.3
+Homepage: http://www.sourceforge.net/projects/@PACKAGE@
+
+Package: @PACKAGE@-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, xinetd, tk, gettext, mawk, @PACKAGE@
+Description: Server side of AF backup system
+ The @PACKAGE@ server runs on the machine which offers storage (tape or 
+ sometimes hard drive) for backups on your network. Any machines running
+ backup clients contact the server in regular intervals and send data
+ to store on the backup medium.

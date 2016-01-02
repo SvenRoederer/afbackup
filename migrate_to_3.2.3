@@ -1,0 +1,52 @@
+#!/bin/sh
+
+echo 'This script is quite dumb, it asks you more questions'
+echo 'than you might think is necessary. However, this script'
+echo 'is meant to run exactly one time.'
+echo ' '
+
+cleanup(){
+  /bin/rm -f $TMPFILE
+  exit $EST
+}
+
+EST=0
+TMPFILE=/tmp/afbu_update_mininfo.3.2.3.$$
+
+trap cleanup 2
+trap cleanup 15
+
+echo "Please enter the full path to your server configuration file:"
+EXISTS=no
+while read CONFIGFILE ; do
+  if [ ! -r $CONFIGFILE ] ; then
+    echo "Error: The file $CONFIGFILE is not readable. Please check and try again."
+    continue
+  fi
+
+  break
+done
+
+echo ' '
+
+cat $CONFIGFILE | awk '{if($0 ~ "^[ 	]*[Ll]ast[-_ 	]*[Cc]artr?i?d?g?e?s[-_ 	]*:?") {sub("^[^0-9]*",""); printf "CartridgeSets:		"; for(i=1;i<=NF;i++){idx=1;for(j=1;j<=NF;j++){if($j<$i && idx<$j+1) idx=$j+1;} printf " %d-%d",idx,$i;} printf "\n";} else { print } }' > $TMPFILE
+
+SAVEFILE="$CONFIGFILE".`date +%y%m%d%H%M%S`
+cp "$CONFIGFILE" "$SAVEFILE" \
+  && /bin/rm -f "$CONFIGFILE" \
+  && cp $TMPFILE "$CONFIGFILE"
+
+if [ $? -ne 0 ] ; then
+  echo Error: Creating new configuration file failed.
+fi
+
+echo "The differences between old and new configuration file are:"
+diff "$SAVEFILE" "$CONFIGFILE"
+if [ $? -eq 0 ] ; then
+  echo '(none)'
+fi
+echo " "
+echo "If you think, this is not ok, please edit manually."
+echo "Your old configuration file is saved as $SAVEFILE"
+
+cleanup

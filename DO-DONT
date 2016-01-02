@@ -1,0 +1,81 @@
+        Do-s and Dont-s
+
+ALWAYS
+------
+
+        - configure a Startup-Info-Command on the client side
+          to save the crucial information for the emergency
+          restore after a hard crash losing the filename logfiles
+          i.e. the filelists and probably more ...
+	- use more than 1 tape (per cartridge set), i recommend
+	  at least 3
+	- also save the server side's .../var directory after the
+	  regular clients' backup, cause it contains crucial files
+	  for recovery, i.e. configure the server as client, too.
+	  If not only the .../var directory of the server is saved,
+	  but also other data residing on the server, the .../var
+	  directory should be saved separately after any client's
+	  backup. Use the full_backup command with a different
+	  client ID supplied with option -W and a different var
+	  directory given with option -V and supply the path to
+	  the real server's var directory as argument. Example:
+	  /path/to/full_backup -W serv-var -V /tmp/foo .../server/var
+	  The directory /tmp/foo must already exist. In fact any
+	  directory can be used as argument for -V, it may even be
+	  removed afterwards. This saving of the server's var
+	  directory serves for being able to restore it in case of
+	  disaster, i.e. complete server crash. Remember, that the
+	  files in this var directory are crucial for restore of
+	  any client, especially the file cartridge_order. If this
+	  saving is done, you are able to do disaster recovery even
+	  without any minimum restore information. See HOWTO Q24
+	  what to do exactly in case of disaster.
+        - run a verify after the first backup with afbackup to 
+          make sure, that everything is working correctly
+        - write the numbers of the cartridges onto their cases
+          or use adhesive labels
+	- use a host alias name for the backup server, so it can
+	  easily be moved to another machine
+        - be happy and forgive me the bugs
+	- try to keep things simple. Making things complicated
+	  unnecessarily will strike back mercilessly sooner or
+	  later, according to Murphy sooner, if not ASAP ... or
+	  even AYAP
+
+
+        ... to be continued
+
+
+NEVER
+-----
+
+        - kill the following client-side afbackup-related programs
+          with signal -9 (== -KILL): full_backup, incr_backup,
+          update_indexes. It may take a while until the program has
+          cleaned up but it does clean up and it will terminate.
+          If this is taking more than 10 minutes, then you might
+          THINK of kill -9. If you can see a process afclient or
+          afbackup, that is a subprocess of one of the named ones,
+          kill this one brutally. This is quite safe as it doesn't
+          maintain persistent data. But first watch the processor
+          time consumed by the processes ! kill -9 on the server is
+          save for all programs, but the client side is a different
+          story ! Be patient !
+        - use fewer cartridges than with a capacity of at least
+          two times the size required for one full backup including
+          subsequent incremental backups. Otherwise you will receive
+          mails from the backup system complaining, that no more
+          space is available on the configured tapes, requesting
+          to mark tapes for reuse i.e. overwrite or increase the
+          number of available tapes.
+	- change the process and/or unprocess program, if not
+	  enough hidden files with the same name like the indexes
+	  (with a leading dot) have been created by afbackup-3.2.7
+	  or higher. These files contain the command to unprocess
+	  the related index. If it is missing, the program in the
+	  configuration file is tried, that might fail, if it has
+	  been modified.
+          See also FAQ Q27 for more information.
+
+        ... to be continued
+

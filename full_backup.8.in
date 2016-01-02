@@ -1,0 +1,452 @@
+.TH FULL_BACKUP 8 "2001 April 1" "Debian Project"
+.SH NAME
+full_backup \- run a full backup with the afbackup package
+.SH SYNOPSIS
+.B full_backup 
+[ -daGy ] [ {+-}LBx ] [ <files> <directories> ... ]
+[ -C <root-directory> ] [ -F \"<files-to-skip>\" ]
+[ -D \"<directories-to-skip>\" ]
+[ -c <configuration-file> ] [ -W <identity> ]
+[ -h <backuphosts> ] [ -P <backup-ports> ]
+[ -I <indexfile-part> ]
+[ { -N <num-indexes-to-store> ] |
+-O <max-age-of-indexes-to-store-in-days> } ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -Z <built-in-compress-level> ]
+[ -s \"<dont-process-patterns>\" ]
+[ -X <exclude-list-file> ] [ -l <logfile> ]
+[ -i <startup-info-program> ]
+[ -b <init-program> ]
+[ -e <exit-program> ]
+[ -k <encryption-key-file> ]
+[ -f <filesystem-types> ]
+[ -V <var-directory> ] [ -S <cartridge-sets> ]
+[ -M <server-message-config> ]
+.SH DESCRIPTION
+This program reads the client-side configuration file and runs
+(eventually a part of) a full backup of all files and directories
+specified in the configuration file or on the commandline. It is
+recommended to setup everything in the configuration file and run
+this command without any arguments (same applies for incr_backup).
+If files and/or directories are supplied on the commandline, those
+specified in the configuration file are overridden. Furthermore
+the program then behaves slightly different: If backup parts are
+configured, they are ignored. The timestamp, that is evaluated
+during incremental backup to determine, whether files have been
+modified, is not changed. This behaviour reflects the assumption,
+that supplying files or directories on the commandline is done
+for testing or other temporary purposes. Modifying the timestamp
+would confuse the normal regularly running backup mechanism. In
+these temporary cases the -a option should make sense, see below
+for details. Be also aware of the -C option's meaning. If the name
+of a file is preceded with -r, the contents of the file is stored,
+but not the characteristics of the inode. This is useful for
+saving raw devices. By default, processing is always turned off.
+Using -R forces processing of the contents. Preceding a directory
+name with -m the recursive descent into this directory is limited
+to the filesystem, where the directory resides.
+The names of the files and directories, that are stored, are
+written into logfiles, that comprise of the indexfile-part (-I)
+and the current total backup counter. This counter is incremented
+each time a full backup (part 1) starts. A minimum information
+required to restore after a hard crash having lost everything is
+piped into the startup-info-program (-i). 
+Whether only a part of a full backup is run depends on the setting
+of the parameter NumBackupParts (See: afclient.conf(8)).
+If the configuration
+file is not supplied explicitly, then it is searched for in the
+@clientconfdir@ and @clientlibdir@, and if not found there the files
+/etc/buclient.conf, /etc/afbuclient.conf, /etc/afclient.conf and
+/etc/afbackup/client.conf are tried.
+Commandline options generally override configuration file settings.
+Every option described below (except -c) has a corresponding
+entry in the configuration file, but there are more possible
+settings in the config file.
+.PP
+.TP
+.B -a
+Append mode. Do not increment the total backup
+counter. (See -N)
+.TP
+.B {+-}B
+Perform per-file processing on the stored files
+(+B) or not (-B) (See: -F)
+.TP
+.B -b <initprog>
+Run the given program before attempting a backup.
+If the command returns an exit status unequal
+to 0, no backup is performed (see: -e). Not to
+be mixed up with option -i
+.TP
+.B -C <rootdir>
+Change to the given directory before starting the
+backup climbing down into the directories to be
+stored
+.TP
+.B -c <configfile> 
+A different configuration file to use
+.TP
+.B -D <skip-dirs>
+A list of directory name patterns separated by
+whitespace to ignore for backup. Several must be
+put into quotes (See: -F and -X)
+.TP 
+.B -d              
+Detach from the terminal when starting
+.TP
+.B -e <exitprog>
+Run the specified program after finishing. If the
+command comprises of several words separated by
+whitespace, it must be put into quotes (See: -i)
+.TP
+.B -F <skip-files>
+A list of filename patterns separated by whitespace
+to ignore for backup. Several must be put into
+quotes (See: -D and -X)
+.TP
+.B -f <fs-types>
+A list of filesystem types, separated by whitespace
+and/or commas. The type names can be prefixed
+with a plus, what is identical with no prefix,
+with a dash - or a slash / . No prefix or a plus
+means, that only files in filesystems of the
+given type are saved, no others. A minus means,
+files in a filesystem of the named type are not
+saved, nonetheless such filesystems are traversed
+to search for filesystems of other types probably
+mounted underneath. The slash means, that such
+filesystems are not even entered or traversed. If
+the - or + prefix is used, no space is allowed
+between option -f and it's argument, e.g. -f-nfs
+.TP
+.B -G
+To request a new cartridge. If the current writing
+position is already at the beginning of a new or
+reused tape, nothing happens
+.TP
+.B -h <backuphosts>
+The names of the hosts, where a backup server side
+lives. The list can be separated by commas and/or
+whitespace. If whitespace is present, quotes are
+necessary. The hosts are tested for service availability.
+If a backup server is not ready, the next one is
+tried. If all are busy, the program waits for a
+minute and tries again
+.TP
+.B -I <idx-prefix>
+The first part of the filename, the names of the
+stored files and directories are written to. The
+current total backup number is appended (that
+increments each start of a full backup). If these
+files undergo processing, .z is appended
+.TP
+.B -i <info-prog>
+The command to save startup information. A minimum
+information to recover from a hard crash is piped
+into this program (at stdin). If the command
+comprises of several words, it must be put into
+quotes. Not to be mixed up with option -b
+.TP
+.B -k <file>
+Use the contents of the given file as encryption
+key for authenticating to the server
+.TP
+.B {+-}L
+Process the filename list files (+L) or not (-L)
+(See: -I)
+.TP
+.B -l <logfile>
+Write loggings into the given logfile. A dash -
+means: no logging, only write to stderr
+.TP
+.B -M <server-message-config>
+The configuration to output messages from the server,
+that normally are sent only via mail to a maintainer.
+The first word consisting of the letters b r v and c
+tells, whether to output messages during backup,
+restore, verify and copy-tape, respecively. The next
+words must name the service name or port number of
+the single stream servers, related to the option -P .
+For each multi stream service configured with -P or
+in the configuration file, the respective single
+stream service must be given here
+.TP
+.B -N <num-idxes>
+The number of filename list files, that is stored
+over time. A new list is begun at each start of
+a full backup (except -a is supplied)
+.TP
+.B -O <maxidxage>
+The maximum age of the filename list files (== index
+files) in days, that is stored. See also option
+-N . A floating point number is allowed here
+.TP
+.B -P <portnos>
+The port numbers, that are tried to connect at the
+servers. They must be supplied positionally according
+to the configured or (with the -h option) given
+backup servers. The list may be separated by whitespace
+and/or commas. If whitespace is present, quotes are
+necessary
+.TP
+.B -S <cartsets>
+The cartridge sets to use, where 
+.I <cartsets> 
+is a number of a valid cartridge set on the appropriate
+server side. Default is 1. These must be supplied
+positionally according
+to the configured or (with the -h option) given
+backup servers. The list may be separated by whitespace
+and/or commas. If whitespace is present, quotes are
+necessary
+.TP
+.B -s <noproc>
+A list of filename patterns, that no processing is
+attempted on, what can save time significantly.
+The list should always be enclosed in quotes
+.TP
+.B -V <var-dir>
+The directory, where varying files are put
+.TP
+.B -W <identity>
+Identify as <id> to the server. This is needed when
+connecting a multi-stream server to distinguish
+between the clients. Default is the official
+hostname of the client. If the client should fake
+to be a different one than it is in fact, this
+option must be used. This flag can also be useful
+e.g. to explicitly store the serverside
+var-directory, that is crucial for restore and should be
+saved seperately after all other backup clients are done.
+.TP
+.B -X <excl-file>
+The name of a file, that may exist in any directory
+containing a list of filename patterns, one per
+line. All files and directories in that directory
+matching one of the patterns are exluded from
+backup (See: -D and -F)
+.TP
+.B {+-}x
+Write CRC32 checksums for each file to tape (+x) or don't
+do this (-x). This option is ignored, if built-in compression
+is selected, cause then CRC32 checksumming is already performed
+.TP
+.B -y
+Write the current progress to the file progress in the
+directory with the varying files (see: -V). The first number
+in this file is the sum of file sizes currently written to
+backup plus an estimate for the packer overhead. The
+second number is the total sum of file sizes to be
+written to backup plus estimated overhead, determined
+in advance before doing the real backup. The third
+number is the percentage of backup volume written up
+to now. All the numbers do NOT include the volume of
+any command output to be written to backup, because it
+would be necessary to run the command(s) twice then,
+what is normally not desired. Using this option requires
+the backup client to run over all configured directories
+to be saved to determine the backup volume in advance
+before doing the real backup, what might be considered
+a waste of time and/or fileserver load.
+.TP
+.B -Z <built-in-compress-level>
+If built-in compression should be used, the level
+can be supplied here. If commands to process and
+unprocess are also supplied with option -z, then
+data is first processed by the process command,
+then by built-in compression. During uncompress it
+works the other way round
+.TP
+.B -z <proccmd> <unproccmd>
+The commands to use for process and unprocess. If
+a command comprises of several words, it must be
+put in quotes
+.PP
+A table of corresponding command line options and configuration
+file entries, (subsets) accepted by full_backup, incr_backup,
+restore, verify:
+.TP
+.B Option
+Client configuration file parameter name
+.TP
+.B +B -B
+ProcessBackupedFiles
+.TP
+.B -C
+RootDirectory
+.TP
+.B -D
+DirsToSkip
+.TP
+.B -e
+ExitProgram
+.TP
+.B -F
+FilesToSkip
+.TP
+.B -f
+FilesystemTypes
+.TP
+.B -h
+BackupHost
+.TP
+.B -I
+IndexFilePart
+.TP
+.B -i
+StartupInfoProgram
+.TP
+.B -k
+EncryptionKeyFile
+.TP
+.B -l
+LoggingFile
+.TP
+.B +L -L
+ProcessLogfiles
+.TP
+.B -N
+NumIndexesToStore
+.TP
+.B -P
+BackupPort
+.TP
+.B -S
+CartridgeSet
+.TP
+.B -s
+DoNotProcess
+.TP
+.B -V
+VarDirectory
+.TP
+.B -W
+ClientIdentifier
+.TP
+.B -X
+ExcludeListFile
+.TP
+.B -x
+WriteChecksums
+.TP
+.B -y
+ReportProgress
+.TP
+.B -z
+ProcessCmd UnprocessCmd
+.TP
+.B -Z
+Built-inCompressLevel
+.SH SIGNALS
+When receiving SIGHUP or a single SIGINT (i.e. keyboard Ctrl-C)
+this program tries to process all pending writes to the server
+before terminating. That is, if the server is currently not
+ready to process requests, this program will wait until the
+server is done or terminates unexpectedly, what will break the
+connection to all clients. Any connection breakdown will cause
+a SIGPIPE and thus make a client terminate prematurely. If this
+program should not wait for the server to terminate properly,
+but shut down as soon as a consistent status of the client's
+local persistent data can be achieved, SIGQUIT (== Ctrl-\\) or
+SIGABRT must be sent (once) or SIGINT (== Ctrl-C) 3 times within
+2 seconds. Pressing Ctrl-C the second time a respective hint is
+written to the user. The same can be achieved by sending SIGTERM,
+which is the default using the kill(1) command. This signal is
+typically sent to all processes, when a Unix-system goes down in
+a controlled manner without crashing or fast halt. When SIGINT
+is received and standard input of this program is not a TTY, the
+immediate shutdown without waiting for the server is attempted
+as well. A shutdown like this can be expected to finish quite
+surely within one second.
+.SH FILES
+.IP @clientconfdir@/@clientconf@
+Client configuration file
+.IP @clientlogdir@
+The directory for logging the client backups
+.IP @clientvardir@
+Some internal state information of the client backups.
+.IP @clientvardir@/num
+Here the current total number of backups is stored.
+The total number of backups is incremented each time
+a full backup finishes successfully, if not the append
+mode (option -a) is selected or files and directories
+are explicitly supplied as arguments. This case is
+considered an exceptional storing of files, that should
+not affect counters or timestamps
+.IP @clientvardir@/part
+If present, it contains the number of the backup part
+that has recently started. Full backups can be split
+in pieces if a complete run would take too much time.
+This can be configured with the parameters
+NumBackupParts, DirsToBackup1, ...
+.IP @clientvardir@/oldmark
+The Modification time of this empty file serves as
+memory for the timestamp, when any full or incremental
+backup has started before. This should be handled in
+the file explained next, but due to backward compati-
+bility issues i will not change this (historical error
+coming from the earlier used scripts for backup and
+the use of the find-command with option -newer)
+.IP @clientvardir@/newmark
+During backup a file holding the timestamp of the
+backup starting time. The reason, why this timestamp
+is kept in the filesystem is safety against program
+crashes
+.IP @clientvardir@/level_timestamps
+This file contains the timestamps for the backup
+levels. Each line has the following format:
+ <backup-level>: <incr-backup-starting-time>
+For each used backup level and the full backup a line
+will be maintained in this file
+.IP @clientvardir@/save_entries
+This file holds the patterns of all configuration
+entries in DirsToBackup, DirsToBackup1, ...
+for use in subsequent backups. If new entries will be
+configured, this file allows to automatically switch
+to full backup from incremental backup, when a new
+entry in the configuration file is found
+.IP @clientvardir@/needed_tapes
+This file contains a list of tapes needed for full
+restore of all files listed in existing filename list
+files (i.e. index). The number of these files depends
+on the clientside parameter NumIndexesToStore. After
+each backup (full or incremental or X-level) a line
+is added to this file or an existing one is extended
+to contain the current backup counter and a list of
+backup levels with the cartridge numbers used during
+write associated. The format is:
+ <backup-counter>: <backup-level>><tape-list> [ <backup-level>><tape-list> ... ]
+When running an incremental or differential backup
+supplying the option -H, entries with a level lower
+than the current one (or in differential mode equal
+to the previous) are removed from this list. Thus the
+tapes from these entries are permitted to be written
+again (often called "recycled")
+.IP @clientvardir@/start_positions
+Here for each full or incremental backup within the
+range required by the parameter NumIndexesToStore
+the information to retrieve all the data is stored.
+Each line has the format
+ <backup-counter>: <backup-server> <backup-service> <cartridge-number> <file-number>
+Having this information everything can be restored in
+case all other data is lost
+.IP @clientvardir@/server_ids
+The information, which server network address has which
+server-ID assiciated. The first two columns contain the
+hostname and port number, the third the server-ID
+.IP @clientvardir@/index_ages
+For each existing index file, this file contains a
+line with the index number in the beginning, followed
+by a colon and the timestamp of the last modification
+of that index in seconds since epoch (1.1.1970 0:00).
+This file is evaluated, if the client side parameter
+DaysToStoreIndexes is set.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), copy_tape(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

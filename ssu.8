@@ -1,0 +1,41 @@
+.TH SSU 8 "2001 May 3" "Debian Project"
+.SH NAME
+ssu \- silent su: switch user/group ID to run a command
+.SH SYNOPSIS
+.B ssu [ -e ] <username>[:<groupname>[:<sec-group>[:...]]] <command> [ <args...> ]
+.SH DESCRIPTION
+ssu switches the real and effective user ID and group ID, if
+given, and the supplementary groups of the process and runs
+/bin/sh to interpret the command supplied in the second
+argument or as the rest of the arguments, when started
+with -e . All supplementary groups are cleared before starting
+the command, if none are given. Username and groupname can
+be numerical IDs. If the groupname is not given, the primary
+group of the given username is used. If no primary group can
+be determined from the username or numerical UID, an error is
+reported.
+
+The ssu command
+should not be installed setuid. It is meant to run commands
+under another user/group-ID from the superuser-ID (0) without
+talking to the syslog and without whatever user's environment
+or shell. Normal users should not have a need to run ssu. The
+exit status is the one of the started command.
+
+If option -e is not given, the program must be given exactly 2
+arguments, that is, the executed command must be passed entirely
+in the 2nd
+argument, usually in quotes. In this case the passed command will
+be interpreted by /bin/sh . If -e is passed, the command given
+as arguments is started as is without interpreting any shell-like
+metacharacters or variables. Then it is not possible to
+start compound commands under a different user id, e.g. pipes
+in a single ssu call.
+
+Instead of colons, dots or commas can be written, e.g. to
+clearer indicate the different item types.
+.SH SEE ALSO
+su(1), sh(1)
+.SH AUTHOR
+.B ssu 
+was written by Albert Fluegel (af@muc.de)

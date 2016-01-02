@@ -1,0 +1,1215 @@
+################### Start of $RCSfile: configure.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/configure.in,v $
+# $Id: configure.in,v 1.17 2013/12/21 11:34:46 alb Exp alb $
+# $Date: 2013/12/21 11:34:46 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(afbackup.h)
+
+PACKAGE=afbackup
+VERSION=`[grep VERSION_STRING version.h|sed 's/^[^"]*"//g'|sed 's/"[^"]*$//g']`
+dnl VERSION=`[grep VERSION_STRING version.h|awk '{l=$0;while(substr(l,1,1)!="\"" && l != "")l=substr(l,2);l=substr(l,2);while(substr(l,length(l)-1,1)!="\"" && l != "") l=substr(l,1,length(l)-1);l=substr(l,1,length(l)-1);print l}']`
+AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
+AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+
+dnl currently automake is overkill
+dnl AM_INIT_AUTOMAKE(PACKAGE, VERSION)
+
+ALL_LINGUAS="it de"
+
+osname=`./prosname.sh`
+
+ARCH="`./prosspec.sh` $*"
+ARCH="`echo $ARCH`"		# for some stupid shells
+if test -r config.setup ; then
+  CONFARCH=`cat config.setup`
+  if test "$CONFARCH" = "$ARCH" ; then
+    echo "Already configured for this setup. Remove config.setup to re-configure."
+    exit 0
+  fi
+fi
+rm -f config.setup
+
+AC_CONFIG_HEADER(config.h)
+
+dnl initial settings
+
+LDFLAGS="$EXTERNAL_LDFLAGS $LDFLAGS"
+INCLUDES="$EXTERNAL_INCLUDES $INCLUDES"
+
+dnl Checks for programs.
+
+AC_PROG_CC
+AC_PROG_CPP
+
+AC_GNU_SOURCE
+AM_GNU_GETTEXT
+
+dnl AC_PROG_LIBTOOL
+
+dnl Checks for libraries.
+
+AC_ISC_POSIX
+
+checkBoth=0
+AC_CHECK_FUNC(connect, checkSocket=0, checkSocket=1)
+if test "$checkSocket" = 1; then
+    AC_CHECK_LIB(socket, main, LIBS="$LIBS -lsocket", checkBoth=1)
+fi
+if test "$checkBoth" = 1; then
+    oldLibs=$LIBS
+    LIBS="$LIBS -lsocket -lnsl"
+    AC_CHECK_FUNC(accept, checkNsl=0, [LIBS=$oldLibs])
+fi
+AC_CHECK_FUNC(gethostbyname, , AC_CHECK_LIB(nsl, main, [LIBS="$LIBS -lnsl"]))
+
+AC_CHECK_LIB(dl, main, [LIBS="$LIBS -ldl"])
+
+dnl Do these checks in advance now, because declarations done by autoconf
+dnl might clash with those in the header files thus failing compilation
+AC_CHECK_FUNCS(bsearch dlsym door_create drand48 eaccess endmntent fsync getcwd getfsstat getipnodebyname getipnodebyaddr getmntent gettimeofday inet_ntoa inet_ntop inet_pton inet_aton isatty isnan lchown lfind lsearch madvise memmove mkfifo mktime mnt_names mntctl putenv qsort rand re_comp regcomp re_compile_pattern rint seed48 select setenv seteuid setreuid setresuid setegid setmntent setregid setresgid setitimer sighold sigrelse socket strcasecmp strncasecmp strcasestr strdup strerror strrstr strstr timer_create uname acl setacl chacl acl_set sys_errlist stat64 statfs statvfs unsetenv vsnprintf vsyslog grantpt unlockpt ptsname_r)
+
+AC_CHECK_PROG(ranlib, ranlib, ranlib)
+AC_PROG_LN_S
+
+dnl Checks for header files.
+
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+
+if test `uname` = "FreeBSD" ; then
+  if test -r /usr/include/values.h ; then
+    ac_cv_header_values_h=yes
+  else
+    ac_cv_header_values_h=no
+  fi
+fi
+
+dnl AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(arpa/inet.h fcntl.h intl/locale.h locale.h limits.h malloc.h mntent.h netinet/ip.h netinet/tcp.h netinet/in_systm.h pthread.h regex.h stdint.h string.h strings.h sys/acl.h sys/fs_types.h sys/ioctl.h sys/mman.h sys/mode.h sys/mntctl.h sys/mnttab.h sys/mount.h sys/mtio.h sys/param.h sys/ptyio.h sys/resource.h sys/select.h sys/statfs.h sys/statvfs.h sys/stropts.h sys/strtio.h sys/time.h sys/timers.h sys/ucred.h sys/vfs.h sys/vmount.h sys/wait.h termios.h termio.h time.h unistd.h values.h openssl/des.h zlib.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_STRUCT_ST_RDEV
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MEMCMP
+AC_TYPE_SIGNAL
+AC_FUNC_UTIME_NULL
+AC_FUNC_VPRINTF
+
+dnl Used by po/Makefile.in
+AC_PROG_INSTALL
+
+# This seems to have been forgotten for some strange reason
+#if test _"${gt_cv_func_gettext_libintl}" = _yes -o _"$ac_cv_lib_intl_bindtextdomain" = _yes ; then
+#  INTLLIBS="$INTLLIBS -lintl"
+#fi
+INTL_HEADER="$nls_cv_header_intl"
+AC_SUBST(INTL_HEADER)
+GT_YES=#YES#
+GT_NO=''
+AC_SUBST(GT_YES)
+AC_SUBST(GT_NO)
+
+AC_MSG_CHECKING(for sys_errlist declaration)
+AC_CACHE_VAL(ac_cv_decl_sys_errlist_def,
+[AC_TRY_COMPILE([
+#include <stdio.h>
+#include <errno.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif],[printf("%s",sys_errlist[0]);],
+ac_cv_decl_sys_errlist_def=yes, ac_cv_decl_sys_errlist_def=no)
+])
+AC_MSG_RESULT($ac_cv_decl_sys_errlist_def)
+if test $ac_cv_decl_sys_errlist_def = yes; then
+    AC_DEFINE(HAVE_SYS_ERRLIST_DEF)
+fi
+
+OPTIMIZE=-O2
+if test $ac_cv_prog_gcc = no -a `echo $osname|grep 'HPUX'|wc -l` -gt 0 ; then
+  EXTRACFLAGS="+Olibcalls -Ae -Dhpux -D__hpux -Dunix -Dnotdef"
+  OPTIMIZE=-O
+fi
+
+AC_CHECK_TYPE(signal_t, int)
+AC_CHECK_TYPE(int64_t, int)
+AC_CHECK_TYPE(int32_t, int)
+AC_CHECK_TYPE(int16_t, short int)
+AC_CHECK_TYPE(int8_t, signed char)
+AC_CHECK_TYPE(uint64_t, unsigned)
+AC_CHECK_TYPE(uint32_t, unsigned)
+AC_CHECK_TYPE(uint16_t, unsigned short)
+AC_CHECK_TYPE(uint8_t, unsigned char)
+dnl wasses net alles gibt
+AC_CHECK_TYPE(u_int64_t, unsigned)
+AC_CHECK_TYPE(u_int32_t, unsigned)
+AC_CHECK_TYPE(u_int16_t, unsigned short)
+AC_CHECK_TYPE(u_int8_t, unsigned char)
+
+AC_ARG_ENABLE(threads, [  --disable-threads       do not configure threads], 
+    if test "x$enable_threads" != xyes; then enable_threads=no; fi,
+    enable_threads=yes)
+
+if test $enable_threads = yes ; then
+  # cannot use pthread_create here, cause IRIX will fail compiling.
+  # Solaris has pthread functions in libc, but they don't work, so
+  # we have to check for libpthread or libthread FIRST.
+  # BTW the m4 autoconf syntax constraints are terrible.
+  AC_CHECK_LIB(pthread, pthread_join, libpthread=yes, libpthread=no)
+  if test $libpthread = yes ; then
+    AC_DEFINE(HAVE_PTHREAD_JOIN)
+    LIBS="$LIBS -lpthread"
+  else
+    AC_CHECK_LIB(thread, pthread_join, libthread=yes, libthread=no)
+    if test $libthread = yes ; then
+      LIBS="$LIBS -lthread"
+      AC_DEFINE(HAVE_PTHREAD_JOIN)
+    else
+      AC_CHECK_FUNC(pthread_join, libc=yes, libc=no)
+      if test $libc = yes ; then
+	AC_DEFINE(HAVE_PTHREAD_JOIN)
+      else
+	AC_MSG_CHECKING(for FreeBSD-like pthreads)
+	LIBS_BEFORE="$LIBS"
+	CPPFLAGS_BEFORE="$CPPFLAGS"
+	LIBS="$LIBS -pthread"
+	CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE"
+	AC_CACHE_VAL(ac_cv_decl_freebsd_pthreads,
+	[AC_TRY_LINK([
+#include <stdio.h>
+#include <errno.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif],[pthread_join();],
+	ac_cv_decl_freebsd_pthreads=yes, ac_cv_decl_freebsd_pthreads=no)
+	])
+	AC_MSG_RESULT($ac_cv_decl_freebsd_pthreads)
+	if test $ac_cv_decl_freebsd_pthreads = yes; then
+	  AC_DEFINE(HAVE_PTHREAD_JOIN)
+	  SYSDEFINES="$SYSDEFINES -D_THREAD_SAFE"
+	else
+	  LIBS="$LIBS_BEFORE"
+	  CPPFLAGS="$CPPFLAGS_BEFORE"
+	fi
+      fi
+    fi
+  fi
+fi
+
+AC_MSG_CHECKING(for environ array)
+AC_CACHE_VAL(ac_cv_decl_environ,
+[AC_TRY_COMPILE([
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+extern char ** environ;],[printf("%s",environ[0]);],
+ac_cv_decl_environ=yes, ac_cv_decl_environ=no)
+])
+AC_MSG_RESULT($ac_cv_decl_environ)
+if test $ac_cv_decl_environ = yes; then
+    AC_DEFINE(HAVE_ENVIRON)
+fi
+
+AC_CHECK_LIB(acl, acl_get_file, acl_get_file=yes, acl_get_file=no)
+if test $acl_get_file = yes ; then
+  LIBS="-lacl $LIBS"
+else
+  AC_CHECK_LIB(pacl, acl_get_file, acl_get_file=yes, acl_get_file=no)
+  if test $acl_get_file = yes ; then
+    LIBS="-lpacl $LIBS"
+  else
+    SAVED_LIBS="$LIBS"
+    LIBS="-lacl $LIBS"
+    AC_CHECK_LIB(attr, acl_get_file, acl_get_file=yes, acl_get_file=no)
+    if test $acl_get_file = yes ; then
+      LIBS="-lattr $LIBS"
+    else
+      LIBS="-lattr $SAVED_LIBS"
+      unset ac_cv_lib_acl_acl_get_file
+      AC_CHECK_LIB(acl, acl_get_file, acl_get_file=yes, acl_get_file=no)
+      if test $acl_get_file = yes ; then
+        LIBS="-lacl $LIBS"
+      else
+        LIBS="$SAVED_LIBS"
+        AC_CHECK_FUNC(acl_get_file, acl_get_file=yes, acl_get_file=no)
+      fi
+    fi
+  fi
+fi
+
+if test $ac_cv_func_acl_set != yes ; then
+  unset ac_cv_func_acl_set
+  AC_CHECK_LIB(sec, acl_set, ac_cv_func_acl_set=yes, ac_cv_func_acl_set=no)
+  AC_CHECK_FUNC(acl_set)
+  if test $ac_cv_func_acl_set = yes ; then
+    LIBS="$LIBS -lsec"
+  fi
+fi
+
+if test "$ac_cv_func_re_comp" != yes ; then
+    AC_CHECK_LIB(compat, re_comp, [LIBS="$LIBS -lcompat"])
+    unset ac_cv_func_re_comp
+    AC_CHECK_FUNCS(re_comp)
+fi
+DONT_OFFER_64_BIT="DONT_"
+if test "$ac_cv_func_stat64" = yes ; then
+    AC_DEFINE(_64_BIT_FILESIZE_)
+    DONT_OFFER_64_BIT=""
+fi
+AC_SUBST(DONT_OFFER_64_BIT)
+
+if test "$ac_cv_func_getmntent" = yes ; then
+  AC_MSG_CHECKING(for two-args getmntent)
+  AC_CACHE_VAL(ac_cv_two_args_getmntent,
+    AC_TRY_RUN([
+#include <stdio.h>
+#include <signal.h>
+void sigh(int sig){ exit(42); }
+main(){
+ FILE * fp; signal(SIGSEGV, sigh); signal(SIGBUS, sigh);
+ fp = fopen("/etc/passwd", "r"); /* file exists on every Unix */
+ getmntent(fp, (void*)1); /* segfault, if 2nd argument used */
+ exit(0);}],
+	ac_cv_two_args_getmntent=no, ac_cv_two_args_getmntent=yes))
+  AC_MSG_RESULT($ac_cv_two_args_getmntent)
+fi
+if test _"$ac_cv_two_args_getmntent" = _yes ; then
+  AC_DEFINE(HAVE_GETMNTENT_TWO_ARGS)
+fi
+
+if test "$ac_cv_func_statfs" = yes -a "$ac_cv_func_statvfs" = no ; then
+  AC_MSG_CHECKING(for f_bavail in struct statfs)
+  AC_CACHE_VAL(ac_cv_struct_stat_bavail,
+    AC_TRY_LINK([
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>	/* this one is for FreeBSD */
+#endif
+#include <sys/types.h>	/* this one is for SunOS-4 */
+#ifdef HAVE_SYS_VFS_H
+#include <sys/vfs.h>
+#endif
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+], [ struct statfs statfsb; statfsb.f_bavail; ],
+	ac_cv_struct_stat_bavail=yes, ac_cv_struct_stat_bavail=no))
+  AC_MSG_RESULT($ac_cv_struct_stat_bavail)
+else
+  ac_cv_func_statvfs=yes
+fi
+if test _"$ac_cv_struct_stat_bavail" = _yes ; then
+  AC_DEFINE(HAVE_STRUCT_STAT_BAVAIL)
+fi
+
+AC_MSG_CHECKING(for IPv6 implementation)
+AC_CACHE_VAL(ac_cv_struct_in6_addr,
+  AC_TRY_LINK([
+#include <netinet/in.h>
+], [ struct in6_addr in6; struct sockaddr_in6 sock6; ],
+	ac_cv_struct_in6_addr=yes, ac_cv_struct_in6_addr=no))
+AC_MSG_RESULT($ac_cv_struct_in6_addr)
+if test _"$ac_cv_struct_in6_addr" = _yes ; then
+  AC_DEFINE(HAVE_IP6)
+fi
+
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
+
+deftmpdir="/tmp"
+AC_ARG_WITH(tmpdir,
+    [   --with-tmpdir=DIR   temporary files in DIR [/tmp]],
+    [
+	if test "$withval"; then
+	    tmpdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-tmpdir
+ option.])
+	fi
+    ]
+)
+: ${tmpdir:="$deftmpdir"}
+tmpdir=`(
+    eval echo "$tmpdir"
+)`
+if test "$tmpdir" != "$deftmpdir" ; then
+  SYSDEFINES="$SYSDEFINES"' -DTMPDIR=\"'"$tmpdir"'\"'
+fi
+
+AC_SUBST(SYSDEFINES)
+
+AC_ARG_WITH(utilslibdir,
+    [   --with-utilslibdir=DIR   server configuration files in DIR [prefix/lib]],
+    [
+	if test "$withval"; then
+	    utilslibdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-utilslibdir
+ option.])
+	fi
+    ]
+)
+: ${utilslibdir:='$prefix/lib'}
+utilslibdir=`(
+    eval echo "$utilslibdir"
+)`
+AC_SUBST(utilslibdir)
+AC_ARG_WITH(utilsincdir,
+    [   --with-utilsincdir=DIR   server configuration files in DIR [prefix/include]],
+    [
+	if test "$withval"; then
+	    utilsincdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-utilsincdir
+ option.])
+	fi
+    ]
+)
+: ${utilsincdir:='$prefix/include'}
+utilsincdir=`(
+    eval echo "$utilsincdir"
+)`
+AC_SUBST(utilsincdir)
+AC_ARG_WITH(utilsbindir,
+    [   --with-utilsbindir=DIR   server configuration files in DIR [prefix/bin]],
+    [
+	if test "$withval"; then
+	    utilsbindir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-utilsbindir
+ option.])
+	fi
+    ]
+)
+: ${utilsbindir:='$prefix/bin'}
+utilsbindir=`(
+    eval echo "$utilsbindir"
+)`
+AC_SUBST(utilsbindir)
+
+prefixext=yes
+AC_ARG_WITH(prefixext,
+    [   --with-prefixext=YESNO extend prefix with /afbackup [yes]],
+    [
+	if test "$withval"; then
+	    prefixext="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-prefixext
+ option.])
+	fi
+    ]
+)
+subdir="/afbackup"
+if test $prefixext != "yes" ; then
+  subdir=""
+fi
+
+dnl *** server side ***
+AC_ARG_WITH(serverdir,
+    [   --with-serverdir=DIR   server installation in DIR [prefix/subdir/server]],
+    [
+	if test "$withval"; then
+	    serverdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-serverdir
+ option.])
+	fi
+    ]
+)
+: ${serverdir:='$prefix$subdir/server'}
+serverdir=`(
+    eval echo "$serverdir"
+)`
+AC_SUBST(serverdir)
+dnl *** serverbindir
+AC_ARG_WITH(serverbindir,
+    [   --with-serverbindir=DIR   server binaries in DIR [serverdir/bin]],
+    [
+	if test "$withval"; then
+	    serverbindir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-serverbindir
+ option.])
+	fi
+    ]
+)
+: ${serverbindir:='$serverdir/bin'}
+serverbindir=`(
+    eval echo "$serverbindir"
+)`
+AC_SUBST(serverbindir)
+dnl *** serverlibdir
+AC_ARG_WITH(serverlibdir,
+    [   --with-serverlibdir=DIR   server configuration files in DIR [serverdir/lib]],
+    [
+	if test "$withval"; then
+	    serverlibdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-serverlibdir
+ option.])
+	fi
+    ]
+)
+: ${serverlibdir:='$serverdir/lib'}
+serverlibdir=`(
+    eval echo "$serverlibdir"
+)`
+AC_SUBST(serverlibdir)
+dnl *** serverconfdir
+AC_ARG_WITH(serverconfdir,
+    [   --with-serverconfdir=DIR   server configuration files in DIR [serverdir/etc]],
+    [
+	if test "$withval"; then
+	    serverconfdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-serverconfdir
+ option.])
+	fi
+    ]
+)
+: ${serverconfdir:='$serverdir/etc'}
+serverconfdir=`(
+    eval echo "$serverconfdir"
+)`
+AC_SUBST(serverconfdir)
+dnl *** servervardir
+AC_ARG_WITH(servervardir,
+    [   --with-servervardir=DIR   variable server files in DIR [serverdir/var]],
+    [
+	if test "$withval"; then
+	    servervardir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-servervardir
+ option.])
+	fi
+    ]
+)
+: ${servervardir:='$serverdir/var'}
+servervardir=`(
+    eval echo "$servervardir"
+)`
+AC_SUBST(servervardir)
+dnl *** servermandir
+AC_ARG_WITH(servermandir,
+    [   --with-servermandir=DIR   variable server files in DIR [serverdir/man]],
+    [
+	if test "$withval"; then
+	    servermandir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-servermandir
+ option.])
+	fi
+    ]
+)
+: ${servermandir:='$serverdir/man'}
+servermandir=`(
+    eval echo "$servermandir"
+)`
+AC_SUBST(servermandir)
+dnl *** serverlogdir
+AC_ARG_WITH(serverlogdir,
+    [   --with-serverlogdir=DIR   server log files in DIR [serverdir/var]],
+    [
+	if test "$withval"; then
+	    serverlogdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-serverlogdir
+ option.])
+	fi
+    ]
+)
+: ${serverlogdir:='$serverdir/var'}
+serverlogdir=`(
+    eval echo "$serverlogdir"
+)`
+AC_SUBST(serverlogdir)
+
+dnl *** client side ***
+AC_ARG_WITH(clientdir,
+    [   --with-clientdir=DIR   client installation in DIR [prefix/subdir/client]],
+    [
+	if test "$withval"; then
+	    clientdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientdir
+ option.])
+	fi
+    ]
+)
+: ${clientdir:='$prefix$subdir/client'}
+clientdir=`(
+    eval echo "$clientdir"
+)`
+AC_SUBST(clientdir)
+dnl *** clientbindir
+AC_ARG_WITH(clientbindir,
+    [   --with-clientbindir=DIR   client binaries in DIR [clientdir/bin]],
+    [
+	if test "$withval"; then
+	    clientbindir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientbindir
+ option.])
+	fi
+    ]
+)
+: ${clientbindir:='$clientdir/bin'}
+clientbindir=`(
+    eval echo "$clientbindir"
+)`
+AC_SUBST(clientbindir)
+dnl *** clientlibdir
+AC_ARG_WITH(clientlibdir,
+    [   --with-clientlibdir=DIR   client configuration files in DIR [clientdir/lib]],
+    [
+	if test "$withval"; then
+	    clientlibdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientlibdir
+ option.])
+	fi
+    ]
+)
+: ${clientlibdir:='$clientdir/lib'}
+clientlibdir=`(
+    eval echo "$clientlibdir"
+)`
+AC_SUBST(clientlibdir)
+dnl *** clientvardir
+AC_ARG_WITH(clientvardir,
+    [   --with-clientvardir=DIR   variable client files in DIR [clientdir/var]],
+    [
+	if test "$withval"; then
+	    clientvardir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientvardir
+ option.])
+	fi
+    ]
+)
+: ${clientvardir:='$clientdir/var'}
+clientvardir=`(
+    eval echo "$clientvardir"
+)`
+AC_SUBST(clientvardir)
+dnl *** clientmandir
+AC_ARG_WITH(clientmandir,
+    [   --with-clientmandir=DIR   variable client files in DIR [clientdir/man]],
+    [
+	if test "$withval"; then
+	    clientmandir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientmandir
+ option.])
+	fi
+    ]
+)
+: ${clientmandir:='$clientdir/man'}
+clientmandir=`(
+    eval echo "$clientmandir"
+)`
+AC_SUBST(clientmandir)
+dnl *** clientlogdir
+AC_ARG_WITH(clientlogdir,
+    [   --with-clientlogdir=DIR   client log files in DIR [clientdir/var]],
+    [
+	if test "$withval"; then
+	    clientlogdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientlogdir
+ option.])
+	fi
+    ]
+)
+: ${clientlogdir:='$clientdir/var'}
+clientlogdir=`(
+    eval echo "$clientlogdir"
+)`
+AC_SUBST(clientlogdir)
+dnl *** clientconfdir
+AC_ARG_WITH(clientconfdir,
+    [   --with-clientconfdir=DIR   client log files in DIR [clientdir/etc]],
+    [
+	if test "$withval"; then
+	    clientconfdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientconfdir
+ option.])
+	fi
+    ]
+)
+: ${clientconfdir:='$clientdir/etc'}
+clientconfdir=`(
+    eval echo "$clientconfdir"
+)`
+AC_SUBST(clientconfdir)
+dnl *** rexecdir
+AC_ARG_WITH(rexecdir,
+    [   --with-rexecdir=DIR   binaries for remote execution in DIR [prefix/rexec]],
+    [
+	if test "$withval"; then
+	    REXECDIR="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-rexecdir
+ option.])
+	fi
+    ]
+)
+: ${REXECDIR:='$prefix$subdir/rexec'}
+REXECDIR=`(
+    eval echo "$REXECDIR"
+)`
+AC_SUBST(REXECDIR)
+dnl *** clientconf
+AC_ARG_WITH(clientconf,
+    [   --with-clientconf=NAME   NAME for client configuration [backup.conf]],
+    [
+	if test "$withval"; then
+	    clientconf="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-clientconf
+ option.])
+	fi
+    ]
+)
+: ${clientconf:=backup.conf}
+clientconf=`(
+    eval echo "$clientconf"
+)`
+AC_SUBST(clientconf)
+dnl *** serverconf
+AC_ARG_WITH(serverconf,
+    [   --with-serverconf=NAME   NAME for server configuration [backup.conf]],
+    [
+	if test "$withval"; then
+	    serverconf="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-serverconf
+ option.])
+	fi
+    ]
+)
+: ${serverconf:=backup.conf}
+serverconf=`(
+    eval echo "$serverconf"
+)`
+AC_SUBST(serverconf)
+dnl *** commondir
+AC_ARG_WITH(commondir,
+    [   --with-commondir=DIR   software for client and server will reside in DIR [prefix/common]],
+    [
+	if test "$withval"; then
+	    commondir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-commondir
+ option.])
+	fi
+    ]
+)
+: ${commondir:='$prefix$subdir/common'}
+commondir=`(
+    eval echo "$commondir"
+)`
+AC_SUBST(commondir)
+dnl *** commondatadir
+AC_ARG_WITH(commondatadir,
+    [   --with-commondatadir=DIR   architecture independent data for client and server will reside in DIR [commondir/share]],
+    [
+	if test "$withval"; then
+	    commondatadir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-commondatadir
+ option.])
+	fi
+    ]
+)
+: ${commondatadir:='$commondir/share'}
+commondatadir=`(
+    eval echo "$commondatadir"
+)`
+AC_SUBST(commondatadir)
+dnl *** commonshlibdir
+AC_ARG_WITH(commonshlibdir,
+    [   --with-commonshlibdir=DIR   architecture independent program text for client and server will reside in DIR [commondatadir/lib]],
+    [
+	if test "$withval"; then
+	    commonshlibdir="$withval"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-commonshlibdir
+ option.])
+	fi
+    ]
+)
+: ${commonshlibdir:='$commondatadir/lib'}
+commonshlibdir=`(
+    eval echo "$commonshlibdir"
+)`
+AC_SUBST(commonshlibdir)
+
+
+dnl DES stuff
+
+AC_CHECK_LIB(crypto, main, libcrypto=yes, libcrypto=no)
+
+def_des_include="../libdes"
+def_des_libdir=`echo $def_des_include|sed 's#/include$#/lib#g'`
+def_des_header=des.h
+def_des_ldflag=-ldes
+
+usedes=no
+
+AC_MSG_CHECKING(for usable openssl)
+
+if test $libcrypto = yes -a $ac_cv_header_openssl_des_h = yes ; then
+  usedes=yes
+
+  des_header="openssl/des.h"
+  des_ldflag="-lcrypto"
+  des_libdir="."
+  des_include="."
+
+  def_des_header="$des_header"
+  def_des_ldflag="$des_ldflag"
+  def_des_libdir="$des_libdir"
+  def_des_include="$des_include"
+fi
+
+AC_MSG_RESULT($usedes)
+
+AC_ARG_WITH(des,
+    [   --with-des   for client/server authentication [no]],
+    [
+	if test "$withval" -a "$withval" = no ; then
+	    usedes=no
+	else
+	    usedes=yes
+	    des_include="$def_des_include"
+	    des_libdir="$def_des_libdir"
+	    des_header="$def_des_header"
+	    des_ldflag="$def_des_ldflag"
+	fi
+    ]
+)
+
+AC_ARG_WITH(des-include,
+    [   --with-des-include=DIR   des header file in DIR [../libdes]],
+    [
+	if test "$withval"; then
+	    usedes=yes
+	    des_include="$withval"
+	    des_libdir=`echo "$des_include" | sed 's#/include$#/lib#g'`
+	    des_header=des.h
+	    des_ldflag=-ldes
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-des-include
+ option.])
+	fi
+    ]
+)
+
+AC_ARG_WITH(des-header,
+    [   --with-des-header=NAME   NAME is des header file [des.h]],
+    [
+	if test "$withval"; then
+	    usedes=yes
+	    des_header="$withval"
+	    des_ldflag=-ldes
+	    if test _"$des_include" = _ ; then
+		des_include=../libdes
+		des_libdir=`echo "$des_include" | sed 's#/include$#/lib#g'`
+	    fi
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-des-header
+ option.])
+	fi
+    ]
+)
+
+AC_ARG_WITH(des-libdir,
+    [   --with-des-libdir=DIR   des library is in DIR [../libdes]],
+    [
+	if test "$withval"; then
+	    usedes=yes
+	    des_libdir="$withval"
+	    des_ldflag=-ldes
+	    if test _"$des_include" = _ ; then
+		des_include=`echo "$des_libdir" | sed 's#/lib$#/include#g;s#/lib64$#/include#g' | sed 's#/lib/[^/]*$#/include#g'`
+	    fi
+	    if test _"$des_header" = _ ; then
+		des_header="des.h"
+	    fi
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-des-libdir
+ option.])
+	fi
+    ]
+)
+
+AC_ARG_WITH(des-ldflag,
+    [   --with-des-ldflag=LIB   des library is specified by LIB [-ldes]],
+    [
+	if test "$withval"; then
+	    usedes=yes
+	    des_ldflag="$withval"
+	    if test _"$des_include" = _ ; then
+		des_include=../libdes
+	    fi
+	    if test _"$des_header" = _ ; then
+		des_header="des.h"
+	    fi
+	    if test _"$des_libdir" = _ ; then
+		des_libdir=`echo "$des_include" | sed 's#/include$#/lib#g'`
+	    fi
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-des-ldflag
+ option.])
+	fi
+    ]
+)
+
+if test $usedes = "no" ; then
+  DESINCLUDEPATH=""
+  DESDEFINES=""
+  DESLIB=""
+  DESLIBPATH=""
+  DESHEADER=""
+  DESCRPT=""
+  DESCRYPT=""
+  DESCOMM="#"
+else
+  if test `echo $des_ldflag|grep '^lib'|wc -l` -gt 0 ; then
+    des_ldflag=`echo $des_ldflag|sed 's/^lib/-l/g;s/[.].*//g'`
+  fi
+
+  DESINCLUDEPATH="-I$des_include"
+  DESDEFINES="-DHAVE_DES_ENCRYPTION"
+  DESHEADER="$des_header"
+  DESLIBPATH="-L$des_libdir"
+  DESLIB="$des_ldflag"
+  DESCRPT="__descrpt"
+  DESCRYPT="descrypt"
+  DESCOMM=""
+fi
+
+AC_SUBST(DESDEFINES)
+AC_SUBST(DESINCLUDEPATH)
+AC_SUBST(DESLIBPATH)
+AC_SUBST(DESLIB)
+AC_SUBST(DESHEADER)
+AC_SUBST(DESCRPT)
+AC_SUBST(DESCRYPT)
+AC_SUBST(DESCOMM)
+
+OPENSSL_INC_FLAGS=""
+AC_CHECK_HEADERS(openssl/ssl.h)
+if test $ac_cv_header_openssl_ssl_h != yes ; then
+  for OPENSSLINC in `(echo /usr/kerberos/include ; echo $des_include ; echo $des_include | sed 's#/openssl/*$##g' ) | sort -u` ; do
+    OLD_CPPFLAGS="$CPPFLAGS"
+    AC_MSG_CHECKING(if openssl/ssl.h works with $OPENSSLINC)
+    AC_MSG_RESULT()
+    unset ac_cv_header_openssl_ssl_h
+    CPPFLAGS="$CPPFLAGS -I$OPENSSLINC"
+    AC_CHECK_HEADERS(openssl/ssl.h)
+    if test $ac_cv_header_openssl_ssl_h = yes ; then
+      OPENSSL_INC_FLAGS="-I$OPENSSLINC"
+      break
+    fi
+    CPPFLAGS="$OLD_CPPFLAGS"
+  done
+fi
+AC_SUBST(OPENSSL_INC_FLAGS)
+
+dnl zlib stuff
+
+AC_CHECK_LIB(z, main, libz=yes, libz=no)
+
+def_zlib_include="/usr/local/include"
+def_zlib_libdir=`echo $def_zlib_include|sed 's#include$#lib#g'`
+
+usezlib=no
+
+AC_MSG_CHECKING(for usable zlib)
+
+if test $libz = yes -a $ac_cv_header_zlib_h = yes ; then
+  usezlib=yes
+  zlib_libdir="."
+  zlib_include="."
+
+  def_zlib_libdir="$zlib_libdir"
+  def_zlib_include="$zlib_include"
+fi
+
+AC_MSG_RESULT($usezlib)
+
+AC_ARG_WITH(zlib,
+    [   --with-zlib   for builtin compression [no]],
+    [
+	usezlib=yes
+	zlib_include="$def_zlib_include"
+	zlib_libdir="$def_zlib_libdir"
+    ]
+)
+
+AC_ARG_WITH(zlib-include,
+    [   --with-zlib-include=DIR   zlib header file in DIR [/usr/local/include]],
+    [
+	if test "$withval"; then
+	    usezlib=yes
+	    zlib_include="$withval"
+	    zlib_libdir="$zlib_include"
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-zlib-include
+ option.])
+	fi
+    ]
+)
+
+AC_ARG_WITH(zlib-libdir,
+    [   --with-zlib-libdir=DIR   zlib library is in DIR [/usr/local/lib]],
+    [
+	if test "$withval"; then
+	    usezlib=yes
+	    zlib_libdir="$withval"
+	    if test _"$zlib_include" = _ ; then
+		zlib_include="$zlib_libdir"
+	    fi
+	else
+	    AC_MSG_WARN([*** You must supply an argument to the --with-zlib-libdir
+ option.])
+	fi
+    ]
+)
+
+AC_SUBST(commondir)
+AC_SUBST(commondatadir)
+AC_SUBST(commonshlibdir)
+
+
+if test $usezlib = "no" ; then
+  ZLIB_INCLUDEPATH=""
+  ZLIB_DEFINES=""
+  ZLIB_LIB=""
+  ZLIB_LIBPATH=""
+  ZIP=""
+else
+  ZLIB_INCLUDEPATH="-I$zlib_include"
+  ZLIB_DEFINES="-DUSE_ZLIB"
+  ZLIB_LIBPATH="-L$zlib_libdir"
+  ZLIB_LIB="-lz"
+  ZIP="__z"
+fi
+
+AC_SUBST(ZLIB_DEFINES)
+AC_SUBST(ZLIB_INCLUDEPATH)
+AC_SUBST(ZLIB_LIBPATH)
+AC_SUBST(ZLIB_LIB)
+AC_SUBST(ZIP)
+
+AC_ARG_WITH(strip,
+    [   --with-strip   strip binaries during installation [yes]],
+    [ ]
+)
+STRIP="strip"
+if test "$with_strip" = no ; then
+  STRIP="echo Not stripped: "
+fi
+
+AC_SUBST(STRIP)
+
+locspec=`echo $prefix|tr '/' '^'`
+AC_SUBST(locspec)
+
+AC_SUBST(EXTRACFLAGS)
+AC_SUBST(OPTIMIZE)
+
+AC_SUBST(osname)
+AC_SUBST(CC)
+
+HEADERS="regex.h limits.h values.h stdint.h openssl/ssl.h"
+for header in $HEADERS ; do
+  safeval=`echo "$header" | sed 'y%./+-%__p_%'`
+  uppersafeval=`echo $safeval|tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  VNAM=DONT_INC_$uppersafeval
+  eval $VNAM=DONT_
+  eval isset='$'ac_cv_header_$safeval
+  if test $isset = yes ; then
+    eval $VNAM=""
+  fi
+done
+TYPES="int64_t uint64_t int32_t uint32_t int16_t uint16_t int8_t uint8_t u_int64_t u_int32_t u_int16_t u_int8_t"
+for type in $TYPES ; do
+  safeval=`echo "$type" | sed 'y%./+-%__p_%'`
+  uppersafeval=`echo $safeval|tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  VNAM=DONT_TYPE_$uppersafeval
+  eval $VNAM=DONT_
+  eval isset='$'ac_cv_type_$safeval
+  if test $isset = yes ; then
+    eval $VNAM=""
+  fi
+done
+
+DONT_DECL_RE_UTILS="DONT_"
+DONT_DECL_POSIX_REGEX="DONT_"
+if test $ac_cv_func_re_compile_pattern != yes ; then
+  DONT_DECL_RE_UTILS=""
+fi
+if test $ac_cv_func_regcomp != yes ; then
+  DONT_DECL_POSIX_REGEX=""
+fi
+AC_SUBST(DONT_INC_REGEX_H)
+AC_SUBST(DONT_INC_LIMITS_H)
+AC_SUBST(DONT_INC_VALUES_H)
+AC_SUBST(DONT_INC_STDINT_H)
+AC_SUBST(DONT_INC_OPENSSL_SSL_H)
+AC_SUBST(DONT_TYPE_INT64_T)
+AC_SUBST(DONT_TYPE_INT32_T)
+AC_SUBST(DONT_TYPE_INT16_T)
+AC_SUBST(DONT_TYPE_INT8_T)
+AC_SUBST(DONT_TYPE_UINT64_T)
+AC_SUBST(DONT_TYPE_UINT32_T)
+AC_SUBST(DONT_TYPE_UINT16_T)
+AC_SUBST(DONT_TYPE_UINT8_T)
+AC_SUBST(DONT_TYPE_U_INT64_T)
+AC_SUBST(DONT_TYPE_U_INT32_T)
+AC_SUBST(DONT_TYPE_U_INT16_T)
+AC_SUBST(DONT_TYPE_U_INT8_T)
+AC_SUBST(DONT_DECL_RE_UTILS)
+AC_SUBST(DONT_DECL_POSIX_REGEX)
+
+AC_MSG_CHECKING(if long long int works and is 64 bit)
+AC_CACHE_VAL(ac_cv_long_long_int_is_64,
+AC_TRY_RUN([
+main(){
+  long long int l;
+ exit(sizeof(l) < 64 : 1 : 0);}],
+	ac_cv_long_long_int_is_64=no, ac_cv_long_long_int_is_64=yes))
+AC_MSG_RESULT($ac_cv_long_long_int_is_64)
+if test $ac_cv_long_long_int_is_64 = yes ; then
+  DONT_TYPE_INT64_IS_NOT_64=DONT_
+fi
+AC_SUBST(DONT_TYPE_INT64_IS_NOT_64)
+
+FUNCTIONS="strrstr strcasestr memmove qsort bsearch lsearch lfind rint isnan isatty re_comp eaccess"
+for function in $FUNCTIONS ; do
+  safeval=`echo "$function" | sed 'y%./+-%__p_%'`
+  uppersafeval=`echo $safeval|tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+  VNAM=DONT_DEF_$uppersafeval
+  eval $VNAM=DONT_
+  eval isset='$'ac_cv_func_$safeval
+  if test $isset != yes ; then
+    eval $VNAM=""
+  fi
+done
+AC_SUBST(DONT_DEF_STRRSTR)
+AC_SUBST(DONT_DEF_STRCASESTR)
+AC_SUBST(DONT_DEF_MEMMOVE)
+AC_SUBST(DONT_DEF_QSORT)
+AC_SUBST(DONT_DEF_EACCESS)
+AC_SUBST(DONT_DEF_BSEARCH)
+AC_SUBST(DONT_DEF_LSEARCH)
+AC_SUBST(DONT_DEF_LFIND)
+AC_SUBST(DONT_DEF_RINT)
+AC_SUBST(DONT_DEF_ISATTY)
+AC_SUBST(DONT_DEF_ISNAN)
+AC_SUBST(DONT_DEF_RE_COMP)
+
+
+DONT_INC_TIME_H=DONT_
+DONT_INC_SYS_TIME_H=DONT_
+if test $ac_cv_header_time_h ; then
+  DONT_INC_TIME_H=""
+fi
+if test $ac_cv_header_time = yes ; then
+  DONT_INC_TIME_H=""
+  DONT_INC_SYS_TIME_H=""
+else
+  if test $ac_cv_header_sys_time_h = yes ; then
+    DONT_INC_SYS_TIME_H=""
+  fi
+fi
+DONT_INC_SYS_TIMERS_H=DONT_
+if test $ac_cv_header_sys_timers_h = yes ; then
+  DONT_INC_SYS_TIMERS_H=""
+fi
+
+AC_SUBST(DONT_INC_TIME_H)
+AC_SUBST(DONT_INC_SYS_TIME_H)
+AC_SUBST(DONT_INC_SYS_TIMERS_H)
+
+DONT_USE_SOLARIS2_ACLS="DONT_"
+if test $ac_cv_header_sys_acl_h = yes -a $ac_cv_func_acl = yes ; then
+  DONT_USE_SOLARIS2_ACLS=""
+fi
+AC_SUBST(DONT_USE_SOLARIS2_ACLS)
+DONT_USE_NFS4_ACLS="DONT_"
+if test $ac_cv_header_sys_acl_h = yes -a $ac_cv_func_acl_set = yes ; then
+  DONT_USE_NFS4_ACLS=""
+fi
+AC_SUBST(DONT_USE_NFS4_ACLS)
+
+DONT_USE_HPUX10_ACLS="DONT_"
+if test $ac_cv_header_sys_acl_h = yes -a $ac_cv_func_setacl = yes ; then
+  DONT_USE_HPUX10_ACLS=""
+fi
+AC_SUBST(DONT_USE_HPUX10_ACLS)
+
+DONT_USE_POSIX_ACLS="DONT_"
+if test $ac_cv_header_sys_acl_h = yes -a $acl_get_file = yes ; then
+  DONT_USE_POSIX_ACLS=""
+  AC_CHECK_FUNC(acl_free_text, AC_DEFINE(HAVE_ACL_FREE_TEXT))
+  AC_CHECK_FUNC(acl_to_short_text, AC_DEFINE(HAVE_ACL_TO_SHORT_TEXT))
+fi
+AC_SUBST(DONT_USE_POSIX_ACLS)
+
+AC_SUBST(LDFLAGS)
+
+if test _"$USE_INCLUDED_LIBINTL" = _yes ; then
+  INCLUDES="$INCLUDES -I\${top_builddir}/intl"
+fi
+
+AC_SUBST(INCLUDES)
+
+CURWD=`pwd`
+AC_SUBST(CURWD)
+if test -d /etc/rc.d/init.d ; then
+  initrddir=/etc/rc.d/init.d
+elif test -d /sbin/init.d ; then
+  initrddir=/sbin/init.d
+elif test -d /etc/init.d ; then
+  initrddir=/etc/init.d
+else
+  initrddir=/etc
+fi
+AC_SUBST(initrddir)
+
+AU_PACKAGE=albiutils
+AC_SUBST(AU_PACKAGE)
+
+AC_OUTPUT(lconf.h budefs.h des_aux.h Makefile server.conf client.conf shwish.head xcc xsc xrs xss clientconfig serverconfig autocptapes afclient.8 cartis.8 cartready.8 afserver.8 afmserver.8 label_tape.8 cart_ctl.8 full_backup.8 incr_backup.8 afrestore.8 afverify.8 update_indexes.8 copy_tape.8 xafrestore.8 afclient.conf.8 afserver.conf.8 init.afbackup CONFIG intl/Makefile po/Makefile.in afbackup.spec postinstall albiutils.spec albiutils.proto)
+
+echo "$ARCH" > config.setup

@@ -1,0 +1,507 @@
+
+
+          Introduction to AF's Backup system
+          ==================================
+
+
+This file gives a short introduction into AF's backup system,
+it's architecture (wow !), the ideas behind it and how it can
+be used to serve the individual needs.
+
+
+Client-Server
+-------------
+
+It's a client-server system. The server is a machine that has
+access to some kind of storage media, usually a tape drive.
+This server side knows how to handle this device, how many
+cartridges are in use and what to do when a cartridge gets full
+or other special cases occur. What the server side does not
+know is anything that has to do with directory structures, files,
+attributes of the stored files or even their names. This is all
+handled on the client side. The server only knows data streams.
+The client demands from the server the functionality to pass it
+the next bunch of data from the tape, to write a packet to tape,
+to put in a certain cartridge and the server performs the actions
+which it can can. The client knows how to pack and unpack the
+files and directories and on which cartridges and files they are
+written and can be found. For this purpose it maintains file
+lists containing the names of all stored filesystem entries in a
+local directory. These filelists are not saved to the backup
+unless explicitly configured. Compression is done on the client
+side to reduce network traffic and to achieve more safety.
+If the packed stream had been compressed, a single wrong bit in
+the stream would make the whole rest of the backup useless. Thus
+the files are compressed individually on the client side.
+
+
+Server
+''''''
+
+Server Identification
+
+An afbackup server is addressed using one of it's hostnames and
+a port number. Two services can be configured for each afbackup
+server: a single stream and a multi stream server, each serving
+on a separate port. It's up to the client, which service it will
+use. The multi stream server can handle requests from several
+clients in parallel (only for saving, not for restore), thus
+multiplexing the data stream. This multiplexing requires some
+overhead, so the performance of the multi stream service can be
+expected worse than the single stream service. For full backups
+the single stream server might be preferred, but for incremental
+backups, where a client is spending most of the time searching
+for modified filesystem entries, the multi stream server might
+be the service to choose. Then the possibly several clients can
+scan their disks in parallel, sending the data to backup to the
+server as it is found.
+Because the two servers are using the same (sets of) tapes, an
+additional identifier is introduced to enable clients to figure
+out, that they are speaking to the same server through different
+services/ports. This together with the strongly recommended use
+of a host alias to address the server(s), makes for being able
+to move the backup service from one machine to another. Change
+the host alias to the other machine, connect the storage media
+to it, move over the afbackup installation and that's it. Of
+course the clients must see, that the host alias has changed,
+so a working name service is necessary.
+
+Storage Devices
+
+Any kind of streamer can be used with this backup system. The
+only restriction is that it must have a block- or character-
+device entry in the /dev-directory. The blocksize of the device
+must be set correctly in the server-side configuration.
+Besides streamers data can also be saved to filesystems.
+The configuration to do this is a little special and
+can be taken from Question 3 of the HOWTO.FAQ.DO-DONT.
+With streamers several tape cartridges can and should be used.
+There are two basic cases: Either you have a robot or you do not.
+If you do not have a robot, you must change the cartridges manually.
+The server supplies you with e-mail, whenever another cartridge
+should be put into the drive. Having done this, a special
+command (cartready) must be run on the server to let it know,
+that it can continue now.
+If you have a robot, but no special software (commands) to tell
+it which cartridge to insert into the drive, you must set the
+robot to sequential mode. That is, the robot puts the next tape
+into the drive once the current one is ejected. Such a mode is
+usually supported in which case the server ejects the cartridges
+out of the drive until the right tape is found.
+If you have commands to set the cartridge directly, you can
+configure them in the configuration file.
+
+Cartridges
+
+The cartridges are identified by numbers beginning with 1. Once
+they are in use, they automatically get a magnetic label that
+they keep until overwritten with a special command (label_tape).
+It is a good idea also to use adhesive labels and to write the
+numbers onto the tapes, so they can't be mixed up. The server
+recognizes if there is a tape in the drive that has the wrong
+label. What happens then depends on the cases mentioned above.
+If you have no robot, you get another email, that points you
+to the problem. If you have a robot in sequential mode, the
+server tries all cartridges it has and attempts to find the right
+one. If it finds a tape with the right label, this is used. If it
+does not, it stops and writes errors to the serverside error logfile.
+If you have a robot and commands to set the cartridge, and the
+robot inserts the wrong one, this is considered a severe problem
+and the server stops, again writing errors to it's error log. It
+then sends an email then waits for a maintainer to solve the problem
+and to allow the server to continue by issuing a command.
+Once all tapes of a set (for cartridge sets see the next section)
+have been used up, the server tries to start over with the first
+of the set, overwriting it. The server tracks what tapes are
+needed for clients to restore all their data. When full, these
+tapes are not overwritten until explicitly permitted or the data
+on them is no longer in any index file on a client. Tapes can be
+set to read-only state. The server will never write to tapes in
+this mode, not even in the variable append operating mode. In
+variable append mode, any tape of the correct cartridge set can
+be supplied to the streamer device and it will be accepted for
+writing. If the data on that tape is still needed by clients, the
+next data will be appended to the area on tape already written,
+otherwise the tape will be overwritten. If not in variable append
+mode, the next writing position commences from where writing stopped
+before. This can be overridden using the cartis command or the
+client-side option -G.
+More cartridges than the robot can juggle can be used. For this
+case see the HOWTO.FAQ.DO-DONT Q6.
+
+Cartridge Sets
+
+You can devide your cartridges into sets for several purposes.
+A set comprises of several cartridges, e.g. the cartridges
+number 1-3. There may be cartridges, that are not in any set
+and a cartridge must not be in more than one set. This would
+be a configuration error. Nonetheless if you have a robot, you
+must tell the backup system the number of cartridges, the robot
+is handling. The configuration parameter is named Cartridge-Sets.
+If you do not configure sets of cartridges, all of the available
+cartridges will be used as the one and only existing set. Which
+set to use, can be configured in the client side configuration
+file or overriding this setting by using commandline options
+(-S). Client access to tapes is handled on a per-set basis.
+Restrictions can be configured evaluating the client's official
+host name. If the server is unable to determine the client's
+hostname, access is denied, if a restriction is configured. If
+no restriction is configured, access is granted for any client.
+Clients must authenticate to operate a server, so this default
+behaviour is not to be considered a security issue. Attempts of
+answers to the question, why to use sets, can be found in the
+HOWTO.FAQ.DO-DONT Q4.
+
+Storage units
+
+This is a term used for the combination of a backup server's
+hostname, the port number to connect and a valid cartridge set
+number on this server. Several storage units can be configured
+on each client. When starting a backup, the client-side first
+checks the servers for availability one after the other and
+starts the backup to the first available one found. Running a
+restore the user or administrator does not have to remember,
+to which storage unit the backup went. This is all handled
+transparently.
+For each of the three client-side configuration parameters
+(server hostname, port number and cartridge set) several
+entries are now allowed. They are associated by position.
+For further information, see the HOWTO.FAQ.DO-DONT HOWTO Q9.
+
+Read and Write
+
+The read position can be requested by clients without any
+restriction assuming the client is granted access to the tape
+in question. With the write position it is different. By default
+the server continues to write at the position where the most
+recent write operation ended. This postition handling is maintained
+individually for each cartridge set. For each set the writing
+position is stored. Writing position means not only the cartridge
+used before, but also the number of the file on tape. Thus
+another tape is not started for each and every backup. The default
+behaviour can be changed to variable append mode. In this mode
+any tape in the right cartridge set with remaining space and not
+in read-only state can be supplied to the streamer device and be
+accepted for writing. If the tape is containing data needed by
+clients for restore, the next data is appended, otherwise the
+tape is reused and completely overwritten.
+The data stream is written to the tape in pieces (tape files) of
+a configurable maximum size. This is done to find the position
+faster, where certain data has been stored. The client knows for
+every file, on which cartridge the file is and in which tape file
+it can be found. Thus a restore of certain requested files is much
+faster than starting only one file for each backup, in the worst
+case using up a whole cartridge.
+
+Locking
+
+The server process generates a lockfile when starting to prevent
+several server processes to access the same tape drive. Nonetheless
+if several processes start, the one started later waits a confi-
+gurable time for the device to become available sending email
+after configurable intervals. Another lock is set for access to
+an autochanger if used.
+
+
+Client
+''''''
+
+Full and Incremental Backup, Backup Levels
+
+A full backup means, that everything requested is stored on the
+server. An incremental backup stores only these files and direc-
+tories, that have changed or are newer than the start of the
+previous full or incremental backup. For determining what has
+changed, the mtime in the inode is used by default. Additionally
+it is possible to configure, that also the inode change time
+(ctime) is evaluated. Why this might be done can be read from
+the HOWTO.FAQ.DO-DONT, Q2.
+Problems may arise if mechanisms are used that create files and
+directories while resetting the mtime to an earlier date and time
+(e.g. using tar -x or cpio -i). In these cases files are not saved
+during the next incremental backup.
+If a backup level is supplied, when running incr_backup, then
+everything is stored that has changed since the most recent
+run with a higher or equal level. Note, that other backup systems
+define levels the other way round: the lower the level number,
+the more is written to backup.
+The full backup can be divided into several parts. This is useful,
+for example, if the duration for backing up everything is too
+long for the intended time frame. If the full backup should run
+during the weekend, but the about 60 hours from friday evening
+to monday morning are not sufficient, this is a case for several
+parts. These can be configured by listing the files and directories
+for each part in different client-side configuration parameters.
+Before the parameter NumBackupParts must be set appropriately.
+
+Packing and Unpacking
+
+The client packs the files and directories and sends them to the
+server or receives a data stream from the server and unpacks it.
+If compression is requested, a configurable compression program
+can be used to process each packed file individually. The name of
+the appropriate uncompress-program is packed into the stream, so
+it needs not be supplied during restore. Nonetheless it must be
+ensured that compress and uncompress-programs exist within the
+search path of the client processes or are supplied with the full
+path.
+
+Filelists
+
+For each stored filesystem entry the client writes a line to a
+file containing the cartridge number where it can be found for
+restore, the tape file number and (since 2.9) the ID of the
+user owning the filesystem entry. This listfile resides locally
+in a filesystem on the client. It serves for determining, where
+the data for restore can be found on the server and to determine,
+whether a user is allowed to restore the corresponding file, if
+this possibility is configured (see HOWTO.FAQ.DO-DONT Q7).
+Each time a full backup is done, a new filelist is started.
+Incremental backups result in appending lines to this file.
+The filelist files are identified by the number of the full
+backup, that is increased continuously each full backup.
+A configurable number of such filelist files is kept for later
+use. The restore utility needs these lists when certain files
+are requested for restore. If these filelists get lost, you are
+in trouble. You should use the mechanism described in the next
+section to avoid this.
+
+Minimum restore information
+
+The minimum information to restore everything (the stored data
+and the filelists) is on which cartridges and in which tape files
+the data can be found. At each start of a full or incremental
+backup this information is passed to a configurable program that
+can read this information (a line of a special format) as the
+standard input. This program should write this to a place where
+it is safe from crashes of the local machine. One possibility
+is a NFS-mounted directory, another one is to send this
+information via email. This minimum information can be passed
+to the restore utility for restoring either everything or only
+the filelist files. The minimum restore information is not
+cumulative i.e. only the latest one is required. Without this
+minimum restore information, a tape scan is necessary to
+do emergency recovery (get everything back after a complete
+loss). This takes notably longer and can be avoided having
+this little string available when needed.
+If it is required to restore older backups or filelists that have been
+deleted, because they fell out of the configurable number of indexes
+to keep, the older minimum restore information can be used.
+So it is not a bad idea to store it together with the
+current date. This possibility requires, of course, that the
+tapes with the older backups have not been overwritten.
+
+Levels of Disaster / data loss
+
+There are several stages of recovery from loss of data depending
+on what information is still abailable and usable.
+* saved filesystem entries are lost on a client, but indexes
+  (filelists) are intact:
+    - (x)afrestore without options -e, -E
+    - uses index
+    - end user restore possible, if configured
+* index(es) lost, minimum restore information at hand:
+    - afrestore with option -e (probably first -f, if desired)
+    - pipe the minimum restore string into the program
+    - must be done by administrator (superuser)
+    - the minimum restore info is NOT (in) an index file,
+      it's the string starting with @@@===--->>>
+* index(es) lost, minimum restore information lost:
+    - afrestore with option -E
+    - supply number(s) of tapes probably having the most
+      recent minimum restore information
+    - must be done by administrator (superuser)
+    - if afbackup -E does not find anything: try to find the
+      minimum restore info on tape using dd(1), strings(1)
+      and grep for @@@===--->>> (in quotes, please) on the
+      tape
+* server broken:
+    - same procedure like for the client
+    - the server's latest version of the var-directory must
+      be restored before doing anything else
+See also HOWTO Q24 and the DO-DONT section for more details.
+
+
+Client-side program structure
+
+There is a three-layer program hierarchy on the client side. The
+program "afclient" in the client's binary directory performs
+the packing, unpacking and the communication with the server
+side. It does not read the configuration file and does not
+maintain the filelists described above. This is done by programs
+with higher functionality, that in turn call the "afclient" program
+setting it into different modes. The entry "afbackup" in the same
+directory is identical with "afclient". These higher level programs
+are full_backup, incr_backup, afrestore, afverify and a few more.
+afrestore in turn is used by the X11-frontend xafrestore. See HOWTO
+Q41 for more information about the architecture.
+
+
+How to use it
+-------------
+
+First a short summary, which program serves for what purpose,
+in order of estimated interest:
+
+client side:
+
+full_backup     runs a backup of all configured files/directories
+incr_backup     runs an incremental or level-X backup i.e. only
+                things modified since one of the previous backups
+                are saved
+afrestore       restore files/directories whose names are matching
+                given arguments
+xafrestore      an X11-frontend for afrestore
+afverify        compare the latest or an older backup with the
+                current status of the files/directories
+update_indexes  remove entries from the online file index, whose
+                corresponding tapes have been erased on the
+                server(s)
+copy_tape       make an identical copy of one tape to another
+                assigning a different secondary label number
+clientconfig    program to modify the client configuration
+                interactively, online help available
+xclientconfig   ditto, but as X11-program
+
+server side:
+
+afserver        the server program operating the tape and serving
+                one client at a time
+afmserver       the multiplexing frontend for afserver, possibly
+                serving several clients in parallel
+label_tape      to put a valid afbackup label to a tape or read it
+cart_ctl        in combination with a changer: handle tapes and
+                maintain their locations
+cartis          to change the writing position on tape manually
+                (use carefully !)
+cartready       to give manual hints to the server when requested
+                to perform some administrative action
+serverconfig    program to modify the client configuration
+                interactively, online help available
+xserverconfig   ditto, but as X11-program
+xserverstatus   displays the current status of the server and the
+                most recent entries of the serverside log
+
+For detailed information about the programs see the PROGRAMS file,
+the manual pages, and the HOWTO-FAQ, e.g. FAQ Q41
+
+Now a typical case is described. Individual needs can be
+satisfied by reading the rest of the documentation. Below are
+hints to configuration files for some typical cases that
+come with the distribution.
+
+Let us assume, you have a DAT-cartridge handler with 12 tapes
+connected to some machine without the possibility to set a
+cartridge directly via commandline interface. The first
+thing to do is set the robot to sequential mode. It is no bad
+idea to make this machine "fetch" the backup from the clients
+using a small script that is started via crond. Thus the
+first step is to setup this backup server. Unpack the
+distribution, run the Install script and select installation
+option number 1 for installing and configuring the server side.
+The last question to be answered is whether to run the
+serverside configuration program. Answer with yes, because we
+should do this now. Most entries can be accepted as they are,
+using the default value. You must know yourself Which device
+should be used (you have, of course, already done some archiving
+with tar to the connected streamer!). The blocksize can be looked
+up usually in the man-pages of rmt or tar. Set the parameter
+"CartridgeHandler" to 1 and the number of cartridges to 12.
+Because you must use the robot sequential mode, clear
+the "SetCartridgeCommand", if not already done entering the
+parameter number and a single space for the value. Set the
+"ChangeCartridgeCommand" to a command, that ejects a tape from
+the drive (usually mt -f %d rewoffl - the %d stands for the
+configured devicename, just for convenience, so that it need
+not to be typed in several times). The UserToInform-parameter
+should be set to some administrator, or group of administrators,
+that should receive important informations. The rest of the para-
+meters are quite self-explanatory. Use the online-help, the
+CONFIG and the HOWTO.FAQ.DO-DONT, if you don't know what they
+mean. Especially the CONFIG should provide valuable hints.
+Finish the server configuration by entering "ok".
+Now make the robot have cartridge number 1 present inside
+the streamer. If you do not want to do this or can't convince
+the device to do what you desire, run the following command:
+/the/path/to/server/bin/cartis <cartno>
+where <cartno> is the integer number specifying the cartridge
+currently present in the drive.
+
+Now install the client side on each client, that should do
+backups to the server. Again, unpack the distribution and
+run the Install script, choosing the installation option
+number 3 for client with remote start possibility. Again, all
+defaults should be ok, so the last question, whether to run
+the clientside configuration program can be confirmed.
+Reasonable defaults are present for each parameter. What you
+have to configure in any case are the files and directories,
+that are to be stored. Furthermore, the startup information
+program should be configured to a reasonable command (see above
+under "Minimum restore information" for details). If you
+are upgrading to a newer version and some of the parameters
+are not set, see the client.config (or server.config, respec-
+tively) of the current distribution for the defaults, that I
+consider sufficient for normal cases. This also might give you
+better ideas about what the parameters are good for.
+
+Finally write small scripts starting the backup one after the
+other on the clients (the server may off course also be a
+client). An example script is provided in the HOWTO.FAQ.DO-DONT
+under Q2. Just replace the list of hosts in the shell-variable
+BACKUPCLIENTS. Now add entries to root's crontab-file. Entering
+crontab -l > my_crontab
+as root writes the current crontab to the file my_crontab. E.g. to
+run a full backup each Friday evening and incremental
+backups each evening from Monday to Thursday (all at 8 pm), add
+these two lines:
+
+0 20 * * 5   /usr/backup/client/bin/full_backup_cycle
+0 20 * * 1-4 /usr/backup/client/bin/incr_backup_cycle
+
+assuming the named programs are the scripts you wrote according
+to the above description. Then run the command
+ crontab my_crontab
+to install the modified crontab file.
+
+That's it. Maybe, you want to start the first full backup manually
+to see whether everything is correctly installed and working.
+In this case just start the script yourself and watch, what
+happens. Especially watch the client- and server-side logfiles in
+/path/to/client/var/backup.log and /path/to/server/var/backup.log.
+
+
+Sample configuration files (Linux)
+
+server.conf.manual
+    For a streamer on /dev/nst0 without a changer, so tapes must be
+    changed manually
+
+server.conf.changer
+    For a streamer on /dev/nst0, changer on /dev/sg0 (run scsicheck
+    to find correct device), stacker has 7 slots, no loadport, copy
+    changer.conf.mtx to /path/to/server/lib/changer.conf
+
+server.conf.dir
+    For writing the backup to a filesystem (directory /var/backup)
+    using the directory option of (see:) HOWTO Q 3
+
+server.conf.dirsl
+    For writing the backup to a filesystem (directory /var/backup)
+    using the symlink option of (see:) HOWTO Q 3
+
+client.conf
+    client side configuration file, appropriate for many cases
+    (server hostname or alias must be backuphost, do adapt the
+    parameter DirsToBackup to what is really appropriate)
+
+
+----
+
+If this introduction together with the rest of the documentation
+is not sufficient, please let me know, but PLEASE give me
+instructive hints regarding what you are missing or what should
+be clarified.
+
+Albert Fluegel
+
+December 8, 2001

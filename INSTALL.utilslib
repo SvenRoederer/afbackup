@@ -1,0 +1,125 @@
+
+ AF's utilities library
+ ======================
+
+The utilities library, that is used in afbackup and soon other
+packages, can be installed as described in the following sections.
+It contains header files, a library and two utility scripts for
+determining the operating system version, if necessary.
+
+The header files are operating system independant, except for
+one, that will be placed in a subdirectory named like the
+output of the utility script prosname.sh . When using the
+library, make sure to insert this subdirectory before the
+directory itself into the include path
+   (e.g. -I/usr/local/include/Linux_2 -I/usr/local/include)
+
+For experienced people, to build and install in most cases the
+following three usual steps are necessary (on HP-UX preceded
+with ksh, for SunOS-4 get a bash and run bash ./configure ... ):
+
+./configure -prefix=/desired/install/prefix
+make x_utils
+make install.x_utils
+
+The first make prompts for a string to create a default hash
+for encryption functions. If a somewhat random default string
+is ok and user interaction unwanted, let the make read /dev/null
+i.e. run:
+ make x_utils </dev/null
+
+Detailed build and install instructions follow.
+See below for possible known problems.
+
+
+BUILD
+=====
+
+To build the library, it is necessary to run ./configure , like
+with all other software using autoconf. The following configure
+options can be supplied:
+
+-prefix=DIR (default: DIR=/usr/local)
+
+  The base directory for the headers, library and scripts.
+  The subdirectories bin, lib and include will be created,
+  if not yet existing.
+
+--with-utilsincdir (default: prefix/include)
+
+  The directory for the header files. A subdirectory named
+  like the output of the script prosname.sh will also be
+  created containing the only OS-dependant header file.
+
+--with-utilslibdir (default: prefix/lib)
+
+  The directory, that will contain the library, who is of
+  course OS-dependant. Therefore a subdirectory named like
+  the output of prosname.sh will be created and really
+  contain the library.
+
+--with-utilsbindir (default: prefix/bin)
+
+  The directory, that will contain utility scripts. If there
+  will be any OS-dependant binaries, too, they will be located
+  in a subdirectory
+
+--with-des (default: yes, if openssl is found, by configure)
+
+  Whether DES-encryption will be built in for the client-
+  server authentication routines. Requires Eric Young's
+  libdes-4.04b or higher. Selecting one or more of the
+  following --with-des-... options automatically selects
+  --with-des
+
+--with-des-header=HEADER (default: HEADER=openssl/des.h)
+
+  The (base-)name of the DES-Header file (without path)
+
+--with-des-include=INC (default: ../libdes)
+
+  The directory, where to find the DES-Header file
+
+--with-zlib (default: yes, if libz is found by configure)
+
+  Whether to build in compression capabilities for the
+  packer or more general file compression functions.
+  Selecting one or more of the following --with-zlib-...
+  options automatically selects --with-zlib
+
+--with-zlib-include=INC (default: INC=/usr/local/include)
+
+  The directory, where to find the zlib header zlib.h
+
+After having run configure type:
+
+make x_utils
+
+
+INSTALL
+=======
+
+To install the library, headers and scripts type
+
+make install.x_utils
+
+When building packages, that need these utilities, follow
+the instructions coming with the package.
+
+To build an RPM, please see the INSTALL file of afbackup.
+
+
+CAVEATS
+=======
+
+Changes in the encryption routines were necessary due to a bug
+in all libdes versions. Thus progrmams linked with this library
+are behaving differently now, what might break compatibility
+with earlier versions of the same program.
+Nonetheless it is possible to build the library using the buggy
+function, so backward compatibility for existing installations
+is provided. If the buggy function should be used, the following
+line must be appended to the file des_aux.h after the configure
+step:
+
+#define LIBDESBUG_COMPATIBILITY 1

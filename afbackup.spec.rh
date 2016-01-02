@@ -1,0 +1,329 @@
+# RPM for Redhat Enterprise 3 and above.
+
+Summary: Common files for the AF backup system
+Name: afbackup
+Version: 3.5.8.12
+Release: 1
+Source0: http://dl.sourceforge.net/sourceforge/afbackup/%{name}-%{version}.tar.gz
+URL: http://sourceforge.net/projects/afbackup/
+License: GPL
+Packager: Albert Fluegel (af@muc.de)
+Group: Applications/Archiving
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Summary: Client side of the AF backup system
+Group: Applications/Archiving
+Requires: openssl zlib tk
+BuildRequires: openssl zlib
+
+%description
+afbackup is a client-server backup system offering several workstations to
+perform a backup to a special central backup server.  Backing up only one
+computer is easily possible, too.  Any streaming device can be used
+for writing the data to, usually this will be a tape device, but hard 
+disks can be used, too.  Writing backups is normally done sequentially; data
+is appended after the end of the previous backup regardless of restore
+operations issued on other tapes in the meantime.
+
+Features:
+- Client is authenticated before being allowed to perform backup
+- Access restriction for the streamer device -> security
+- Client-side per-file compression -> reliability
+- Data stream is written to tape in chunks -> fast finding of files
+- Tape position logging for each file
+- Tape capacity is fully used
+- Full/incremental backups
+- Raw partitions can be backed up
+- Client and server use buffering for maximal throughput
+
+The afbackup client needs to be installed on all machines which have data 
+to back up.  It is started either via remote control or using a local cron 
+job, connects then to the server over the network and sends the data to be 
+backed up.
+
+%define osname Linux_%(uname -r | cut -d. -f1)
+
+%package server
+Summary: Server side of AF's backup system
+Group: Applications/Archiving
+Requires: openssl zlib xinetd tk
+Prereq: /usr/sbin/groupadd, /usr/sbin/useradd
+BuildRequires: openssl zlib
+
+%package devel
+Summary: Libraries containing miscellaneous utilities
+Group: Utilities
+Requires: openssl zlib
+
+%description server
+The afbackup server runs on the machine which offers storage (tape or 
+sometimes hard drive) for backups on your network. Any machines running
+backup clients contact the server in regular intervals and send data
+to store on the backup medium.
+
+%description devel
+A library containing many many utilities to make every day's live of a
+C programmer easier (libx_utils)
+
+
+%prep
+%setup -q
+
+./configure --prefix=%{_prefix} \
+	--without-prefixext \
+	--with-zlib \
+	--with-serverbindir=%{_sbindir} \
+	--with-serverlibdir=%{_libdir}/%{name} \
+	--with-serverconfdir=%{_sysconfdir}/%{name} \
+	--with-servervardir=%{_var}/lib/%{name}/server \
+	--with-servermandir=%{_mandir} \
+	--with-serverlogdir=%{_var}/log/%{name} \
+	--with-serverconf=server.conf \
+	--with-clientbindir=%{_sbindir} \
+	--with-clientlibdir=%{_libdir}/%{name} \
+	--with-clientconfdir=%{_sysconfdir}/%{name} \
+	--with-clientvardir=%{_var}/lib/%{name}/client \
+	--with-clientmandir=%{_mandir} \
+	--with-clientlogdir=%{_var}/log/%{name} \
+	--with-clientconf=client.conf \
+	--with-rexecdir=%{_sysconfdir}/%{name}/rexec \
+	--with-commondir=%{_libdir}/%{name} \
+	--with-commondatadir=%{_datadir} \
+	--with-commonshlibdir=%{_datadir}/%{name} \
+	--with-des \
+	--with-des-header=openssl/des.h \
+	--with-des-ldflag=-lcrypto
+
+%build
+make all < defkey
+
+%install
+test $RPM_BUILD_ROOT != / && rm -rf $RPM_BUILD_ROOT
+
+mkdir -p $RPM_BUILD_ROOT%{_var}/log/%{name}
+
+make install.client install.server install.rexeclinks install.userrestore install.x_utils install.devel \
+	SERVERBINDIR=$RPM_BUILD_ROOT%{_sbindir} \
+	SERVERCONFDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name} \
+	SERVERLIBDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{_libdir}/%{name} \
+	SERVERVARDIR=$RPM_BUILD_ROOT%{_var}/lib/%{name}/server \
+	SERVERMANDIR=$RPM_BUILD_ROOT%{_mandir} \
+	CLIENTBINDIR=$RPM_BUILD_ROOT%{_sbindir} \
+	CLIENTCONFDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name} \
+	CLIENTLIBDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{_libdir}/%{name} \
+	CLIENTVARDIR=$RPM_BUILD_ROOT%{_var}/lib/%{name}/client \
+	CLIENTMANDIR=$RPM_BUILD_ROOT%{_mandir} \
+	SERVERREXECDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name}/rexec \
+	COMMONDIR=$RPM_BUILD_ROOT%{_libdir}/%{name} \
+	COMMONDATADIR=$RPM_BUILD_ROOT%{_datadir} \
+	COMMONSHLIBDIR=$RPM_BUILD_ROOT%{_datadir}/%{name} \
+	SERVERINITDIR=$RPM_BUILD_ROOT%{_initrddir} \
+	UTILSINCDIR=$RPM_BUILD_ROOT%{_includedir} \
+	UTILSLIBDIR=$RPM_BUILD_ROOT%{_libdir} \
+	UTILSBINDIR=$RPM_BUILD_ROOT%{_sbindir} \
+	COMMONLIBDIR=$RPM_BUILD_ROOT%{_datadir}/%{name}/lib \
+	COMMONINCDIR=$RPM_BUILD_ROOT%{_datadir}/%{name}/include
+
+%find_lang %name
+
+%clean
+test $RPM_BUILD_ROOT != / && rm -rf $RPM_BUILD_ROOT
+
+%post
+%{_sysconfdir}/%{name}/.postinstall client
+
+if [ ! -f %{_var}/lib/%{name}/client/.i ] ; then
+  sed '	s@^ *Backup[-_ ]*Hosts*:.*$@Backup-Hosts:		localhost@1i' %{_sysconfdir}/%{name}/client.conf > %{_sysconfdir}/%{name}/client.conf.$$ \
+   && cat %{_sysconfdir}/%{name}/client.conf.$$ > %{_sysconfdir}/%{name}/client.conf \
+   && /bin/rm -f %{_sysconfdir}/%{name}/client.conf.$$
+  touch %{_var}/lib/%{name}/client/.i
+fi
+
+%preun
+/bin/rm -f %{_var}/lib/%{name}/client/.i
+
+# Only dismantle if the server package is gone, too
+if [ ! -f %{_sbindir}/afserver ] ; then
+  %{_sysconfdir}/%{name}/.preremove all
+fi
+
+%post server
+%{_sysconfdir}/%{name}/.postinstall server
+chown afbackup:0 %{_var}/lib/%{name}/server
+
+# Initially setup the configuration for saving in files
+# Base backup directory is %{_var}/lib/%{name}/server/backup/vol.1
+if [ ! -d %{_var}/lib/%{name}/server/backup ] ; then
+  mkdir -p %{_var}/lib/%{name}/server/backup/vol.1
+  chown afbackup:0 %{_var}/lib/%{name}/server/backup %{_var}/lib/%{name}/server/backup/vol.1
+  chmod 700 %{_var}/lib/%{name}/server/backup
+  ln -s vol.1 %{_var}/lib/%{name}/server/backup/vol
+  
+sed '	s@^ *Backup[-_ ]*Device:.*$@Backup-Device:		%{_var}/lib/%{name}/server/backup/vol@1i
+	s@^ *Tape[-_ ]*Blocksize:.*$@Tape-Blocksize:		8192@1i
+	s@^ *Cartridge[-_ ]*Handler:.*$@Cartridge-Handler:	1@1i
+	s@^ *Number[-_ ]*Of[-_ ]*Cartridges:.*$@Number Of Cartridges:	1000@1i
+	s@^ *Max[-_ ]*Bytes[-_ ]*Per[-_ ]*File:.*$@Max Bytes Per File:	10485760@1i
+	s@^[ #]*Max[-_ ]*Bytes[-_ ]*Per[-_ ]*Tape:.*$@Max Bytes Per Tape:	104857600@1i
+	s@^ *Cart[-_ ]*Insert[-_ ]*Gracetime:.*$@Cart-Insert-Gracetime:		0@1i
+	s@^ *Set[-_ ]*File[-_ ]*Command:.*$@SetFile-Command:	exit 0@1i
+	s@^ *Skip[-_ ]*Files[-_ ]*Command:.*$@SkipFiles-Command:	exit 0@1i
+	s@^[ #]*Set[-_ ]*Cart[-_ ]*Command:.*$@Set-Cart-Command:       /bin/rm -f %d ; mkdir -p %d.%n ; ln -s %d.%n %d ;  exit 0@1i
+	s@^ *Change[-_]*Cart[-_ ]*Command:.*$@Change-Cart-Command:	exit 0@1i
+	s@^[ #]*Erase[-_]*Tape[-_]*Command:.*$@Erase-Tape-Command:	/bin/rm -f %d/* ; exit 0@1i' \
+		%{_sysconfdir}/%{name}/server.conf > %{_sysconfdir}/%{name}/server.conf.$$ \
+   && cat %{_sysconfdir}/%{name}/server.conf.$$ > %{_sysconfdir}/%{name}/server.conf \
+   && /bin/rm -f %{_sysconfdir}/%{name}/server.conf.$$
+fi
+
+%preun server
+# If the backup data directory has not been used, remove it
+if [ -d %{_var}/lib/%{name}/server/backup ] ; then
+  rmdir %{_var}/lib/%{name}/server/backup/* >/dev/null 2>&1
+  DIRENTS=`/bin/ls %{_var}/lib/%{name}/server/backup`
+  if [ _"$DIRENTS" = _vol ] ; then
+    if [ `/bin/ls -ld %{_var}/lib/%{name}/server/backup/vol | cut -c1` = l ] ; then
+      /bin/rm -f %{_var}/lib/%{name}/server/backup/vol
+      rmdir %{_var}/lib/%{name}/server/backup
+    fi
+  fi
+fi
+
+# Only dismantle if the client package is gone, too
+if [ ! -f %{_sbindir}/afbackup ] ; then
+  %{_sysconfdir}/%{name}/.preremove all
+fi
+
+%files -f %{name}.lang
+%defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/client.conf
+%{_sysconfdir}/%{name}/.postinstall
+%{_sysconfdir}/%{name}/.preremove
+%doc CONFIG HOWTO FAQ DO-DONT INTRO README PROGRAMS
+%doc UPGRADE INSTALL INSTALL.utilslib LICENSE ChangeLog COPYING
+%dir %{_datadir}/%{name}
+%dir %{_sysconfdir}/%{name}
+%dir %{_var}/lib/%{name}
+%dir %{_var}/log/%{name}
+%{_datadir}/%{name}/aftcllib.tcl
+%dir %{_var}/lib/%{name}/client
+%{_sbindir}/afclient
+%{_sbindir}/afbackup
+%{_sbindir}/full_backup
+%{_sbindir}/incr_backup
+%{_sbindir}/afverify
+%{_sbindir}/copy_tape
+%{_sbindir}/afbackout
+%{_sbindir}/update_indexes
+%{_sbindir}/afrestore
+%{_sbindir}/afclientconfig
+%{_sbindir}/clientconfig
+%{_sbindir}/xafclientconfig
+%{_sbindir}/xclientconfig
+%{_sbindir}/xafrestore
+%{_sbindir}/xrestore
+%{_sbindir}/autocptapes
+%{_sbindir}/__packpats
+%{_sbindir}/__piper
+%if "@DESCRPT@"
+%{_sbindir}/__descrpt
+%endif
+%if "@ZIP@"
+%{_sbindir}/__z
+%endif
+%{_mandir}/man8/afclient.8*
+%{_mandir}/man8/afclient.conf.8*
+%{_mandir}/man8/afrestore.8*
+%{_mandir}/man8/afverify.8*
+%{_mandir}/man8/full_backup.8*
+%{_mandir}/man8/incr_backup.8*
+%{_mandir}/man8/update_indexes.8*
+%{_mandir}/man8/copy_tape.8*
+%{_mandir}/man8/xafrestore.8*
+
+%files server -f %{name}.lang
+%defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/server.conf
+%config(noreplace) %{_sysconfdir}/%{name}/changer.conf
+%{_sysconfdir}/%{name}/.postinstall
+%{_sysconfdir}/%{name}/.preremove
+%doc CONFIG HOWTO FAQ DO-DONT INTRO README PROGRAMS
+%doc UPGRADE INSTALL INSTALL.utilslib LICENSE ChangeLog COPYING
+%dir %{_datadir}/%{name}
+%dir %{_sysconfdir}/%{name}
+%dir %{_var}/lib/%{name}
+%dir %{_var}/log/%{name}
+%{_datadir}/%{name}/aftcllib.tcl
+%dir %{_var}/lib/%{name}/server
+%dir %{_sysconfdir}/%{name}/rexec
+%{_sbindir}/label_tape
+%{_sbindir}/cartready
+%{_sbindir}/afserver
+%{_sbindir}/afmserver
+%{_sbindir}/__mt
+%{_sbindir}/__inc_link
+%{_sbindir}/cart_ctl
+%{_sbindir}/cartis
+%{_sbindir}/changerready
+%{_sbindir}/afserverconfig
+%{_sbindir}/serverconfig
+%{_sbindir}/xafserverconfig
+%{_sbindir}/xserverconfig
+%{_sbindir}/xafserverstatus
+%{_sbindir}/xserverstatus
+%{_sbindir}/__numset
+%{_sbindir}/cartagehandler
+%{_mandir}/man8/afserver.8*
+%{_mandir}/man8/afmserver.8*
+%{_mandir}/man8/cartis.8*
+%{_mandir}/man8/cartready.8*
+%{_mandir}/man8/label_tape.8*
+%{_mandir}/man8/afserver.conf.8*
+%{_mandir}/man8/cart_ctl.8*
+%{_initrddir}/%{name}
+%{_sysconfdir}/%{name}/rexec/full_backup
+%{_sysconfdir}/%{name}/rexec/incr_backup
+%{_sysconfdir}/%{name}/rexec/afverify
+%{_sysconfdir}/%{name}/rexec/afrestore
+%{_sysconfdir}/%{name}/rexec/copy_tape
+%{_sysconfdir}/%{name}/rexec/update_indexes
+
+%files devel -f %{name}.lang
+%defattr(-,root,root)
+%dir %{_includedir}/%{osname}
+%dir %{_libdir}/%{osname}
+%dir %{_datadir}/%{name}
+%dir %{_datadir}/%{name}/include
+%dir %{_datadir}/%{name}/lib
+%if ""
+%dir %{_libdir}/%{osname}/gnuintl
+%{_libdir}/%{osname}/gnuintl/@INTLLIBS@
+%endif
+%{_libdir}/%{osname}/libx_utils.a
+%{_includedir}/crptauth.h
+%{_includedir}/fileutil.h
+%{_includedir}/mvals.h
+%{_includedir}/netutils.h
+%{_includedir}/afpacker.h
+%{_includedir}/genutils.h
+%{_includedir}/sysutils.h
+%{_includedir}/x_data.h
+%{_includedir}/x_defs.h
+%{_includedir}/x_errno.h
+%{_includedir}/x_regex.h
+%{_includedir}/x_timer.h
+%{_includedir}/x_types.h
+%{_includedir}/zutils.h
+%{_includedir}/albiapps.h
+%{_includedir}/lconf.h
+%{_includedir}/%{osname}/lconf.h
+%{_sbindir}/prosname.sh
+%{_sbindir}/prosspec.sh
+%{_datadir}/%{name}/include/afbackup.h
+%{_datadir}/%{name}/include/prot.h
+%{_datadir}/%{name}/include/budefs.h
+%{_datadir}/%{name}/include/server.h
+%{_datadir}/%{name}/lib/lib%{name}.a
+
+%changelog
+* Fri Dec 12 2011 Albert Fluegel <af@muc.de> 3.5.7
+- Re-lauch of spec file for redhat-like linux systems

@@ -1,0 +1,102 @@
+.TH UDF 8 "2002 April 1" "Debian Project"
+.SH NAME
+udf \- display filesystem characteristics
+.SH SYNOPSIS
+.B udf [-afUusbmdtch]
+[-F <formatstring>] [ {+|-}T <types> ] [ <directories>... ]
+.br
+.B udf 
+-\\?  
+.PP
+.SH DESCRIPTION
+udf displays characteristics of either all mounted
+filesystems (no directories argument given) or of those
+filesystems that the given files or directories are residing
+on. By default, filesystems of the determined type 'autofs', 'auto'
+or 'ignore' are not displayed. These can be made
+visible using the option -a of +T. If the -T option is supplied,
+the following list of filesystem types (separated by commas
+or space, what requires the argument to quoted in a line
+interpreted by a shell) is excluded from display. With +T
+and a following list only the filesystems having one of the
+given types are shown. The default output shows all determined
+values, that is: the mountpoint, the device, the filesystem
+type, the size of the
+filesystem, the current free space in the filesystem, the available
+space (free for normal users), the used space (the latter
+four in kilobytes), the used capacity in percent and the
+blocksize of the filesystem in bytes. If one or more of the flags
+-bcdfmstuU is supplied, only the respective
+values will be printed (see
+below under OPTIONS). The flag -h suppresses the header line
+containing the column names. If a different output format
+is desired, the -F option can be used. The formatstring is
+applied to every set of filesystem characterics replacing
+patterns with the real values. The patterns comprise of a
+percent sign % and a letter. The letters are the same like
+the option names when selecting certain values explicitely,
+e.g. %s will be replaced with the size of the filesystem.
+Many usual C-like backslash-escape sequences can be used in
+the formatstring, e.g. \\n for a newline. Also octal values
+can be given e.g. \\12. Note, that the formatstring must end
+in a newline character, if desired. A newline is not added
+automatically. Note furthermore, that the formatstring is
+also applied to the header line, if not suppressed using the
+flag -h .
+.SH OPTIONS
+.TP
+.B -a
+display all types of filesystems. Do not exclude filesystems
+of the determined types 'autofs', 'auto' or 'ignore'
+.TP
+.B -b
+display the blocksize of the filesystems in bytes
+.TP  
+.B -c
+display the used capacity of the filesystems in percent
+.TP
+.B -d
+display the device where each filesystem resides (host and
+directory in case of an NFS filesystem)
+.TP
+.B -F <formatstring>
+Instead of the default output, apply the given formatstring
+displaying the characteristics for each filesystem. Patterns
+in the formatstring are replaced with the determined values.
+A pattern consists of a percent sign % and a letter. The
+letters can be determined from the respective option (e.g.
+%s for the filesystem size). Many C-like backslash sequences
+are allowed in the format string, also octal values. The
+formatstring must end in a newline sequence (\\n), if output
+for each filesystem should be in a separate line.
+.TP  
+.B -f
+display the free space for each filesystem
+.TP
+.B -h
+do not display the header line containing the column names
+.TP
+.B -m
+show the mountpoints of the filessytems
+.TP  
+.B -s
+show the sizes of the filesystems in kilobytes
+.TP
+.B {+|-}T <types>
+<types> is a list of filesystem types, separated by commas
+or space. If -T is used, the given types are excluded from
+output. Using +T, only the characteristics of filesystems
+having one of the given types are printed
+.TP
+.B -t
+show the type of each filesystem
+.TP
+.B -U
+show the usable space in the filesystems available to normal users
+(not the superuser with user-ID 0, usually root)
+.TP
+.B -u
+show the usage of the filesystems in kilobytes
+.SH AUTHOR
+.B udf 
+was written by Albert Fluegel (af@muc.de)

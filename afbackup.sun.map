@@ -1,0 +1,101 @@
+# $Id: afbackup.sun.map,v 1.1 2004/07/08 20:34:48 alb Exp alb $
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/afbackup.sun.map,v $
+#
+# map file for solaris-2 packaging
+#
+d none usr/local/afbackup 0755 root root
+d none usr/local/afbackup/server 0755 root root
+d none usr/local/afbackup/server/man 0755 root root
+d none usr/local/afbackup/server/man/man8 0755 root root
+f none usr/local/afbackup/server/man/man8/afserver.8=root/afbackup/server/man/man8/afserver.8 0644 root root
+f none usr/local/afbackup/server/man/man8/afmserver.8=root/afbackup/server/man/man8/afmserver.8 0644 root root
+f none usr/local/afbackup/server/man/man8/cartis.8=root/afbackup/server/man/man8/cartis.8 0644 root root
+f none usr/local/afbackup/server/man/man8/cartready.8=root/afbackup/server/man/man8/cartready.8 0644 root root
+f none usr/local/afbackup/server/man/man8/label_tape.8=root/afbackup/server/man/man8/label_tape.8 0644 root root
+f none usr/local/afbackup/server/man/man8/cart_ctl.8=root/afbackup/server/man/man8/cart_ctl.8 0644 root root
+f none usr/local/afbackup/server/man/man8/afserver.conf.8=root/afbackup/server/man/man8/afserver.conf.8 0644 root root
+d none usr/local/afbackup/server/bin 0755 root root
+f none usr/local/afbackup/server/bin/afserver=root/afbackup/server/bin/afserver 0700 root root
+f none usr/local/afbackup/server/bin/afmserver=root/afbackup/server/bin/afmserver 0700 root root
+f none usr/local/afbackup/server/bin/cartready=root/afbackup/server/bin/cartready 0700 root root
+s none usr/local/afbackup/server/bin/changerready=cartready
+f none usr/local/afbackup/server/bin/cartis=root/afbackup/server/bin/cartis 0755 root root
+f none usr/local/afbackup/server/bin/label_tape=root/afbackup/server/bin/label_tape 0700 root root
+s none usr/local/afbackup/server/bin/cart_ctl=label_tape
+f none usr/local/afbackup/server/bin/__mt=root/afbackup/server/bin/__mt 0755 root root
+f none usr/local/afbackup/server/bin/__inc_link=root/afbackup/server/bin/__inc_link 0755 root root
+f none usr/local/afbackup/server/bin/afserverconfig=root/afbackup/server/bin/afserverconfig 0755 root root
+s none usr/local/afbackup/server/bin/serverconfig=afserverconfig
+f none usr/local/afbackup/server/bin/xafserverconfig=root/afbackup/server/bin/xafserverconfig 0755 root root
+s none usr/local/afbackup/server/bin/xserverconfig=xafserverconfig
+f none usr/local/afbackup/server/bin/xafserverstatus=root/afbackup/server/bin/xafserverstatus 0755 root root
+s none usr/local/afbackup/server/bin/xserverstatus=xafserverstatus
+f none usr/local/afbackup/server/bin/__numset=root/afbackup/server/bin/__numset 0755 root root
+f none usr/local/afbackup/server/bin/cartagehandler=root/afbackup/server/bin/cartagehandler 0755 root root
+d none var/adm/afbackup 0755 root root
+d none var/adm/afbackup/server 0755 root root
+s none usr/local/afbackup/server/var=/var/adm/afbackup/server
+d none usr/local/afbackup/server/lib 0755 root root
+f none usr/local/afbackup/server/etc/backup.conf=root/afbackup/server/etc/backup.conf 0644 root root
+#f none usr/local/afbackup/server/lib/changer.conf=root/afbackup/server/lib/changer.conf 0644 root root
+d none usr/local/afbackup/server/rexec 0755 root root
+s none usr/local/afbackup/server/rexec/full_backup=/usr/local/afbackup/client/bin/full_backup
+s none usr/local/afbackup/server/rexec/incr_backup=/usr/local/afbackup/client/bin/incr_backup
+s none usr/local/afbackup/server/rexec/afrestore=/usr/local/afbackup/client/bin/afrestore
+s none usr/local/afbackup/server/rexec/afverify=/usr/local/afbackup/client/bin/afverify
+s none usr/local/afbackup/server/rexec/copy_tape=/usr/local/afbackup/client/bin/copy_tape
+s none usr/local/afbackup/server/rexec/update_indexes=/usr/local/afbackup/client/bin/update_indexes
+d none usr/local/afbackup/common 0755 root root
+d none usr/local/afbackup/common/share 0755 root root
+d none usr/local/afbackup/common/share/locale 0755 root root
+d none usr/local/afbackup/common/share/locale/it 0755 root root
+d none usr/local/afbackup/common/share/locale/it/LC_MESSAGES 0755 root root
+f none usr/local/afbackup/common/share/locale/it/LC_MESSAGES/afbackup.mo=root/afbackup/common/share/locale/it/LC_MESSAGES/afbackup.mo 0644 root root
+d none usr/local/afbackup/common/share/locale/de 0755 root root
+d none usr/local/afbackup/common/share/locale/de/LC_MESSAGES 0755 root root
+f none usr/local/afbackup/common/share/locale/de/LC_MESSAGES/afbackup.mo=root/afbackup/common/share/locale/de/LC_MESSAGES/afbackup.mo 0644 root root
+d none usr/local/afbackup/common/share/lib 0755 root root
+f none usr/local/afbackup/common/share/lib/aftcllib.tcl=root/afbackup/common/share/lib/aftcllib.tcl 0644 root root
+d none usr/local/afbackup/client 0755 root root
+d none usr/local/afbackup/client/man 0755 root root
+d none var/adm/afbackup/client 0755 root root
+s none usr/local/afbackup/client/var=/var/adm/afbackup/client
+d none usr/local/afbackup/client/man/man8 0755 root root
+f none usr/local/afbackup/client/man/man8/afclient.8=root/afbackup/client/man/man8/afclient.8 0644 root root
+f none usr/local/afbackup/client/man/man8/afrestore.8=root/afbackup/client/man/man8/afrestore.8 0644 root root
+f none usr/local/afbackup/client/man/man8/afverify.8=root/afbackup/client/man/man8/afverify.8 0644 root root
+f none usr/local/afbackup/client/man/man8/full_backup.8=root/afbackup/client/man/man8/full_backup.8 0644 root root
+f none usr/local/afbackup/client/man/man8/incr_backup.8=root/afbackup/client/man/man8/incr_backup.8 0644 root root
+f none usr/local/afbackup/client/man/man8/copy_tape.8=root/afbackup/client/man/man8/copy_tape.8 0644 root root
+f none usr/local/afbackup/client/man/man8/update_indexes.8=root/afbackup/client/man/man8/update_indexes.8 0644 root root
+f none usr/local/afbackup/client/man/man8/xafrestore.8=root/afbackup/client/man/man8/xafrestore.8 0644 root root
+f none usr/local/afbackup/client/man/man8/afclient.conf.8=root/afbackup/client/man/man8/afclient.conf.8 0644 root root
+d none usr/local/afbackup/client/bin 0755 root root
+f none usr/local/afbackup/client/bin/afclient=root/afbackup/client/bin/afclient 0700 root root
+s none usr/local/afbackup/client/bin/afbackup=afclient
+f none usr/local/afbackup/client/bin/full_backup=root/afbackup/client/bin/full_backup 0700 root root
+s none usr/local/afbackup/client/bin/incr_backup=full_backup
+s none usr/local/afbackup/client/bin/afverify=full_backup
+s none usr/local/afbackup/client/bin/copy_tape=full_backup
+f none usr/local/afbackup/client/bin/afrestore=root/afbackup/client/bin/afrestore 4755 root root
+s none usr/local/afbackup/client/bin/update_indexes=afrestore
+s none usr/local/afbackup/client/bin/afbackout=afrestore
+f none usr/local/afbackup/client/bin/afclientconfig=root/afbackup/client/bin/afclientconfig 0755 root root
+s none usr/local/afbackup/client/bin/clientconfig=afclientconfig
+f none usr/local/afbackup/client/bin/xafclientconfig=root/afbackup/client/bin/xafclientconfig 0755 root root
+s none usr/local/afbackup/client/bin/xclientconfig=xafclientconfig
+f none usr/local/afbackup/client/bin/xafrestore=root/afbackup/client/bin/xafrestore 0755 root root
+s none usr/local/afbackup/client/bin/xrestore=xafrestore
+f none usr/local/afbackup/client/bin/autocptapes=root/afbackup/client/bin/autocptapes 0755 root root
+f none usr/local/afbackup/client/bin/__packpats=root/afbackup/client/bin/__packpats 0755 root root
+f none usr/local/afbackup/client/bin/__piper=root/afbackup/client/bin/__piper 0755 root root
+f none usr/local/afbackup/client/bin/__descrpt=root/afbackup/client/bin/__descrpt 0700 root root
+f none usr/local/afbackup/client/bin/__z=root/afbackup/client/bin/__z 0755 root root
+s none usr/local/afbackup/client/bin/backout=afbackout
+s none usr/local/afbackup/client/bin/restore=afrestore
+d none usr/local/afbackup/client/lib 0755 root root
+f none usr/local/afbackup/client/etc/backup.conf=root/afbackup/client/etc/backup.conf 0644 root root
+i pkginfo=pkginfo
+i postinstall=postinstall
+i preremove=postinstall
+i checkinstall=postinstall

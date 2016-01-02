@@ -1,0 +1,34 @@
+.TH CARTREADY 8 "2001 April 1" "Debian Project"
+.SH NAME
+cartready \- tell the tape server about cartridge changes
+.SH SYNOPSIS
+.B cartready
+(No arguments evaluated)
+.SH DESCRIPTION
+If you have no cartridge handling system, a human must put the
+next cartridge into the drive, if necessary. Then the backup-
+server must get a hint, when the maintainer has done it. This
+is achieved entering this command on the backup server host,
+after the new cartridge is inserted. Nonetheless the server
+process waits a certain timespan, until it accesses the drive
+the next time (See: "Cart-Insert-Gracetime" in 
+@serverlibdir@/@serverconf@).
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file
+.IP @serverlogdir@
+The directory for logging the server actions
+.IP @servervardir@
+Some internal state information of the server.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).
+

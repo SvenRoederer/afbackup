@@ -1,0 +1,590 @@
+#! /opt/bin/wish
+################### Start of $RCSfile: xsc.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/xsc.in,v $
+# $Id: xsc.in,v 1.7 2011/12/14 20:27:23 alb Exp alb $
+# $Date: 2011/12/14 20:27:23 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+set prefix "@prefix@"
+set TEXTDOMAIN "@PACKAGE@"
+set TEXTDOMAINDIR "@commondatadir@/locale"
+
+proc T_ { text } {
+  global TEXTDOMAIN TEXTDOMAINDIR
+
+  return [ INTL_gettext $text $TEXTDOMAIN $TEXTDOMAINDIR ]
+}
+
+proc TN_ { text } {
+  return $text
+}
+
+source "@commonshlibdir@/aftcllib.tcl"
+
+if { [ llength $argv ] > 1 } {
+  set usagestr [ T_ "Usage" ]
+  append usagestr [ TN_ ": " ] [ file tail $argv0 ] { [ <config-file> ]}
+  puts stderr $usagestr
+  exit 2
+}
+
+# user settable section
+
+set BACKUP_HOME_DEFAULT $env(BACKUP_HOME_DEFAULT)
+
+if { [ info exists env(BACKUP_HOME) ] } {
+  set BACKUP_HOME $env(BACKUP_HOME)
+}
+
+if { [ llength $argv ] == 1 } {
+  set configfile [ lindex $argv 0 ]
+} else {
+  set found 0
+  set configfiles "$BACKUP_HOME_DEFAULT/etc/backup.conf $BACKUP_HOME_DEFAULT/lib/backup.conf /etc/buserver.conf /etc/afbuserver.conf /etc/afserver.conf /etc/afbackup/server.conf"
+  lappend configfiles "@serverconfdir@/@serverconf@"
+  foreach configfile "$configfiles" {
+    if { [ file readable $configfile ] } {
+      set found 1
+      break
+    }
+  }
+
+  if { ! $found } {
+    puts stderr [ T_ "Error: Cannot read configuration file. Exiting." ]
+    exit 2
+  }
+}
+
+set configfile [ GFile_resolvePath $configfile ]
+
+set textwidth	[ T_ "server-config-description-label-width" ]
+if { $textwidth == "server-config-description-label-width" } {
+  set textwidth	28
+}
+set entrywidth	40
+
+set num_fix_params	37
+set num_var_sp_idx	0
+
+set comments(1) [ TN_ "\nSERVER SPECIFICATION\n\nThe identifier for the server" ]
+set comments(2) [ TN_ "\nDEVICE SPECIFICATION\n\nThe device name (No-Rewind-Version !)" ]
+set comments(3) [ TN_ "\nThe blocksize of the device" ]
+set comments(4) [ TN_ "\nSpecification of the tape buffer (size, high-, lowmark, filename)" ]
+set comments(5) [ TN_ "\nFlag, whether the device is a robot / cartridge handling system (0 or 1)" ]
+set comments(6) [ TN_ "\nInsert your number of cartridges, whether you have a robot or not" ]
+set comments(7) [ TN_ "\nThe specifiers of different cartridge sets, if requested.\nDefault is 1 set with cartridges ranging from 1 up to the\nprevious parameter. Specifiers of cartridge sets must be\nseparated by whitespace and may contain digits, commas and\ndashes. Examples: 1-3 4,8-10 6,7" ]
+set comments(8) [ TN_ "\nThe maximum number of bytes per file on tape" ]
+set comments(9) [ TN_ "\nThe maximum number of bytes per tape" ]
+set comments(10) [ TN_ "\nAppend also to explicitly deselected cartridges" ]
+set comments(11) [ TN_ "\nWrite to any supplied cartridge, that has space" ]
+set comments(12) [ TN_ "\nRefuse to write to tapes, that do not have a valid label" ]
+set comments(13) [ TN_ "\nPrefer writable cartridges available in a changer" ]
+set comments(14) [ TN_ "\nTime to wait from the moment, a new cartridge has been inserted\nuntil a new action is attempted on the tape device" ]
+set comments(15) [ TN_ "\nTime to wait while the device is unavailable until a mail is\nsent to the user in charge" ]
+set comments(16) [ TN_ "\nTime to wait while the device is unavailable until abort" ]
+set comments(17) [ TN_ "\nThe interval in seconds for probing, if device is ready, when\ninserting another cartridge is requested. 0 for no probing." ]
+set comments(18) [ TN_ "\nConfiguration file for a media changer" ]
+set comments(19) [ TN_ "\n\nSHELL-COMMANDS FOR TAPE HANDLING\n\nIn these commands %d is replaced by the device name,\n%n by the number, if within the command the count starts with 1,\n%m by the number, if the count starts with 0.\n\nCommand to set the file # on tape" ]
+set comments(20) [ TN_ "\nCommand to skip to the next %n-th file on tape" ]
+set comments(21) [ TN_ "\nIf there is a command to set the cartridge directly, supply it here" ]
+set comments(22) [ TN_ "\nIf the cartridges can only by changed successively, insert the\ncommand to change them here. This is also the command, that unloads\nthe tape, if you have no cartridge handler." ]
+set comments(23) [ TN_ "\nIf the media must be prepared for access in some way,\nthe appropriate command can be supplied here." ]
+set comments(24) [ TN_ "\nThe command to erase the tape. This is necessary on some systems." ]
+set comments(25) [ TN_ "\nCommand, that is called, when a tape is full." ]
+set comments(26) [ TN_ "\n\nCONFIGURATION FOR NON-EXISTING CARTRIDGE HANDLING SYSTEM\n\nThe user to inform, if a cartridge should be changed manually" ]
+set comments(27) [ TN_ "\nThe mail-program to use.\n\nInsert %u for the position, where the username has to appear,\n%U for the remote user, %H for the remote client host." ]
+set comments(28) [ TN_ "\n\nFILES TO SAVE THE STATE AND LOGGINGS\n\nDirectory for changing and persistent files" ]
+set comments(29) [ TN_ "\nFilename to save the current tape position" ]
+set comments(30) [ TN_ "\nFilename for error loggings etc." ]
+set comments(31) [ TN_ "\nFilename to write the current server status to" ]
+set comments(32) [ TN_ "\nLocking file to prevent several server starts" ]
+set comments(33) [ TN_ "\nLockfile for accessing a media changer" ]
+set comments(34) [ TN_ "\nThe file with the authentication encryption key" ]
+set comments(35) [ TN_ "\n\nCONFIGURATION FOR REMOTE_EXECUTION\n\nDirectory, where remotely started programs must reside" ]
+set comments(36) [ TN_ "\n\nSERVER-STARTUP AND SHUTDOWN ACTIONS\n\nshell-command to perform, when the server starts" ]
+set comments(37) [ TN_ "\nshell-command to perform, when the server exits" ]
+
+set names(1) {ServerIdentifier}
+set names(2) {Backup-Device}
+set names(3) {Tape-Blocksize}
+set names(4) {Tape-Buffer}
+set names(5) {Cartridge-Handler}
+set names(6) {Number Of Cartridges}
+set names(7) {Cartridge-Sets}
+set names(8) {Max Bytes Per File}
+set names(9) {Max Bytes Per Tape}
+set names(10) {Full Append Mode}
+set names(11) {Variable Append Mode}
+set names(12) {Reject Unlabeled Tapes}
+set names(13) {Prefer Cartridge in Changer}
+set names(14) {Cart-Insert-Gracetime}
+set names(15) {Device Unavail Send mail after min}
+set names(16) {Device Unavail give up after min}
+set names(17) {Device-Probe Interval}
+set names(18) {Changer-Configuration-File}
+set names(19) {SetFile-Command}
+set names(20) {SkipFiles-Command}
+set names(21) {Set-Cart-Command}
+set names(22) {Change-Cart-Command}
+set names(23) {Init-Media-Command}
+set names(24) {Erase-Tape-Command}
+set names(25) {Tape-Full-Command}
+set names(26) {User To Inform}
+set names(27) {Mail-Program}
+set names(28) {VarDirectory}
+set names(29) {Tape-Pos-File}
+set names(30) {Logging-file}
+set names(31) {Status-file}
+set names(32) {Lock-file}
+set names(33) {Changer-Lockfile}
+set names(34) {Encryption-Key-File}
+set names(35) {Program-Directory}
+set names(36) {Init-Command}
+set names(37) {Exit-Command}
+
+set patterns(1) {[Ss]erver[-_ \t]*[Ii]denti(ty|fier):?}
+set patterns(2) {[Bb]ackup[-_ \t]*[Dd]evi?c?e?s?:?}
+set patterns(3) {[Tt]ape[-_ \t]*[Bb]lock[-_ \t]*[Ss]ize:?}
+set patterns(4) {([Ss]treamer|[Tt]ape)[-_ \t]*[Bb]uffer:?}
+set patterns(5) {[Cc]artr?i?d?g?e?[-_ \t]*[Hh]andler:?}
+set patterns(6) {[Nn]umb?e?r?[-_ \t]*[Oo]f[-_ \t]*[Cc]artr?i?d?g?e?s[-_ \t]*:?}
+set patterns(7) {[Cc]artr?i?d?g?e?[-_ \t]*[Ss]ets[-_ \t]*:?}
+set patterns(8) {[Mm]axi?m?u?m?[-_ \t]*[Bb]ytes[-_ \t]*[Pp]er[-_ \t]*[Ff]ile:?}
+set patterns(9) {[Mm]axi?m?u?m?[-_ \t]*[Bb]ytes[-_ \t]*[Pp]er[-_ \t]*[Tt]apes?:?}
+set patterns(10) {([Ff]ull[-_ \t]*)?[Aa]ppend([-_ \t]*[Mm]ode)?:?}
+set patterns(11) {[Vv]ar(iable)?[-_ \t]*[Aa]ppend([-_ \t]*[Mm]ode)?:?}
+set patterns(12) {[Rr]eject[-_ \t]*[Uu]nlabeled([-_ \t]*[Tt]apes?)?:?}
+set patterns(13) {[Pp]refer[-_ \t]*[Cc]artr?i?d?g?e?s?[-_ \t]*[Ii]n[-_ \t]*[Cc]hanger:?}
+set patterns(14) {[Cc]artr?i?d?g?e?[-_ \t]*[Ii]nse?r?t?[-_ \t]*[Gg]race[-_ \t]*[Tt]ime:?}
+set patterns(15) {[Dd]evi?c?e?[-_ \t]*[Uu]n[Aa]vaila?b?l?e?[-_ \t]*[Ss]end[-_ \t]*[Mm]ail[-_ \t]*([Aa]fter[-_ \t]*)?[Mm]inu?t?e?s?:?}
+set patterns(16) {[Dd]evi?c?e?[-_ \t]*[Uu]n[Aa]vaila?b?l?e?[-_ \t]*[Gg]ive[-_ \t]*[Uu]p[-_ \t]*([Aa]fter[-_ \t]*)?[Mm]inu?t?e?s?:?}
+set patterns(17) {[Dd]evi?c?e?[-_ \t]*[Pp]rob(e|ing)[-_ \t]*[Ii]nterval:?}
+set patterns(18) {[Cc][Hh][Aa][Nn][Gg][Ee][Rr][-_ \t]*[Cc][Oo][Nn][Ff][Ii][Gg]([Uu][Rr][Aa][Tt][Ii][Oo][Nn])?[-_\t]*([Ff][Ii][Ll][Ee][-_ 	]*)?:?}
+set patterns(19) {[Ss]et[-_ \t]*[Ff]ile[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(20) {[Ss]kip[-_ \t]*[Ff]iles?[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(21) {[Ss]et[-_ \t]*[Cc]artr?i?d?g?e?[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(22) {[Cc]hange[-_ \t]*[Cc]artr?i?d?g?e?[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(23) {[Ii]nit[-_ \t]*[Mm]edia[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(24) {[Ee]rase[-_ \t]*[Tt]ape[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(25) {[Tt]ape[-_ \t]*[Ff]ull[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(26) {[Uu]ser[-_ \t]*[Tt]o[-_ \t]*[Ii]nfor?m?:?}
+set patterns(27) {[Mm]ail[-_ \t]*[Pp]rogram:?}
+set patterns(28) {[Vv][Aa][Rr][-_ \t]*[Dd]ire?c?t?o?r?y?:?}
+set patterns(29) {[Tt]ape[-_ \t]*[Pp]osi?t?i?o?n?[-_ \t]*[Ff]ile:?}
+set patterns(30) {[Ll]ogg?i?n?g?[-_ \t]*[Ff]ile:?}
+set patterns(31) {[Ss]tatus[-_ \t]*[Ff]ile:?}
+set patterns(32) {[Ll]ocki?n?g?[-_ \t]*[Ff]ile:?}
+set patterns(33) {[Cc][Hh][Aa][Nn][Gg][Ee][Rr][-_ 	]*[Ll][Oo][Cc][Kk]([Ii][Nn][Gg])?[-_ \t]*[Ff][Ii][Ll][Ee]:?}
+set patterns(34) {([Ee]n)?[Cc]rypti?o?n?[-_ \t]*[Kk]ey[-_ \t]*[Ff]ile:?}
+set patterns(35) {[Pp]rogram[-_ \t][Dd]ire?c?t?o?r?y?:?}
+set patterns(36) {[iI]niti?a?l?i?z?a?t?i?o?n?[-_ \t]*[Cc]o?mm?a?n?d:?}
+set patterns(37) {[eE]xit[-_ \t]*[Cc]o?mm?a?n?d:?}
+
+set prompts(1) [ TN_ "Server Identifier:" ]
+set prompts(2) [ TN_ "Streamer device (no-rewind):" ]
+set prompts(3) [ TN_ "Device Blocksize:" ]
+set prompts(4) [ TN_ "Tape Buffer Specification:" ]
+set prompts(5) [ TN_ "Cartridge handler:" ]
+set prompts(6) [ TN_ "Number of cartridges:" ]
+set prompts(7) [ TN_ "Cartridge Sets:" ]
+set prompts(8) [ TN_ "Max. number of bytes per file:" ]
+set prompts(9) [ TN_ "Max. number of bytes per tape:" ]
+set prompts(10) [ TN_ "Full Append Mode:" ]
+set prompts(11) [ TN_ "Variable Append Mode:" ]
+set prompts(12) [ TN_ "Reject unlabeled tapes:" ]
+set prompts(13) [ TN_ "Prefer Cartridges in Changer:" ]
+set prompts(14) [ TN_ "Cartridge change gracetime:" ]
+set prompts(15) [ TN_ "Device unav. send mail after:" ]
+set prompts(16) [ TN_ "Device unavail. abort after:" ]
+set prompts(17) [ TN_ "Device probing interval:" ]
+set prompts(18) [ TN_ "Changer-Configuration-File:" ]
+set prompts(19) [ TN_ "Set-file-command:" ]
+set prompts(20) [ TN_ "Skip-files-command:" ]
+set prompts(21) [ TN_ "Set-cartridge-command:" ]
+set prompts(22) [ TN_ "Change-cartridge-command:" ]
+set prompts(23) [ TN_ "Init-media-command:" ]
+set prompts(24) [ TN_ "Erase-tape-command:" ]
+set prompts(25) [ TN_ "Tape-full-command:" ]
+set prompts(26) [ TN_ "User to inform:" ]
+set prompts(27) [ TN_ "Mail program:" ]
+set prompts(28) [ TN_ "Var-Directory:" ]
+set prompts(29) [ TN_ "Tape-position savefile:" ]
+set prompts(30) [ TN_ "Logging-file:" ]
+set prompts(31) [ TN_ "Status-file:" ]
+set prompts(32) [ TN_ "Lock-file:" ]
+set prompts(33) [ TN_ "Changer-Lockfile:" ]
+set prompts(34) [ TN_ "Encryption-Key-File:" ]
+set prompts(35) [ TN_ "Program directory:" ]
+set prompts(36) [ TN_ "Init command:" ]
+set prompts(37) [ TN_ "Exit command:" ]
+
+for { set i 1 } { $i <= [ expr $num_fix_params + 2 ] } { incr i } {
+  set types($i) s
+}
+set types(5) b
+set types(10) b
+set types(11) b
+set types(12) b
+set types(13) b
+
+set helps(1) [ TN_ "The identifier for the server. Default: The official hostname, followed by a colon and the full path to the configuration file. The server identifier can be used to become independent of the server machine name. This might be helpful, if the backup server should move to another machine. Whitespace characters may be used in this identifier, but they are replaced with asterisks * before comparing, so they are not significant." ]
+set helps(2) [ TN_ "This is the device, the backup is written to. It can be any tape device with the capability to distinguish several files on the media. It is mandatory to supply the no-rewind device here. Otherwise this package won't work properly. This may also be the path of a directory. Then the backup is written to files in this directory. Suitable device names for some OS-es:\nAIX:          /dev/rmt0.1\nSolaris:      /dev/rmt/0bn\nIRIX:         /dev/rmt/tps0d4nr\nHP-UX:        /dev/rmt/0hn\nLinux:        /dev/nst0\nDigital UNIX: /dev/nrmt0h\nFreeBSD:      /dev/nsa0\nIf the drive has a media handler attached, a specifier for this may follow the device name. The format for this is =<drive-count>@<device>#<num-slots>^<num-loadbays>, for example =1@/dev/sg0#6^2 . Whitespace before and following the special characters = @ and # is allowed for readability. The example means: The drive is number 1 in the changer, /dev/sg0 is the changer device, that has 6 media slots and 2 loadbays. The parts =<drive-count> and ^<num-loadbays> are optional.\nIf the server is only used for remote start and no real backup device should be accessed, a dash - should be configured here as device, so a respective warning to the server log will be suppressed." ]
+set helps(3) [ TN_ "The blocksize of the tape device. This value specifies, how many bytes are written to tape or read from it in one system call. Usually this value is at least 512 or a multiple of it. It is not very important, whether the blocksize is set to 2048 or 1024. The main thing to keep in mind is that if there is a minimum, it should be respected (e.g. 1024 on AIX), otherwise media space is wasted." ]
+set helps(4) [ TN_ "Three numbers and a filename can be given here. The first number is the desired size of the tape buffer in bytes. The optional second number is the high-watermark while writing in percent (default: 67), the optional third number is the low watermark, also in percent (default: 0). As long as the buffer fill rate does not reach the high watermark, nothing is written, but when it is reached, writing does not stop until the buffer fill rate is equal or below the low watermark. This procedure hopefully reduces tape wear and increases average writing speed, because excessive tape stops/starts are avoided. If the optional filename is given, buffering is done in the given file, which is mapped into the server's address space for that purpose. In the filename, patterns are replaced like with Changer-Configuration-File (18)." ]
+set helps(5) [ TN_ "This value must be 1 or 0, what means, that you either have a cartridge handling system (i.e. some kind of robot) (1) or not (0). If you don't have a robot, you may nonetheless maintain a set of cartridges, that you have to number manually. The backup server side will inform you via email or console output, whenever another cartridge has to be inserted into the drive and what number it requires it is." ]
+set helps(6) [ TN_ "This number specifies, how many cartridges you are maintaining. If you have a cartridge handling system (some kind of robot), this is usually the number of cartridges, your system is juggling." ]
+set helps(7) [ TN_ "Several cartridge sets can be used. Here they can be specified. The specifiers for the cartridge sets must be separated by whitespace. Each specifier may consist of digits, commas and dashes. Examples for cartridge set specifiers: 1-5 7-9,12 6,10,11 This example shows how to specify three cartridge sets. If this parameter is not given, there is only the default set number 1 containing all available cartridges. Not all cartridges need to be included in a set and sets must not overlap. See the man-page of afserver.conf how to configure client access restrictions for cartridge sets individually." ]
+set helps(8) [ TN_ "The stream of data, that represents your backup, is divided into pieces (files on tape). This is done to find the files faster during a restore. This value determines, how large the pieces on tape may be in bytes. Some good values for a few tape technologies:\n  DAT:              30000000\n  Exabyte:          50000000\n  DLT:             100000000" ]
+set helps(9) [ TN_ "With this entry the number of bytes written to a single tape can be limited. Serveral entries with a leading range specifier allow to handle certain tapes differently. The range specifier must end in a colon : and may contain lists of ranges and numbers. A given number without a leading range specifier will be valid for all tapes not explicitly described. Default is use of full tape capacity. Several entries must be separated by whitespace and may look like the following examples: 4000000000 1,3-5:3500000000 7,9-:5000000000" ]
+set helps(10) [ TN_ "Normally, when the insert (writing) position is forced to another tape with the cartis command or with the clientside option -G, the rest of the current tape remains unused. When this option is set to 1, it will nonetheless be used to write data on, if there is no free tape left." ]
+set helps(11) [ TN_ "In default mode, the place (tape and tapefile), where the next data will be written, is fix and can only manipulated using the command cartis or the clientside option -G. When the server wants to write with variable append mode enabled, any cartridge, that is in the drive, is belonging to the right cartridge set and is allowed to be written, will be accepted and appended to. Note, that this will also override the settings of cartis or option -G." ]
+set helps(12) [ TN_ "Default is to accept an unlabeled tape as the requested one and to label it automatically. If this behaviour is unwanted and only tapes with a recognized label should be permitted for writing, this parameter should be set." ]
+set helps(13) [ TN_ "When a tape gets full and another one must be chosen to continue writing, the server does not make a difference, whether a tape is available in a changer or not, if this flag is not set. This is the default. If this parameter is set, the next cartridge is chosen from those, that are available in the slots of a changer, if present and configured. If there is no tape found inside the changer, that is allowed to be overwritten, manual administrator interaction is nonetheless required." ]
+set helps(14) [ TN_ "This is the time in seconds, the program waits after another cartridge has been put into the drive. Normal devices need a certain time span to mount the tape to get it ready for use. Normally this value is not critical. If you estimate it too low, the ioctl-system-call will wait until the device becomes available. This time is sometimes longer than two minutes, so if you want to proceed quickly after a cartridge change, you may measure the maximum time, your system needs. Some tried values for a few tape technologies:\n  DAT:         30\n  Exabyte:     70\n  DLT:         70" ]
+set helps(15) [ TN_ "If the streaming device is not accessible (i.e. an open or a tape handling command fails) or another backup server process is still running, the server process re-tries his attempts regularly. If it fails longer than the time in minutes supplied here, an e-mail is sent to the configured user in charge (see: User To Inform). Supplying 0 means: never send mail." ]
+set helps(16) [ TN_ "If the streaming device is not accessible (i.e. an open or a tape handling command fails), the server process re-tries his attempts regularly. If it fails longer than the time in minutes supplied here, it exits silently leaving a warning in the log file. Supplying 0 means: try forever, never exit." ]
+set helps(17) [ TN_ "This is the interval in seconds, after that regularly the device is probed to be ready for reading. Thus after having ejected a cartridge it is automatically recognized, if a new cartridge has been inserted. For other media (e.g. exchangeable disks) this may not be suitable. Supply a 0 in these cases for no probing." ]
+set helps(18) [ TN_ "If a media changer is available and it should be used, this is the file to configure it. It must contain specifications of the commands, that are driving the media changer. %L will be replaced with the full path of the lib-directory of the server, %B with the bin-directory, %C with the configuration directory and %V with the var-directory. See the manual pages of cart_ctl, how to setup the media changer operation." ]
+set helps(19) [ TN_ "This is the (shell-) command to run to position the tape to a certain file. Usually this is something like a combination of: mt -f <device> rewind  and  mt -f <device> fsf <number>. If the command you are supplying here starts to count with 1 for the first file on tape, you should insert %n for the <number>. If it starts with 0, replace <number> with %m. If you don't want to type the devicename again here, you may write %d instead. For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(20) [ TN_ "This is the (shell-) command to run to skip over to a file later on tape. Usually this is something like\nmt -f <device> fsf <number>\nInsert %n, where the number of files to skip over must be supplied in the command, in the example instead of <number>, and %d, where the device should appear (here: <device>). For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(21) [ TN_ "This is the (shell-) command to run to put a certain cartridge into the device. If the command you are supplying here starts to count with 1 for the first cartridge, you should insert %n in the place, where the cartridge number must appear. If it starts with 0, replace it with %m. If you don't want to type the devicename again here, you may write %d instead. If you don't have a command to perform this task, don't supply anything here. In this case you must set your cartridge handling system to sequential mode (automatically putting the next cartridge in, when the current one is ejected). For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(22) [ TN_ "This is the (shell-) command to run to eject a cartridge currently placed inside the streamer device. This is normally something like  mt -f <device> rewoffl  (but better consult your man-pages). You have to supply this either if you have no cartridge handling system (robot) or if you have no command to set the cartridge directly by number. In the latter case this package tries to maintain the number of the current cartridge in a file and to (hopefully) keep it consistent with the reality. In this case the cartridge handling system must be configured to sequential mode (automatically putting the next cartridge in, when the current one is ejected). The pattern %c, if used in this command, will be replaced with number of the current cartridge, %n with the number of the next one, that is expected to be put into the streamer by a robot in sequential mode after eject. %b can be used instead of %c if counting of cartridges starts with 0 and not with 1. The same applies for %m, what means %n minus 1. %d is replaced with the device name. %N is replaced with the configured total number of cartridges. For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(23) [ TN_ "The (shell-) command, the server runs before accessing the storage media for the first time or after changing it. %d will be replaced with the device. This command can be used e.g. to automatically mount a removable disk after inserting. This command might be called several times on the same media, this has to kept in mind when configuring it. %n is replaced with the number of the cartridge, that is expected to in the drive, when the next media access operation will take place. %m is replaced with %n - 1 i.e. assuming that the cartridge numbering starts with zero, not one. Note, that the cartridge, that will really be in the drive is not necessarily known at the time, the Init-Media-Command is running. Thus the term \"expected\". For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(24) [ TN_ "The (shell-) command to run, if the tape must be erased. (actually not needed). For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(25) [ TN_ "The (shell-) command to run, when a tape is full. %d is replaced with the device name, %c with the number of the cartridge, that became full, %n with the number of cycles, the cartridge has become full until now and %C with the full path to the configuration file. For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(26) [ TN_ "If you don't have a cartridge handling system (robot), a human maintainer must put the appropriate cartridge into the tape device. If you supply a mail program, an e-mail is sent to the user given here, which informs him, that and which cartridge (by number) must be put into the tape device. If a timespan is configured, after that an automatic e-mail should be sent due to an unaccessible tape device, it is directed to this user." ]
+set helps(27) [ TN_ "The mail program used to send messages to a human maintainer. This is done, whenever another cartridge must be put into the tape device and it can't be done automatically (by a robot or whatever). If you don't want to type the username again here, you can instead write %u . The pattern %U will be replaced with the login name of a current user on the client side, %H with the name of the client host. If none could be figured out, the entire word containing %U or %H is deleted from the command. For more pattern replacements see Changer-Configuration-File (18). If you don't want mails to be sent, you may instead supply any other command, that reads the standard input and does something reasonable with it, e.g. redirects it to the console:  cat > /dev/console" ]
+set helps(28) [ TN_ "The directory, where varying files should be put in. These files should not be deleted. The information they contain is necessary for the server to work properly." ]
+set helps(29) [ TN_ "In this file some values are stored, e.g. the number of the cartridge currently placed inside the streamer device. For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(30) [ TN_ "Logging information concerning errors or other notable events is redirected to this file. If the first word of this entry is starting with @, then logging is directed to the syslog as well. If there are characters immediately following the @, this word is used as the syslog identifier, otherwise the identifier is afbackup. If writing to the syslog is configured, the rest of the entry is used as additional logging file, if present. For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(31) [ TN_ "The current status of the server is written to this file. If it starts with >>, then the file is created and status messages will be appended to it. Otherwise the file is removed before writing. For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(32) [ TN_ "To prevent the server program from being started several times a lock file is created and this is it's name. For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(33) [ TN_ "The name of a file, that a lock is set on, when a media changer is accessed. This is to prevent concurrent access, what might result in inconsistencies in the cartridge database. For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(34) [ TN_ "Entries specifying files, that contain encryption keys for authenticating backup clients to the server. Each entry consists of a filename, optionally followed by a colon : and a specifier for client selection. If an entry lacks a client selector, this one will apply for all clients, that are not matched by any other entry. The client selector is either a list of comma-separated hostnames, a filename starting with a slash / containing hostnames one per line, or a command starting with a bar, that is stripped off before starting the command. The command gets the current client name as input on stdin, aside from arguments containing patterns (see below). If the command returns an exit status of 0, the client name will match the entry. Entries are separated by whitespace. If an entry must contain whitespace, it must be enclosed by double quotes. If colons are needed within the filenames, they must be escaped using a backslash. Each key file must contain at least 5 characters and must not have read permission for group or world. The pattern %H is replaced with the client name resolved from the IP-address. %h is similar to %H, but everything from and including the first dot is stripped off. For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(35) [ TN_ "If you are using the remote start option for backing up clients, this is the directory, where programs must reside, that can be started remotely. No other programs can be started remotely (for security reasons). For pattern replacements see Changer-Configuration-File (18)." ]
+set helps(36) [ TN_ "Here you may supply a (shell-) command to be run, when the backup server side wakes up, i.e. the server process starts. A %p appearing in this command is replaced with the name of the client, that connected the backup service. For more pattern replacements see Changer-Configuration-File (18)." ]
+set helps(37) [ TN_ "Here you may supply a (shell-) command to be run, when the backup server side goes to sleep, i.e. the server process ends. A %p appearing in this command is replaced with the name of the client, that connected the backup service. For more pattern replacements see Changer-Configuration-File (18)." ]
+
+# end of user settable section
+
+set var_param_idx [ expr $num_fix_params + 2 ]
+set fix_param_idx [ expr $num_fix_params + 1 ]
+
+proc replSubstring { string to_repl replacement } {
+  set new ""
+  set repllen [ string length $to_repl ]
+
+  while { $string != "" } {
+    set idx [ string first $to_repl $string ]
+    if { $idx >= 0 } {
+      append new [ string range $string 0 [ expr $idx - 1 ] ]
+      append new $replacement
+      set string [ string range $string [ expr $idx + $repllen ] end ]
+    } else {
+      append new $string
+      break
+    }
+  }
+
+  return $new
+}
+
+proc getparam { pat } {
+  global configfile
+
+  set pattern {^[ \t]*}
+  append pattern $pat
+  append pattern {[ \t]*}
+
+
+  set errfl [ catch { set fp [ open $configfile r ] } ]
+  if { $errfl } {
+    puts stderr [ format [ T_ "Error: Cannot open file `%s'.\n" ] $configfile ]
+    exit 0
+  }
+
+  while { [ gets $fp line ] >= 0 } {
+    if { [ regexp -indices $pattern $line i1 ] } {
+      close $fp
+      set idx [ expr [ lindex $i1 1 ] + 1 ]
+      return [ string trim [ string range $line $idx end ] ]
+    }
+  }
+
+  close $fp
+  return ""
+}
+
+for { set i 1 } { $i <= $num_fix_params } { incr i } {
+  set values($i) [ getparam $patterns($i) ]
+}
+if { $num_var_sp_idx > 0 } {
+  set num_var_params $values($num_var_sp_idx)
+} else {
+  set num_var_params 0
+}
+if { $num_var_params > 0 } {
+  if { $num_var_params > 1 } {
+    for { set i 0 } { $i < $num_var_params } { incr i } {
+      set l [ expr $num_fix_params + $i + 1 ]
+      set pattern [ replSubstring $patterns($var_param_idx) "#num#" [expr $i + 1] ]
+      set values($l) [ getparam $pattern ]
+    }
+  } else {
+    set values($fix_param_idx) [ getparam $patterns($fix_param_idx) ]
+  }
+}
+
+#
+# SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT
+#
+if { [ string trim $values(7) ] == "" } {
+  set sep ""
+  set lc [ getparam {[Ll]ast[-_ \t]*[Cc]artr?i?d?g?e?s[-_ \t]*:?} ]
+  set n [ llength $lc ]
+  for { set i 0 } { $i < $n } { incr i } {
+    set idx 1
+    for { set j 0 } { $j < $n } { incr j } {
+      set v1 [ lindex $lc $i ]
+      set v2 [ lindex $lc $j ]
+      if { $v2 < $v1 && $idx < $v2 + 1 } {
+	set idx [ expr $v2 + 1 ]
+      }
+    }
+    append values(7) $sep "$idx-$v1"
+    set sep " "
+  }
+}
+#
+# END OF SHIT END OF SHIT END OF SHIT END OF SHIT END OF SHIT END OF SHIT
+#
+
+
+proc what_now { } {
+  tk_dialog .help [ T_ "Help" ] [ T_ "Make all the modifications in the entry fields on the right side you need after clicking once into the desired field. To get help on a specific item press F1, F2 or Escape after clicking into the field." ] "" -1 [ T_ "Ok" ]
+}
+
+proc show_win { } {
+  global	num_fix_params values prompts num_var_sp_idx
+  global	var_param_idx fix_param_idx types num_var_params
+  global	textwidth entrywidth
+
+  if { $num_var_sp_idx > 0 } {
+    set num_var_params $values($num_var_sp_idx)
+  } else {
+    set num_var_params 0
+  }
+
+  catch { destroy .top }
+  frame .top
+  frame .top.mbar -relief raised -bd 2
+  menubutton .top.mbar.help -text [ T_ "Help" ] -underline 0 -menu .top.mbar.help.menu
+  menu .top.mbar.help.menu
+  .top.mbar.help.menu add command -label [ T_ "What now ?" ] -command what_now -underline 0
+  pack .top.mbar.help -side right
+  pack .top.mbar -in .top -side top -fill x
+
+  set num_rows [ expr ($num_fix_params + $num_var_params + 1) / 2 ]
+
+  frame .top.params
+  frame .top.params.lframe
+  frame .top.params.rframe
+  set itemno 0
+  for { set i 1 } { $i <= $num_fix_params } { incr i } {
+    incr itemno
+    if { $itemno <= $num_rows } {
+      set pw .top.params.lframe
+    } else {
+      set pw .top.params.rframe
+    }
+    frame $pw.line$i
+    label $pw.line$i.label -width $textwidth -text [ T_ $prompts($i) ]
+    case $types($i) in {
+      s {
+	entry $pw.line$i.value -width $entrywidth -textvariable values($i)
+      }
+      b {
+        if { [ regexp {[Yy]([Ee][Ss])?} $values($i) ] } {
+          set values($i) 1
+        }
+        if { [ regexp {[Nn][Oo]?} $values($i) ] } {
+          set values($i) 0
+        }
+	checkbutton $pw.line$i.value -onvalue 1 -offvalue 0 -variable values($i)
+      }
+    }
+    if { $i == $num_var_sp_idx } {
+      bind $pw.line$i.value <Return> show_win
+    }
+    bind $pw.line$i.value <F1> "help_on $i"
+    bind $pw.line$i.value <F2> "help_on $i"
+    bind $pw.line$i.value <Escape> "help_on $i"
+    pack $pw.line$i.label $pw.line$i.value  -side left -fill x
+    pack $pw.line$i -in $pw -side top -anchor w -fill x -expand 1
+  }
+
+  if { $num_var_params > 0 } {
+    if { $num_var_params > 1 } {
+      for { set i 0 } { $i < $num_var_params } { incr i } {
+        set l [ expr $num_fix_params + $i + 1 ]
+	if { ! [ info exists values($l) ] } {
+	  set values($l) ""
+	}
+
+	incr itemno
+	if { $itemno <= $num_rows } {
+	  set pw .top.params.lframe
+	} else {
+	  set pw .top.params.rframe
+	}
+        frame $pw.line$l
+        set prompt [ replSubstring [ T_ $prompts($var_param_idx) ] "#num#" [expr $i + 1] ]
+        label $pw.line$l.label -width $textwidth -text $prompt
+        case $types($var_param_idx) in {
+          s {
+	    entry $pw.line$l.value -width $entrywidth -textvariable values($l)
+          }
+          b {
+            if { [ regexp {[Yy]([Ee][Ss])?} $values($l) ] } {
+              set values($l) 1
+            }
+            if { [ regexp {[Nn][Oo]?} $values($l) ] } {
+              set values($l) 0
+            }
+	    checkbutton $pw.line$l.value -onvalue 1 -offvalue 0 -variable values($l)
+          }
+        }
+        bind $pw.line$l.value <F1> "help_on $l"
+        bind $pw.line$l.value <F2> "help_on $l"
+        bind $pw.line$l.value <Escape> "help_on $l"
+        pack $pw.line$l.label $pw.line$l.value  -side left -fill x
+        pack $pw.line$l -in $pw -side top -anchor w -fill x -expand 1
+      }
+    } else {
+      incr itemno
+      if { $itemno <= $num_rows } {
+	set pw .top.params.lframe
+      } else {
+	set pw .top.params.rframe
+      }
+      frame $pw.line$fix_param_idx
+      label $pw.line$fix_param_idx.label -width $textwidth -text [ T_ $prompts($fix_param_idx) ]
+      case $types($fix_param_idx) in {
+        s {
+	  entry $pw.line$fix_param_idx.value -width $entrywidth -textvariable values($fix_param_idx)
+        }
+        b {
+          if { [ regexp {[Yy]([Ee][Ss])?} $values($fix_param_idx) ] } {
+            set values($fix_param_idx) 1
+          }
+          if { [ regexp {[Nn][Oo]?} $values($fix_param_idx) ] } {
+            set values($fix_param_idx) 0
+          }
+	  checkbutton $pw.line$fix_param_idx.value -onvalue 1 -offvalue 0 -variable values($fix_param_idx)
+        }
+      }
+      bind $pw.line$fix_param_idx.value <F1> "help_on $fix_param_idx"
+      bind $pw.line$fix_param_idx.value <F2> "help_on $fix_param_idx"
+      bind $pw.line$fix_param_idx.value <Escape> "help_on $fix_param_idx"
+      pack $pw.line$fix_param_idx.label $pw.line$fix_param_idx.value  -side left -fill x
+      pack $pw.line$fix_param_idx -in $pw -side top -anchor w -fill x -expand 1
+    }
+  }
+
+  pack .top.params.lframe .top.params.rframe -side left -expand 1 -fill y
+  pack .top.params -in .top -side top -expand 1
+
+  frame .top.cmds
+  button .top.cmds.save -text [ T_ "Save" ] -command save_settings
+  button .top.cmds.cancel -text [ T_ "Exit" ] -command "exit 0"
+  pack .top.cmds.save .top.cmds.cancel -side left
+  pack .top.cmds -in .top -side top
+  pack .top
+}
+
+proc save_settings { } {
+  global	names values comments configfile num_var_sp_idx
+  global	fix_param_idx var_param_idx num_fix_params num_var_params
+
+  set errfl [ catch { set fp [ open $configfile w ] } ]
+
+  if { $errfl } {
+    tk_dialog .error [ T_ "Error" ] [ format [ T_ "Error: Cannot open file `%s' for writing." $configfile ] ] -1 [ T_ "Ok" ]
+    return
+  }
+
+  for { set i 1 } { $i <= $num_fix_params } { incr i } {
+    set comment "# "
+    append comment [ replSubstring [ T_ $comments($i) ] "\n" "\n# " ]
+    puts $fp $comment
+    if { [ string length [ string trim $values($i) ] ] == 0 } {
+      puts $fp "#$names($i):\t\t$values($i)"
+    } else {
+      puts $fp "$names($i):\t\t$values($i)"
+    }
+  }
+  if { $num_var_params > 0 } {
+    if { $num_var_params > 1 } {
+      for { set i 0 } { $i < $num_var_params } { incr i } {
+	set comment "# "
+	append comment [ replSubstring [ T_ $comments($var_param_idx) ] "\n" "\n# " ]
+	set comment [ replSubstring $comment "#num#" [ expr $i + 1 ] ]
+	set l [ expr $num_fix_params + 1 + $i ]
+	puts $fp $comment
+	set name [ replSubstring $names($var_param_idx) "#num#" [ expr $i + 1 ] ]
+	if { [ string length [ string trim $values($l) ] ] == 0 } {
+	  puts $fp "#${name}:\t\t$values($l)"
+	} else {
+	  puts $fp "${name}:\t\t$values($l)"
+	}
+      }
+    } else {
+      set comment "# "
+      append comment [ replSubstring [ T_ $comments($fix_param_idx) ] "\n" "\n# " ]
+      puts $fp $comment
+      if { [ string length [ string trim $values($fix_param_idx) ] ] == 0 } {
+	puts $fp "#$names($fix_param_idx):\t\t$values($fix_param_idx)"
+      } else {
+	puts $fp "$names($fix_param_idx):\t\t$values($fix_param_idx)"
+      }
+    }
+  }
+
+  close $fp
+}
+
+proc help_on { idx } {
+  global	helps num_fix_params var_param_idx values
+  global	fix_param_idx num_var_sp_idx num_var_params
+
+  if { $idx > $num_fix_params } {
+    if { $num_var_params > 1 } {
+      set num [ expr $idx - $var_param_idx + 2 ]
+      set msg [ replSubstring [ T_ $helps($var_param_idx) ] "#num#" $num ]
+    } else {
+      set msg [ T_ $helps($fix_param_idx) ]
+    }
+  } else {
+    set msg [ T_ $helps($idx) ]
+  }
+  set msg [ replSubstring $msg "\n" " " ]
+  set msg [ replSubstring $msg "\\" "\n" ]
+  GGUI_genericDialog .help [ T_ "Help" ] $msg "" -1 [ T_ "Ok" ]
+}
+
+show_win
+
+# Workaround for strange wish behaviour: window to small
+update idletasks
+set h [ winfo height .top.cmds.save ]
+if { $h < 20 } {
+  show_win
+}

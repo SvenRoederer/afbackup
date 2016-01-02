@@ -1,0 +1,35 @@
+Source: @PACKAGE@
+Section: unknown
+Priority: optional
+Maintainer: Albert Fluegel <af@muc.de>
+Build-Depends: debhelper (>= 7), autotools-dev, libssl-dev, tk, mawk, gettext
+Standards-Version: 3.8.3
+Homepage: http://www.sourceforge.net/projects/@PACKAGE@
+
+Package: @PACKAGE@
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, tk, gettext, mawk
+Description: Client side of AF backup system
+ @PACKAGE@ is a client-server backup system offering several workstations to
+ perform a backup to a special central backup server.  Backing up only one
+ computer is easily possible, too.  Any streaming device can be used
+ for writing the data to, usually this will be a tape device, but hard 
+ disks can be used, too.  Writing backups is normally done sequentially; data
+ is appended after the end of the previous backup regardless of restore
+ operations issued on other tapes in the meantime.
+ .
+ This @PACKAGE@ client needs to be installed on all machines which have data 
+ to back up.  It is started either via remote control or using a local cron 
+ job, connects then to the server over the network and sends the data to be 
+ backed up.
+ .
+ Features:
+ - Client is authenticated before being allowed to perform backup
+ - Access restriction for the streamer device -> security
+ - Client-side per-file compression -> reliability
+ - Data stream is written to tape in chunks -> fast finding of files
+ - Tape position logging for each file
+ - Tape capacity is fully used
+ - Full/incremental backups
+ - Raw partitions can be backed up
+ - Client and server use buffering for maximal throughput

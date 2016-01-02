@@ -1,0 +1,18 @@
+#!/bin/sh
+################### Start of $RCSfile: build_shwish,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/build_shwish,v $
+# $Id: build_shwish,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+cat shwish.head
+sed 's/\\\\/\\\\\\\\/g;s/\$/\\\$/g;s/`/\\\`/g' $1
+cat shwish.tail

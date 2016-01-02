@@ -1,0 +1,429 @@
+.TH AFCLIENT.CONF 8 "2001 April 1" "Debian Project"
+.SH NAME
+@clientconf@ \- client side configuration file for afbackup
+.SH DESCRIPTION
+This file needs not be edited by hand with an editor,
+instead the program @clientbindir@/afclientconfig
+can be used. If you are 
+running X, the programs are the same, but start with an 'x';
+(Tcl/Tk must be installed): 
+and @clientbindir@/xafclientconfig.
+The parameters described below are the same for both versions.
+Entries consist of lines starting with the parameter name,
+then follows a colon and the value of the parameter. Comment
+lines can be inserted as desired starting with the # character.
+.SH ENTRIES
+.TP
+ BackupHosts
+These are the hostnames of the machines where a server side
+of the backup service resides. Some kind of streamer device
+must be connected to these machines. The files and directories,
+that should be saved, are packed, eventually processed somehow,
+and then sent to the named machines, who writes them to the
+connected device. The named machines are tested for service
+availability. If a server is busy, the next one is tried.
+BackupPorts can be configured in the same order as the host
+entries supplied here. The servers in this list may be
+separated by whitespace and/or commas. If a backup server
+is the same host as the client, the use of the name localhost
+is encouraged.
+.TP
+.B BackupPorts
+These are the port numbers on the backup server machines, where
+the backup server processes listen. The default is 2988 or the
+number found in the file /etc/services (or in NIS if it is
+configured). Several ports can be supplied, positionally according
+to the backup server hosts supplied in the BackupHosts parameter.
+The numbers can be separated by whitespace and/or commas. If
+fewer numbers are supplied than backup servers, the default port
+2988 applies for the rest. If more port numbers are given, the
+superfluous ones are ignored.
+.TP
+.B CartridgeSets
+The cartridge sets on the server side to use for backups.
+They must bes legal number between 1 and the number of cartridge
+sets configured on the appropriate server side. Several sets can
+be supplied, positionally according to the backup server hosts
+supplied in the BackupHosts parameter. The numbers can be separated
+by whitespace and/or commas. If fewer numbers are supplied than
+backup servers, the default set # 1 applies for the rest. If more
+cartridge set numbers are given, the superfluous ones are ignored.
+.TP
+.B PrintServerMessages
+By default the server sends messages about current problems or
+required actions to a maintainer or, if determinable and configured,
+to the
+user on the client side. They cannot be seen as output on the
+client side. When this parameter is set, these messages are also
+output on the client side. The first word must consist of the
+letters b, v, r and c i.e. messages are output during backup,
+verify, restore, and/or copy-tape depending on what letters
+appear. The next fields must name the respective single stream
+server ports or service names according to the configured ports
+in BackupPorts, i.e. wherever a multi stream port appears in the
+configuration in BackupPorts, here the respective single stream
+service must be named. If not given the values default to
+the ones configured in BackupPorts. If this parameter is not properly
+configured, the messages might not be seen on the client side
+for technical reasons.
+.TP
+.B RootDirectory
+This is the directory, the backup client changes to before
+packing the files and directories. Their names should be
+supplied relative to this directory, e.g. ./home .
+.TP
+.B DirsToBackup
+These are the names of files and directories, that should be
+saved. Wildcards in the usual manner are allowed (shell-
+style or glob-style). They should be supplied relative to
+the working directory, the client changes to when starting.
+Descending into directories can be limited to the current
+filesystem by preceding the filename with the four
+characters .//. or the option -m (and a space). The prefix .//.
+is stripped off the name before saving. Supplying a filename
+preceded with the four characters /../ (what makes no sense
+normally) or the option -r (and a space) forces the file
+contents to be saved regardless of the file type. This way
+raw partitions or similar things can be saved. The prefix
+/../ is stripped off the name before saving. These file
+contents are by default never processed for safety reasons.
+If you want to force processing nonetheless, use //../ as
+prefix or precede the name with the option -R (and a space).
+To save the output of a command, supply (in double quotes) a
+triple bar |||, followed by a space and the command. Another
+triple bar must follow, after that another command doing the
+opposite of the first one. This command gets the data written
+by the first one as input at restore time. A triple sharp ###
+and a comment may follow.
+A command can be supplied here, whose output is read and used
+as if it were written here literally. If this is desired, the
+entry must start with a bar |, followed by a mandatory space
+and the shell-command to execute. If the pattern %T appears
+in this command, it is replaced with a specifier for the type
+of backup: F, if it's a full backup; F<N>, if the full backup
+is split into several parts with <N> being the part number,
+e.g. F2; I, if it's an incremental backup; L<N> for a level <N>
+backup e.g. L5
+.TP
+.B DirsToBackupX
+These are the names of files and directories, that should
+be saved as part X. Wildcards in the usual manner are
+allowed (shell-style or glob-style). They should be
+supplied relative to the working directory the client
+changes to when starting (See: RootDirectory). Descending
+into directories can be limited to the current filesystem by
+preceding the filename with the four characters .//. or
+the option -m (and a space). The prefix .//. is stripped
+off the name before saving. Supplying a filename preceded
+with the four characters /../ (what makes no sense normally)
+or the option -r (and a space) forces the file contents to
+be saved regardless of the file type. This way raw
+partitions or similar things can be saved. The prefix /../
+is stripped off the name before saving. These file contents
+are by default never processed for safety reasons. If you
+want to force processing nonetheless, use //../ as prefix
+or precede the name with the option -R (and a space). To
+save the output of a command, supply (in double quotes) a
+triple bar |||, followed by a space and the command. Another
+triple bar must follow, after that another command doing the
+opposite of the first one. This command gets the data written
+by the first one as input at restore time. A triple sharp ###
+and a comment may follow.
+A command can be supplied here, whose output is read and used
+as if it were written here literally. If this is desired, the
+entry must start with a bar |, followed by a mandatory space
+and the shell-command to execute. If the pattern %T appears
+in this command, it is replaced with a specifier for the type
+of backup: F, if it's a full backup; F<N>, if the full backup
+is split into several parts with <N> being the part number,
+e.g. F2; I, if it's an incremental backup; L<N> for a level <N>
+backup e.g. L5
+These parameters may only be supplied if the parameter
+NumBackupParts is set greater than 1 (!). Otherwise they
+must be commented out to prevent a mismatch.
+.TP
+.B FilesToSkip
+These are the names of files, that should not be saved.
+Wildcards in the usual manner are allowed (shell-style or
+glob-style, furthermore path-patterns in the style of GNU's
+find program with option -path. Note, that e.g. a*d matches
+ab/cd). E.g. it does not usually make much sense to back up
+object files, as they can be easily reproduced from existing
+program sources.
+.TP
+.B DirsToSkip
+These are the names of directories, that should not be saved.
+Wildcards in the usual manner are allowed (shell-style or
+glob-style, furthermore path-patterns in the style of GNU's
+find program with option -path. Note, that e.g. a*d matches
+ab/cd). E.g. it does not usually make much sense to back up
+the lost+found directory or such only containing object files,
+as they can be easily reproduced from existing program sources.
+.TP
+.B FilesystemTypes
+A list of filesystem types, separated by whitespace
+and/or commas. The type names can be prefixed
+with a plus, what is identical with no prefix,
+with a dash - or a slash / . No prefix or a plus
+means, that only files in filesystems of the
+given type are saved, no others. A minus means,
+files in a filesystem of the named type are not
+saved, nonetheless such filesystems are traversed
+to search for filesystems of other types probably
+mounted underneath. The slash means, that such
+filesystems are not even entered or traversed
+.TP
+.B ExcludeListFile
+A file with the name supplied here can be present in any
+directory. It should contain a list of file-/directory-names
+(or glob-style patterns), that should be skipped during backup.
+Each entry must be in an own line. The given names/patterns are
+valid only in the same directory, where the file resides. Thus
+each directory can have it's individual exclusion list."
+.TP
+.B WriteChecksums
+This flag specifies, whether CRC32 checksums are written to
+the backup or not. Checksumming costs performance but might
+be desired to achieve additional safety, that the recovered
+files are intact
+.TP
+.B UseCTime
+When this flag is set, not only a filesystem entry's modification
+time (mtime) is evaluated when selecting objects to store during
+incremental or a level X backup, but also the inode change time
+(ctime). In this mode the filesystem entries access time (atime)
+is not restored to the value it had before saving it, because
+that would again change the ctime, thus each incremental backup
+would result in a full backup
+.TP
+.B NumBackupParts
+If you have to backup a large amount of files and the
+full backup can't be done during one run (e.g. over a
+weekend), you can divide the full backup into pieces.
+This number determines, how many pieces you need. If
+this number is not equal to 1, you have to supply which
+files and directories you want to save in which piece.
+You do so by setting the parameters DirsToBackupX with X
+equal to the number of the backup part the files belong
+to.
+.TP
+.B ProcessCmd
+If you want your files to be processed during save (e.g.
+compressed), you can supply the name of the program that
+should perform the desired processing here. If you do so,
+you MUST also supply the appropriate unprocess- program.
+Note that this program may be specified with options but
+no shell-like constructions such as pipes, variables or
+wildcards. This program must read standard input and write
+to standard output. For pattern replacements see Logging File.
+.TP
+.B UnprocessCmd
+The counterpart to the process program. You must either
+supply both process- and unprocess-program or neither of
+them. Like the Process program, the unprocess-program must
+read standard input and write to standard output. For pattern
+replacements see LoggingFile.
+.TP
+.B Built-inCompressionLevel
+A number, that specifies the level of built-in compression, if
+present, otherwise no built-in compression will be performed.
+If a processing program is also specified, the order of processing
+is: First the data is piped through the external program and
+then built-in compression is done. Uncompressing works the other
+way round.
+.TP
+.B IndexFilePart
+The name of the file where the names of the saved files
+are stored. The current number is appended to this filename.
+The number is incremented each time a full backup starts.
+For pattern replacements see LoggingFile.
+.TP
+.B IndexProcessCmd
+The program to preprocess the index file, in most cases some kind of
+compression. If this parameter is not set, it defaults to the setting
+of the ProcessCmd. If you set it, you MUST also supply the
+appropriate unprocess- program. Note that this program may be
+specified with options but no shell-like constructions such as
+pipes, variables or wildcards. This program must read standard
+input and write to standard output. For pattern replacements see
+LoggingFile
+.TP
+.B IndexUnprocessCmd
+The counterpart to the index processing program. If not given, it
+defaults to the setting of the UnprocessCmd. You must either
+supply both process- and unprocess-program or neither of them.
+Like the index process program, the unprocess-program must read
+standard input and write to standard output. For pattern
+replacements see LoggingFile
+.TP
+.B ProcessBackupedFiles
+This flag specifies, whether the files, that are saved,
+should be processed by the configured processing program.
+.TP
+.B ProcessLogfiles
+This flag specifies, whether the filename logging files
+should be processed by the configured processing program.
+.TP
+.B DoNotProcess
+These patterns or filenames specify files, that no processing
+is attempted on. Normally this is done for all files. This
+might be unefficient, e.g. compressing files, that are already
+compressed, so their compression can be suppressed with this
+parameter. The value of this parameter must be a list separated
+by whitespace. Double quotes may enclose list elements.
+.TP
+.B NumIndexesToStore
+This number determines how many log files of previous full
+backups are saved. These files may serve for the restore
+of older files than those present in the current backup.
+Of course there must be sufficient space to hold all the
+data for the backups. It doesn't help to save all the
+saved filenames but not to have them available on tape.
+.TP
+.B DaysToStoreIndexes
+Instead of the number of index files to be kept (previous
+parameter), their maximum age can be configured in days
+(floating point number allowed). Older index files will
+be automatically removed. If this parameter is configured
+and the previous one at the same time, the longer duration
+will be applied to avoid accidental removal of indexes on
+configuration errors.
+.TP
+.B NumIndexesToScan
+This is the maximum number of index files, that will be
+scanned during restore. This can be helpful, if it takes
+too much time to scan through all index files, what is
+done, if restrictions are given, such as before time, after
+time or certain tapes. This parameter can be overridden by
+option -N of afrestore.
+.TP
+.B DaysToScanIndexes
+Instead of configuring the maximum number of index files
+to be scanned (previous parameter), their maximum age in
+days can be configured (floating point number allowed).
+This parameter can be overridden by option -O of afrestore.
+.TP
+.B CheckRestoreAccessPerms
+When this flag is set, during restore started by a normal
+user (not the superuser) it is checked, whether the user
+has sufficient access permissions in the directory, where
+the files are recovered. When relocating using option -C
+this is default behaviour. With this flag set it will be
+enforced also when not relocating. This has pros and cons.
+It might be desirable, that users can also restore their
+own files in directories owned by root (e.g. at-job files
+or the CDE calendar stuff). On the other side this might
+be considered a security problem.
+.TP
+.B LoggingFile
+The name of a file error messages or other notable events
+are written to. A dash - stands for no logging. The pattern
+%V will be replaced with the full path to the var-directory,
+%B with the bin directory, %L with the lib directory, %C with
+the configuration directory and %I with the logging directory
+(usually == %V)
+.TP
+.B ClientIdentifier
+The identifier for the client. Default: The official hostname.
+This entry is required, it several afbackup clients reside on
+one host and the multi stream server is used. In this case the
+multi stream server must be able to distinguish the clients to
+distribute the pieces of backup data on tape correctly.
+Otherwise the data would be mixed up and be unusable for the
+reading client.
+The multi-stream server writes the data to backup piecewise to
+tape, each chunk preceded with an identifier. This identifier
+is by default the official hostname of the connected client.
+If several client programs are running on the same client
+host, this procedure must fail. Any data prefixed with the
+name of the client would be delivered to the client program
+when reading (restore, verify, ...) and thus be a mixture of
+data previously sent to the server by both client programs
+with the same identifier (official hostname by default).
+For this reason the server denies to serve several connected
+clients with the same identifier. If several afbackup clients
+should be installed on one host, different client identifiers
+must be set in their configuration files.
+.TP
+.B VarDirectory
+The directory, where varying files should be put in.
+These files must not be deleted. The information they
+contain is necessary for restore.
+.TP
+.B EncryptionKeyFile
+The file containing the encryption key for authenticating
+the backup client to the server. This file must contain
+at least 5 characters and must not have read permission
+for group or world. For pattern replacements see LoggingFile.
+.TP
+.B LockFile
+To prevent client programs from being started several times
+a lock file is created and this is it's name.
+For pattern replacements see LoggingFile.
+.TP
+.B StartupInfoProgram
+This is the (shell-) command to run to save the startup
+information of an incremental or full backup, sometimes
+called bootstrap information. This program should read the
+standard input and do something reasonable with it, e.g.
+append it to some file. The produced information can be
+used to recover from a hard crash, when the files are
+lost, that are containing the names of the saved files.
+Therefore this information should not be saved locally on
+the client host, but e.g. on an NFS-mounted filesystem, a
+floppy disc or in a mail-file (then this command should
+be sth. like: mail someuser). For pattern replacements
+see LoggingFile.
+.TP
+.B InitProgram
+A (shell-) command to be run before a backup is attempted.
+If this program returns an exit status unequal to 0, no
+backup is performed. This parameter makes only sense when
+backup is started remotely, cause in that case no shell-
+command can be supplied. If backup is started locally, there
+is no problem to run whatever is necessery before the backup
+explicitly. For pattern replacements see LoggingFile.
+.TP
+.B ExitProgram
+This parameter may specify a (shell-) command to run at
+exit time of a full or incremental backup. The following
+patterns are replaced as explained:
+.B %l 
+by the name of the file containing the filelists
+.br
+.B %r
+by the name of the file containing statistics (this
+file is automatically removed after execution of this
+program)
+.br
+.B %e
+by the overall exit status
+.br
+.B %i
+with the minimum restore information
+.br
+For more pattern replacements see LoggingFile.
+Under very troublesome circumstances (e.g. several clients are
+trying to connect a busy single stream server and timeout, or a
+client program is killed) it might happen, that the ExitProgram
+is not executed. If you rely on the actions of the ExitProgram
+you better implement the desired functionality outside of the
+afbackup system.
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file
+.IP @serverlogdir@
+The directory for logging the server actions
+.IP @servervardir@
+Some internal state information of the server.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

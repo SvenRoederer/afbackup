@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# Instead of contructing even more magic around Debian's build system
+# this script does only the things that are actually required
+
+PACKAGE=`egrep '^Name:' afbackup.spec.rh | awk '{print $2}'`
+VERSION=`egrep '^Version:' afbackup.spec.rh | awk '{print $2}'`
+REPLPAT="sed s/@"'PACKAGE'"@/$PACKAGE/g;s/@"'VERSION'"@/$VERSION/g"
+
+# Prepare command to avoid packing the same files several times, what makes
+# dpkg -i fail on the server package, that requires the base package afbackup
+# anyway
+PREPARE_server="find debian -type f '(' -name aftcllib.tcl -o -name '*.gmo' -o -name '*.mo' ')' -exec rm {} ';'"
+
+# Exit on any failure - like make usually does
+set -e
+
+# Loop over the packages to build
+for PKG in :client -devel:devel -doc:"-" -server:server ; do
+  # the extension for the package name
+  PKGEXT=`echo "$PKG" | cut -d: -f1`
+  # The install.X target for make
+  INSTTARGET=`echo "$PKG" | cut -d: -f2`
+  # Start anew with an empty debian directory
+  /bin/rm -rf debian
+  mkdir -p debian
+  # Create the required files, but only those
+  for FILE in changelog compat control"$PKGEXT" docs menu README ; do
+    $REPLPAT";s/@"'DEBPACKAGE'"@/$PKGEXT/g" debian.tmpl/"$FILE" > debian/"$FILE"
+  done
+  if [ -r debian.tmpl/conffiles."$INSTTARGET" ] ; then
+    cp debian.tmpl/conffiles."$INSTTARGET" debian/conffiles
+  fi
+  # The control file must always be named control
+  if [ _ != _"$PKGEXT" ] ; then
+    mv debian/control"$PKGEXT" debian/control
+  fi
+  # for all packages except doc and devel, provide postinstall and preremove
+  echo "$PKG" | egrep '(doc|devel)' >/dev/null \
+   || (
+    cp postinstall debian/postinst
+    cp postinstall debian/prerm
+  )
+
+  if [ _"$INSTTARGET" != _- ] ; then
+    # Do the make install...
+    make install."$INSTTARGET" DESTDIR=`pwd`/debian/"$PACKAGE""$PKGEXT"
+
+#  dh_auto_install -v install."$INSTTARGET"
+    # If there's an init script for this package, copy it to debian with the
+    # expected name and remove it from the etc/init.d directory, where it had
+    # been created by make install... . This is necessary to keep the Debian
+    # build system from marking it as a configuration file. By default anything
+    # under /etc is marked a configuration file and thus not overwritten when
+    # updating the package
+    if [ -r debian.tmpl/init."$INSTTARGET" ] ; then
+      cp debian.tmpl/init."$INSTTARGET" debian/"$PACKAGE""$PKGEXT".init
+      /bin/rm -f debian/"$PACKAGE""$PKGEXT"/etc/init.d/*
+    fi
+    # Debian magic
+    dh_installmenu -v
+    eval PREP='"$'"PREPARE_$INSTTARGET"'"'
+    if [ _"$PREP" != _ ] ; then
+      eval "$PREP"
+    fi
+  fi
+  # More Debian magic
+  fakeroot dh_installdocs -v
+  fakeroot dh_installchangelogs -v
+  fakeroot dh_installdebconf -v
+  dh_compress -v
+  fakeroot dh_fixperms -v
+  fakeroot dh_installdeb -v
+  dh_installinit
+  fakeroot dh_gencontrol -v
+  fakeroot dh_md5sums -v
+  # finally create the package. It will reside in the parent directory
+  dh_builddeb -v
+done
+

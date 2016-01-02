@@ -1,0 +1,2 @@
+?package(@PACKAGE@):needs="X11|text|vc|wm" section="Applications/see-menu-manual"\
+  title="@PACKAGE@-restore" command="/usr/@PACKAGE@/bin/xafrestore"

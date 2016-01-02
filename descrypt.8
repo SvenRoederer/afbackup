@@ -1,0 +1,29 @@
+.TH DESCRYPT 8 "2001 May 3" "Debian Project"
+.SH NAME
+descrypt \- en-/decrypt data using a DES algorithm
+.SH SYNOPSIS
+.B descrypt [ -edw ] [ -k <cryptkeyfile> ]
+.SH DESCRIPTION
+descrypt reads stdin (filedescriptor 0) and writes stdout (fd 1).
+The read data is encrypted (decrypted with the -d option)
+using the 3DES algorithm (simple DES
+with option -w) in cipher chaining mode. The key is composed by
+reading bytes from the given cryptkeyfile. From each byte only
+the 6 least significant bits are used to build the key. Thus
+ASCII-files can be used without loss of significance by the limited
+character encoding range. If too
+few bytes can be read from the file to make up a complete 128 bit
+key (64 bit with option -w), the bytes are filled up with a
+constant value (0x5a). To make a full 128 bit key, 23 bytes are
+needed from the cryptkeyfile, for a 64 bit key it's 11 bytes.
+If no keyfile is supplied, a built in constant key is used.
+
+The reason, why this command exists, is, that no other suitable
+encryption command could be found, that does NOT get the key
+from the command line. If the key is on the command line, then
+it is public good by using ps(1), what might be not the desired
+functionality. A file can be made restricted for read, a command
+line argument not.
+.SH AUTHOR
+.B descrypt 
+was written by Albert Fluegel (af@muc.de)

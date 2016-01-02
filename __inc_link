@@ -1,0 +1,120 @@
+#!/bin/sh
+################### Start of $RCSfile: __inc_link,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/__inc_link,v $
+# $Id: __inc_link,v 1.2 2004/07/08 20:34:42 alb Exp alb $
+# $Date: 2004/07/08 20:34:42 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+silent=0
+if [ _"$1" = "_-s" ] ; then
+  silent=1
+  shift 1
+fi
+
+if [ $# -ne 2 -a $# -ne 3 ] ; then
+  echo usage: `basename $0` '[ -s ] <symlink> <increment> [ <maxrotate> ]' >&2
+  exit 1
+fi
+
+maxrotate=""
+if [ $# -eq 3 ] ; then
+  maxrotate="$3"
+fi
+
+c=`ls -ld $1|cut -c1`
+if [ _"$c" != "_l" ] ; then
+  if [ $silent -eq 0 ] ; then
+    echo "Error: $1 is not a symbolic link." >&2
+  fi
+  exit 2
+fi
+
+AWK=""
+# the solaris awk is doin' dawn f...... BS
+for awk in nawk gawk awk ; do
+  for dir in `echo $PATH|tr : " "` ; do
+    if [ -x $dir/$awk ] ; then
+      AWK=$dir/$awk
+      break
+    fi
+  done
+  if [ _$AWK != _ ] ; then
+    break
+  fi
+done
+
+if [ _$AWK = _ ] ; then
+  if [ $silent -eq 0 ] ; then
+    echo 'No awk ? Is this really a lovely UNIX ?' >&2
+    echo 'Sorry. I have to exit.' >&2
+  fi
+  exit 1
+fi
+
+points_to=`/bin/ls -l $1|$AWK '{print $NF}'`
+first_c=`echo "$points_to"|cut -c1`
+if [ _"$first_c" != _/ ] ; then
+  points_to=`dirname $1`/"$points_to"
+fi
+trailing_num=`echo "$points_to"|$AWK '{p=match($0,"[0-9]+$");if(p<1)print 0;else print substr($0,p)}'`
+base=`echo "$points_to"|$AWK '{p=match($NF,"[0-9]+$");if(p<1)print $0;else print substr($0,1,p-1)}'`
+
+if [ -d $points_to ] ; then
+  points_to_type=d
+fi
+if [ -f $points_to ] ; then
+  points_to_type=f
+fi
+
+new_num=`expr $trailing_num + $2`
+if [ _"$maxrotate" != _ ] ; then
+  new_num=`expr '(' '(' $new_num - 1 ')' % $maxrotate ')' + 1`
+fi
+
+EST=0
+if [ ! -f "$base""$new_num" -a ! -d "$base""$new_num" ] ; then
+  if [ _"$points_to_type" = _f ] ; then
+    bd=`basename "$base""$new_num"`
+    if [ ! -d $bd ] ; then
+      mkdir -p $bd \
+       && touch "$points_to"
+      EST=$?
+    fi
+  fi
+  if [ _"$points_to_type" = _d ] ; then
+    if [ ! -d "$base""$new_num" ] ; then
+      mkdir -p "$base""$new_num"
+      EST=$?
+    fi
+  fi
+fi
+
+if [ $EST -ne 0 ] ; then
+  echo "Error: Cannot create component to point to." >&2
+  exit 2
+fi
+
+/bin/rm -f $1
+ln -s "$base""$new_num" $1
+EST=$?
+
+if [ $EST -ne 0 ] ; then
+  if [ $silent -ne 1 ] ; then
+    echo "Error: Cannot create link." >&2
+  fi
+  exit $EST
+fi
+
+if [ $silent -eq 0 ] ; then
+  echo "$base""$new_num"
+fi
+
+exit $EST

@@ -1,0 +1,70 @@
+################### Start of $RCSfile: changer.conf.stctl,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/changer.conf.stctl,v $
+# $Id: changer.conf.stctl,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#  Configuration file for media changer devices using the stc driver
+#
+####################################################################
+#
+# typical output of stc -v status:
+# numdrives=1 numtransports=1 numloadbays=0 numslots=5
+#      drive=0         volume=0
+#      transport=0     volume=empty
+#      slot=0          status=mounted in drive 0
+#      slot=1          status=yes
+#      slot=2          status=yes
+#      slot=3          status=yes
+#      slot=4          status=yes
+#
+
+#
+# Replacements in the commands:
+#
+# pattern  replaced with
+#
+# %d       streamer device filename
+# %D       changer device filename
+# %n       the origin number, if counting starts with 1
+# %m       the origin number, if counting starts with 0
+# %N       the target number, if conuting starts with 1
+# %M       the target number, if counting starts with 0
+#
+# Commands to move cartridges
+# (moves, that are not supported, should be commented out)
+#
+#Move Drive To Slot Command:	mt -f %d rewoffl >/dev/null 2>&1; \
+#				stc -f %D unload %m %M
+Move Drive To Slot Command:	stc -f %D unload %m %M
+
+Move Slot To Drive Command:	stc -f %D load %m %M
+
+#Move Drive To Loadport Command:	mt -f %d rewoffl >/dev/null 2>&1; \
+#					stc -f %D unload %m %M
+#Move Drive To Loadport Command:	stc -f %D unload %m %M
+
+#Move Loadport To Drive Command:	stc -f %D load l%m %M
+
+#Move Slot To Loadport Command:	stc -f %D move s%m l%M
+
+#Move Loadport To Slot Command:	stc -f %D move l%m s%M
+
+#Move Drive To Drive Command:	mt -f %d rewoffl >/dev/null 2>&1; \
+#				stc -f %D unload %m %M
+#Move Drive To Drive Command:	stc -f %D unload %m %M
+
+#Move Slot To Slot Command:	stc -f %D move s%m s%M
+
+#Move Loadport To Loadport Command:	stc -f %D move l%m l%M
+
+#
+# Commands to find free resources
+#
+ListEmpty Slots Command:	stc -v -f %D status | awk '$1 ~ /^slot=[0-9]/ && ($2 == "status=empty" || $2 ~ /^status=mounted/) {print substr($1,6) + 1}'
+
+#ListEmpty Loadports Command:	

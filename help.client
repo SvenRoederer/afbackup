@@ -1,0 +1,335 @@
+Description
+===========
+
+This program is used to maintain archives on a backup server
+host or in a file. Archives can be created, extracted or their
+contents be listed. At least one of the following flags has to
+be supplied:
+
+ -c  to create an archive
+
+ -x  to extract from an archive
+
+ -t  to list the contents of an archive
+
+ -d  to verify (compare) the contents of an archive
+
+ -C  to set a certain cartridge on the backup server
+       (makes only sense extracting or listing with -x or
+        -t, the writing position can't be changed by clients)
+
+ -F  to set a certain file on the backup server's tape
+       (the same applies as for -C)
+
+ -q  to printout the current cartridge and tape file number
+       on the backup server
+
+ -Q  to printout the cartridge and tape file number for the
+       the next write access on the backup server
+
+ -X  followed by the full path name of a program to be started on
+       the client. This can be used to trigger a backup remotely.
+       If the program needs arguments, the command together with
+       the arguments has to be enclosed by quotes
+
+ -I  to printout an index of the backups written to the current
+       cartridge
+
+ -w  to check the status of the streamer on the server side, e.g.
+       whether it is ready and waiting for requests to service
+
+ -G  to request a new cartridge for the next writing operation.
+       If the current writing position is already at the beginning
+       of a new or reused tape, nothing happens
+
+ -D <destination> to make an exact copy of a tape to another one
+       (duplicate). See below how to specify the destination tape.
+       Duplication can be either from one cartridge to another on
+       the same server, or from one server to another one. When
+       copying to the same server chunks of data are stored in a
+       temporary directory on the client, where the command is
+       started, what should preferably be the source server
+
+ -M <message> send a message to the server. Messages will in the
+       most cases contain whitespace, so they should be enclosed
+       in quotes. Server messages should be sent to the single
+       stream server (port), the multi stream server might hang
+       receiving a message due to systematical reasons. Several
+       messages can be put into the string. They must be separated
+       by a real newline character or the usual C-like \n .
+       The following messages are currently supported:
+
+        PreciousTapes: <client-id> <list-of-tapes>
+                   The list of tapes is inserted into the table
+                   with the tapes, that are crucial for clients
+                   to restore all files, that are listed in all
+                   existing index files. The list is assigned to
+                   the client with the given client identifier,
+                   regardless of an id suppied with option -W .
+                   These tapes will not be overwritten until it
+                   is explicitly permitted. This message is sent
+                   automatically by full_backup or incr_backup
+                   and should not be used in other user contexts
+
+        ReuseTapes: <list-of-tapes>
+                   The opposite of PreciousTapes. Sending this
+                   message permits the server to overwrite the
+                   listed tapes, though they are crucial for
+                   some client
+
+        TapesReadOnly: <list-of-tapes>
+                   The list of tapes is inserted into the file
+                   listing the files, that should not be written
+                   any more for whatever reason
+
+        TapesReadWrite: <list-of-tapes>
+                   This reverts the status of tapes set read-only
+                   to read-write, the opposite of TapesReadOnly
+
+        CartridgeReady
+                   When an operator is requested to do something
+                   the server is waiting for, this message can be
+                   sent to trigger the server to proceed. This
+                   message has the same effect as the cartready
+                   command
+
+        DeleteClient: <client-identifier>
+                   The tapes, that are marked as reserved for a
+                   client to recover all the data in his indexes,
+                   are freed. That is, the appropriate line is
+                   removed from the server's precious_tapes file
+
+ -m [ <interval> ] poll the current message from the server and
+       write it to standard output, if it is new. Polling is
+       done regularly with the given interval in seconds, default
+       interval is 3 seconds
+
+-c, -x, -t, -d, -X, -D, -I and -m are mutual exclusive. The other
+options can be supplied as needed. To set the cartridge and/or
+the tape file on the backup server is only making sense when not
+creating an archive. The serial order of writing to tape is
+handled by the server machine independently of the client.
+
+
+Filenames
+
+The names of the files and directories, that have to be put
+into or extracted from an archive are by default read from the
+standard input. If filenames are supplied in the command line
+the -a flag is given when extracting, standard input is not read.
+The same applies, when filenames are read from a file with the
+-T option. When reading the names from a file or from standard
+input, they must be given one per line. If a name contains
+special characters (like newline or nonprintable ones), they
+have to be specified using backslash-sequences like in C-code,
+e.g. \n for newline.
+In save mode (-c) filenames can be prefixed with character
+sequences, that have special meanings (no space between prefix
+and filename):
+
+ /../   The file is not saved with all attributes present in
+        the inode, but only the contents are saved. This might
+        be useful for saving raw-devices
+ //../  With /../ the configured processing is not applied to
+        the file contents for safety reasons. With this prefix
+        processing can be forced nonetheless
+ |||    and a mandatory space character indicates, that the
+        following characters up to (but not including) another
+        triple bar ||| should be interpreted as a shell command,
+        that is started and whose standard output is written to
+        the backup. At restore time the command following the
+        second triple bar is started and the data stream read
+        at backup time is written to it's standard input. This
+        might be useful for saving e.g. databases. The second
+        command may be terminated by a triple sharp ###, that
+        starts an optional comment. Example:
+        ||| pg_dumpall ||| psql db_tmpl ### Store Postgres DBs
+
+
+Destination
+
+The destination tape for the duplicate operation can be given
+in two ways: either with the options -h, -p, -C and -k following
+the -D immediately without space and enclosed in quotes, so that
+they appear as an own argument list in one real argument, e.g.:
+ -D' -C 5 -h targethost -p targetport'
+(double quotes are of course also possible ...).
+The second format is as follows:
+ [<targetcart>][@<targethost>][%targetport>][:<targetcryptkeyfile>]
+At least one of the specifiers must be present. Examples:
+ 5@otherhost  5%2990:/keyfile/for/target/server @otherhost%2970
+If one of the specifiers is omitted, it is assumed identical with
+the copy source specified in the normal options -h, -p, -C and -k.
+Copying a tape to itself is prevented.
+
+
+More options in alphabetical order:
+
+ -            in combination with -c: read standard input and
+                write it to tape, in combination with -x: read
+                tape and write it to standard output
+
+ -A <time>    process files (save or extract) modified after
+                the given time in seconds since 1.1.1970 00:00
+
+ -a           in combination with -x: extract all files and
+                directories in the archive
+
+ -B <time>    process files (save or extract) modified before
+                the given time in seconds since 1.1.1970 00:00
+
+ -b           don't enter buffering mode
+
+ -e <errlog>  Use the file <errlog> to write error messages to
+                instead of the standard error output
+
+ -f <file>    write to or read from a file instead of querying
+                the backup server
+
+ -g           while extracting/reading: ignore leading garbage,
+                suppress error messages at the beginning. This
+                is useful when extracting from tape files, that
+                are not the first ones of a whole archive.
+
+ -H <header>  put the supplied informational header to the begin
+                of the backup. If a - is supplied (no space may
+                follow -H i.e. -H-) the information is read from
+                the first line of stdin. Backslash sequences of
+                C-like style are replaced
+
+ -h <host>    use the backup server with the name <host>
+                default host is the machine with the name
+                backuphost
+
+ -i           while extracting: ignore the stored ownership and
+                do not restore it
+
+ -j           when starting to write: request starting a new
+                tape file
+
+ -K           when packing, do not keep the access time of the
+                file. By default after packing a filesystem entry
+                it's previous atime is restored
+
+ -k <file>    use the contents of the given file as encryption
+                key for authenticating to the server
+
+ -l           for each packed or unpacked filename, if sending
+                to or receiving from a backup server in verbose
+                   mode in combination with -n:
+                printout server name and port number at the
+                beginning of the line, e.g.: orion%2988!
+
+ -N <file>    while archiving: ignore files with a modification
+                time before the one of the given file, only save
+                newer files or such with the same age in seconds
+
+ -n           for each packed or unpacked filename, if sending
+                to or receiving from a backup server in verbose
+                   mode:
+                printout cartridge and tape file number at the
+                beginning of the line, e. g.: 7.15: <filename>
+                In combination with -X: precede each line of
+                output received from the remotely started program
+                with the identifier of the remote host and a
+                colon, e. g.:  darkstar: Full backup finished.
+
+ -O           for each packed file creating a backup in verbose
+                mode: printout the user-ID of the file owner at
+                the beginning of the line prefixed with a bar |
+                eventually behind cartridge and file number
+
+ -o <uid>     archive or extract only files owned by the user
+                with the given user-ID (an integer)
+
+ -p <portno>  use a different port number for communicating with
+                the backup server. Default is TCP-Port 2988
+
+ -R           pack or extract directories recursively with all
+                of their contents
+
+ -r           use filenames relative to the current directory,
+                whether they start with a slash or not. If -r
+                is given more then 1 time, also let symlinks
+                originally pointing to absolute paths now point
+                to paths relative to the directory, where the
+                symlink will be created. If given twice, the
+                current directory is assumed to be the relative
+                root directory for the symbolic link target.
+                If given three times, the root directory of the
+                current process is used as the relative root
+                directory of the symbolic link targets
+
+ -S <cartset> The cartridge set to use, where <cartset> is the
+                number of a valid cartridge set on the server
+                side. Default is 1. This option makes sense only
+                when creating backups with -c
+
+ -s <filepat> do not attempt processing on files matching the
+                given filename pattern. This parameter may
+                appear several times
+
+ -T <file/dir> read the filenames to process from the <file>.
+                The filenames must be separated by whitespace.
+                If whitespace is part of a filename, it has to
+                be enclosed by double quotes. Double quotes or
+                backslashes within the filename have to be
+                preceded by a backslash. In combination with
+                -D: the tape files to be copied are temporarily
+                stored in the given directory instead of the
+                default directory /tmp
+
+ -U           for each packed file creating a backup in verbose
+                mode: printout the modification time of the file
+                in seconds since 1970/1/1 0:00 at the beginning
+                of the line prefixed with a tilde ~ eventually
+                behind cartridge number, file number and owner
+
+ -u           while extracting: remove existing files with the
+                same name as found in the archive. Otherwise
+                no existing files are overwritten
+
+ -V <file>    write a report containing statistics at the end of
+                a backup to the <file>
+
+ -v           verbose mode: print the filenames while creating
+                or extracting, be a little more verbose while
+                listing contents. If -v is the only given flag:
+                print out software name and version
+
+ -W <id>      identify as <id> to the server. This is needed when
+                connecting a multi-stream server to distinguish
+                between the clients. Default is the string
+                "<client-program>"
+
+ -z <z> <uz>  use <z> as the command, that is used to process
+                files, <uz> for the corresponding unprocess.
+                The command has to read from stdin and to write
+                to stdout. If arguments have to be supplied to
+                <z> and/or <uz>, don't forget to use quotes. If
+                built-in compression is desired, the command for
+                processing has to start with a dot (.), followed
+                by a space and a number ranging from 1 to 9, that
+                specifies the compression level. If an additional
+                external command should process the data, it may
+                follow, separated from the compression level by
+                whitespace. The order of processing is: First the
+                external program processes the data, then built-in
+                compression is applied. An empty string has to be
+                supplied for <uz> (or any other dummy is ok), if
+                only built-in compression is desired.
+                Examples for <z>:
+                 gzip       (run external command gzip),
+                 "gzip -2"  (the same with an argument),
+                 ". 8"      (only built-in compression level 8),
+                 ". 3 __descrpt -k /my/key" (run command __descrpt
+                            and apply built-in compression level 3)
+
+ -Z           while printing out the contents: check those files
+                in the archive that are processed for integrity.
+                While creating an archive: write a CRC32 checksum
+                for each file, file contents or command output to
+                the backup stream
+
+
+ -?           to printout this text

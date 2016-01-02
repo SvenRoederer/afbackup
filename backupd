@@ -1,0 +1,64 @@
+#! /bin/sh
+
+SHELL=/bin/sh
+
+DATE=`date`
+
+DAY=`echo $DATE|awk '{print $1}'`
+MIN=`echo $DATE|awk '{print $4}'|cut -d: -f1-2|sed 's/[^0-9]*//g'`
+BACKUP_HOME=/usr/backup/client
+export BACKUP_HOME
+STARTTIME=`$BACKUP_HOME/bin/getparam StartingTime`
+STARTMIN=`echo $STARTTIME|sed 's/[^0-9][^0-9]*/ /g'|awk '{printf "%s%s",$1,$2}'`
+
+test $MIN -lt $STARTMIN
+TODAY=$?			# is 0 if MIN < STARTMIN
+
+case $DAY in
+    M*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Tue"
+	fi
+	;;
+    Tu*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Wed"
+	fi
+	;;
+    We*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Thu"
+	fi
+	;;
+    Th*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Fri"
+	fi
+	;;
+    Fr*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Mon"
+	fi
+	;;
+    *)
+	START="$STARTTIME Mon"
+	;;
+esac
+
+export SHELL
+
+cat << END_OF_AT_IN | at "$START" 1>/dev/null 2>/dev/null
+cd $BACKUP_HOME/bin
+sh -c "( sleep 70; ./backupd ) &"
+./make_backup
+END_OF_AT_IN

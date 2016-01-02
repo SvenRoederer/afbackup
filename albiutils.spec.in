@@ -1,0 +1,69 @@
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/albiutils.spec.in,v $
+# $Id: albiutils.spec.in,v 1.1 2012/11/01 09:53:09 alb Exp alb $
+#
+Buildroot: @CURWD@/root
+Name: @AU_PACKAGE@
+Version: @VERSION@
+Release: 1
+Summary: Albi's utilities
+Group: Useful programs
+License: GPL
+Vendor: AF
+Packager: Albert Fluegel <af@muc.de>
+BuildRoot: @CURWD@/root
+
+%define _rpmdir RPM/
+%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+%define curwd @CURWD@
+
+# Autoreq: 0
+# Don't complain on unpackaged files:
+%define _unpackaged_files_terminate_build 0
+#%define _missing_doc_files_terminate_build 0
+
+%description
+Things you always wanted to have on Unix but didn't dare to ask for
+
+%pre
+
+%post
+
+%preun
+
+
+%files -f %{curwd}/@AU_PACKAGE@.autodirs.spec~
+%defattr(-,root,root)
+%attr(0555,root,root) @prefix@/bin/ssu
+%attr(0555,root,root) @prefix@/bin/af-lockfile
+%attr(0555,root,root) @prefix@/bin/choice
+%attr(0555,root,root) @prefix@/bin/ttywrap
+%attr(0555,root,root) @prefix@/bin/bufrate
+%attr(0555,root,root) @prefix@/bin/numset
+%attr(0555,root,root) @prefix@/bin/udf
+%attr(0555,root,root) @prefix@/bin/rotor
+%if "@DESCRPT@"
+%attr(0555,root,root) @prefix@/bin/descrypt
+%endif
+%attr(0555,root,root) @prefix@/bin/get_ent
+%attr(0555,root,root) @prefix@/bin/base64enc
+%attr(0555,root,root) @prefix@/bin/base64dec
+%attr(0555,root,root) @prefix@/bin/datebysec
+%attr(0555,root,root) @prefix@/bin/secbydate
+%attr(0644,root,root) @prefix@/man/man8/ssu.8
+%attr(0644,root,root) @prefix@/man/man8/af-lockfile.8
+%attr(0644,root,root) @prefix@/man/man8/choice.8
+%attr(0644,root,root) @prefix@/man/man8/bufrate.8
+%if "@DESCRPT@"
+%attr(0644,root,root) @prefix@/man/man8/descrypt.8
+%endif
+%attr(0644,root,root) @prefix@/man/man8/numset.8
+%attr(0644,root,root) @prefix@/man/man8/ttywrap.8
+%attr(0644,root,root) @prefix@/man/man8/udf.8
+%attr(0644,root,root) @prefix@/man/man8/rotor.8
+
+%changelog
+* Tue Aug 21 2012 Albert Fluegel <af@muc.de> 3.5.8
+- New programs base64enc base64dec secbydate datebysec
+- Integrated into afbackup package
+- rpmbuild now ignores BuildRoot in spec file (why tf !?!?!)

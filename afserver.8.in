@@ -1,0 +1,142 @@
+.TH AFSERVER 8 "2001 April 1" "Debian Project"
+.SH NAME
+afserver \- the server program of the afbackup package
+.SH SYNOPSIS
+.B afserver
+[ -b ] [ -L <locale> ] [ <configuration-file> ]
+.SH DESCRIPTION
+The server program. It must be started by the inetd-superdaemon.
+The configuration-file is read as @serverlibdir@/@serverconf@
+if not given explicitly.
+.TP
+.B -b
+Turns off buffering mode. This reduces performance
+but seems to be necessary on some OSes
+.TP
+.B -L <locale>
+Set the locale to the given string. Note, that this option
+might not be honoured due to insufficiencies of the
+gettext implementation on some systems
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file (See: afserver.conf(8))
+.IP @serverlogdir@
+The directory for logging the server actions
+.IP @servervardir@
+Save internal state information of the server here
+.IP @servervardir@/status
+This file is updated, whenever a notable server
+status change occurs. The file is always removed
+and created again as status changes occur often
+and they are not worth keeping. This file only
+serves the purpose to get an information about
+what is currently going on. While reading or
+writing the current throughput is reported here
+about every 5 seconds. Logging of errors or
+warnings goes to the configured logfile
+.IP @servervardir@/pref_client
+This file is maintained to prevent colliding
+client accesses. The clients should have
+a chance to get the server always again, when
+querying several times within a certain interval.
+The previously served client and a timestamp is
+saved here to grant this client preferred service
+within a certain interval. Actually since version
+3.3.5 this file is obsolete
+.IP @servervardir@/bytes_on_tape
+The persistent counters of the server side. A
+maximum number of bytes per tape can be configured
+and the server must remember, how much he had
+written to all of the tapes. It makes no sense to
+count them all each time a cartridge is loaded.
+The format of each line is:
+ <cartridge-number>: <number-of-bytes-on-tape> <number-of-files-on-tape> <tape-full-flag> <last-writing-timestamp>
+.IP @servervardir@/tapepos
+The name of this file can be configured in the
+serverside configuration file, but i think, noone
+will ever change it. This file contains entries,
+that specify tape positions in different contexts.
+Lines starting with a number followed by a colon
+specify the writing position for the cartridge set
+specified by the leading number. Lines starting
+with a device name field indicate, what tape in
+which position is currently in that drive. Each
+pair of numbers specifying a position consists of
+a cartridge number and a file number
+.IP @servervardir@/precious_tapes
+This file contains a line for each client, listing
+which cartridges the client needs for restoring
+everything it saved and it wants access to. All
+cartridges listed here are considered read-only, if
+they have no more space on tape to write to. If they
+have free space, new data is appended at the end of
+the last file on tape during write
+.IP @servervardir@/readonly_tapes
+This file contains lists of cartridge numbers,
+that should not be written to anymore. This file
+can be edited or modified sending an appropriate
+server message (See: afclient, option -M). The
+format of this file is simply numbers, ranges or
+comma-separated numbers of cartridges. A range can
+be given as [<start-number>]-[<end-number>], e.g.
+2-4, -2 or 8-. In the last example the number of
+cartridges configured in the server configuration
+file will be applied for the end of the list
+.IP @servervardir@/cartridge_order
+The server must remind, what tape follows which
+other one, because their order no longer follows
+the number of the cartridge and the server no
+longer starts writing the first one after the last
+one is full. Tapes can be set read-only or marked
+crucial for restoring some client. So it may occur,
+that the server must skip one or more tapes to find
+a writable one. Also in full append mode it might
+happen, that it is not the first file on tape, who
+follows the last one on a full tape. In this file
+the order is saved, what file on which tape must be
+read, when a certain tape is exhausted. Behind the
+number of the cartridge in the first column and the
+arrow characters -> the following numbers name the
+tape and file to be read next. This file should be
+saved to some other location, because it is crucial
+for restore
+.IP @servervardir@/tape_uses
+This file contains a list of cartridge numbers in
+the first column, followed by a colon : . The second
+column contains a number indicating, how often this
+tape has become full up to now. This number is supplied
+to the configured Tape-Full-Command , whenever a tape
+becomes full
+.IP @servervardir@/cartridge_locations
+This file contains the database, where the
+cartridges currently can be found. The first
+column is the cartridge number, followed by a
+colon. A space follows and the rest of the
+line either contains three fields: the device
+name of the media changer, a word to specify the
+location class (drive, slot or loadport), and a
+number counting instances of location classes, e.g.
+ /dev/rmt/stctl0 slot 6
+If the rest of the line is not of this form, it is
+considered to be a freetext description
+.IP @servervardir@/ever_used_blocksizes
+This file contains a list of all the tape
+blocksizes, that have ever been used on the
+the server. The list is used to quickly find
+the correct blocksize for reading, when the
+tape cannot be read with the configured one. If
+tapes are used, that come from another server and
+have a tape blocksize, that this server has never
+seen, the unknown blocksize should be added to this
+file manually, one per line
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), cartis(8), cartready(8), label_tape(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

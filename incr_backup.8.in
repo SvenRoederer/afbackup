@@ -1,0 +1,55 @@
+.TH INCR_BACKUP 8 "2001 April 1" "Debian Project"
+.SH NAME
+incr_backup \- run an incremental backup with the afbackup package.
+.SH SYNOPSIS
+.B incr_backup <options ... See: full_backup> [ -EH ] [ -Q <backup-level> ]
+.SH DESCIPTION
+This program reads the client-side configuration
+file and runs an incremental backup, i.e. all files and
+directories are saved, whose modification time is later
+than the moment the previous backup (full or incremental) has
+started. The options and their meanings are exactly the same as
+for full_backup, except the -a option, see below. The total
+backup counter is not increased.
+.PP
+.TP
+.B -a
+Differential mode. The timestamp storing the time of the last
+backup is not modified.
+.TP
+.B -E
+Use not only the modification time comparing
+the timestamps to select filesystem entries
+for backup, but also the inode change
+time (ctime)
+.TP
+.B -H
+If this flag is set, all backups with a lower level
+since the last full backup are removed from the indexes
+and the respective tapes freed, if there is no other
+backup data on them. In differential mode (-a) a
+previous differential backup is also removed and the
+tapes freed, if possible
+.TP
+.B -Q <backup-level>
+The backup level. All files modified since the
+most recent backup with a level equal or
+higher are saved. The higher this number, the
+more files are redundantly saved again.
+<level> can be an arbitrary number from 0
+up to 2147483646 (== MAXINT - 1). Default: 0.
+A full backup has an implicit backup level of
+2147483647 (== MAXINT)
+.SH FILES
+See: full_backup(8)
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

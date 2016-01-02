@@ -1,0 +1,358 @@
+
+
+AF's backup system
+------------------
+
+This is a client-server backup system offering several
+workstations a centralized backup to special backup
+servers. The backup on the clients can be started auto-
+matically using cron-jobs on the clients, but the more
+intelligent solution is to start it remotely from a central
+administrative host. To be independent of tricks like
+rsh, rcp and so on, that are in fact security holes, this
+remote start option is implemented internally. This is
+done because normally the backup has to be run with root
+authorization, otherwise files that are read protected by
+users would not be backed up. Any streaming device can be
+used for writing the data to it. The only thing it must be
+able to do is to distinguish between several files on tape
+so that it can be positioned directly.
+Writing backups is normally done sequentially: The next
+writing to tape goes to the end of the previous write no
+matter from where you have restored in the meantime. There
+is a special possibility for the administrator to change
+the next writing position, but this should be done only
+in emergency cases (See: PROGRAMS, "cartis"). Another way
+to be more flexible here is to configure variable append
+mode.
+A more thorough introduction can be found in the file
+INTRO, all changes in comparison with earlier releases
+are listed in the file ChangeLog.
+
+afbackup has been tested on Linux, AIX, IRIX, FreeBSD,
+Digital Unix (OSF1), Solaris and HP-UX. The clientside has
+also been tested on SunOS, OpenBSD and MacOS-X.
+Using Solaris < 2.6 as server is discouraged.
+
+
+DISCLAIMER
+----------
+
+These programs come without warranty. Everybody using this
+software does so at his or her own risk. The C-code has
+nonetheless been running over a year without problems and
+should have no bugs - at least if there are, they didn't
+hurt any backup or restore. The scripts for installation
+and configuration have been added later and might have
+bugs (but lots of testing has been done of course).
+
+
+PLEASE
+------
+
+Can someone (-: PLEASE :-) do me a favour and:
+
+- tell me, if she or he finds unusual, strange or simply
+  wrong English anywhere in my text. (This is a permanent
+  request due to ongoing development of this software and
+  thus the documentation)
+
+
+FEATURES
+--------
+
+- Client/Server System
+
+- Authentication of the client is performed before it can
+  take over control (see INSTALL and FAQ) -> security
+
+- Several servers can be configured for each client: the actual
+  server is chosen by availability
+
+- Multi stream server, several clients can store to one
+  server at the same time
+
+- Remote start option -> centralized administration
+
+- Access restriction for the streamer device -> security
+
+- Client-side per-file processing -> reliability. If the
+  files and directories were first packed and then processed, 
+  by the server a single faulty bit in the processed stream 
+  would make the rest of the backup unaccessible for restore
+
+- Built-in compression (requires libz)
+
+- Data stream is written to tape in pieces of configurable
+  size -> fast finding of files during restore
+
+- Tape position logging for each file -> fast finding of files
+  during restore
+
+- Tape capacity is fully used
+
+- Flexible tape handling and configurable append mode
+
+- Full/incremental backups and verify
+
+- Raw partitions can be saved
+
+- Ordinary users can run the restore for their own files
+  and directories, but only for these
+
+- Emergency recovery on different catastrophe levels
+
+- Command output saving feature: useful e.g for databases
+
+- Cartridge locations database maintained
+
+- Support for media changers
+
+- Client access to cartridge sets can be restricted
+
+
+
+WHAT YOU NEED
+-------------
+
+GNU make. Others may not work, but all should (thanks to
+autoconfig). Using gcc is recommended.
+
+A streaming device. This can be either a cartridge handling
+system or a simple drive. In the latter case you might want
+to maintain several cartridges nonetheless. Just buy them
+and write numbers to them starting with 1. The backup server
+will supply you with email when a tape must be put in and
+which it should be. The number of cartridges is configurable.
+
+E.g. a compression program on the client side, if you want to
+use the processing feature and no built-in compression, which
+is not mandatory.
+
+Some space for the logfiles. All the names of the saved files
+and directories are written to log files, which could grow to
+a notable size if a lot of files are saved.
+
+For media changer support an appropriate driver command is
+necessary, e.g. mtx or stctl. They can be obtained from the
+same place, where afbackup had been downloaded.
+
+
+
+INSTALLATION
+------------
+
+See: INSTALL
+
+
+UPGRADE
+-------
+
+See: UPGRADE
+
+Updates can be obtained from sourceforge:
+http://sourceforge.net/projects/afbackup
+
+
+CONFIGURATION
+-------------
+
+See: CONFIG, INTRO and HOWTO.FAQ.DO-DONT
+
+
+BEFORE YOU START
+----------------
+
+... Your first backup! Put your tape cartridge number 1 into
+the drive or make your cartridge handling system do so. If
+you don't want this or can't persuade your cartridge handler
+to do so, find out the number of the cartridge which is
+currently inside the drive. Then enter the following commands
+on the backup server (the host, to which the drive is connected)
+replacing <num> with the real cartridge number:
+
+$BASEDIR/server/bin/cartis <num>
+$BASEDIR/server/bin/cartis -i <num> 1
+
+The first command tells the server the number of the cartridge,
+that is currently in the drive. The second one says: Write the
+next backup to the named cartridge, file 1 (the data stream is
+written in pieces==files to tape). See: PROGRAMS. $BASEDIR
+always stands for your chosen installation directory,
+corresponding to the particular tape device.
+
+
+WHAT CAN BE STARTED: PROGRAMS
+-----------------------------
+
+See: PROGRAMS
+
+
+LIMITATIONS AND KNOWN BUGS
+--------------------------
+
+- Under certain circumstances the label_tape command starts a
+  mail program, that reads stdin, requires the user to press
+  Ctrl-D and then sends an empty mail. Currently it is not
+  understood nor analyzed in detail, why this happens. It might
+  as well be a configuration error, but currently it must be
+  treated as a bug
+- Directories should be traversed in parallel, when on different
+  filesystems
+- A real index should be maintained, not only the probably
+  compressed filelist, preferred implementation design:
+  a special index server not bound to the client or server host
+- It should be possible, that several devices share a pool of
+  tapes like in most jukeboxes
+- There are too many warnings written to the logs, that can be
+  safely ignored
+- There is a strange problem with the multi-stream server on
+  Digital Unix and probably others, that is not understood yet.
+  There the multi-stream server should be started to run as a
+  daemon (see: FAQ Q37)
+- On FreeBSD an probably other Intel-Unixes the optimization
+  for the processor architecture i686 breaks the server side
+  functionality on PIII multiprocessor systems and probably
+  others. As there's not much performance increase achieved
+  by fancy optimizations the use of such compiler options is
+  generally discouraged, -O2 is ok, but you're better off
+  refraining from heavier stuff like -march=i686.
+- Also on FreeBSD using threads breaks proper operation with
+  newer DDS-4 drives. If you are using a drive like these and
+  are experiencing problems especially at end of tape, rebuild
+  the server with threads disabled. See the INSTALL file how
+  to achieve this or use the Install script, that provides a
+  special choice. These problems have been observed on FreeBSD
+  version 4.7 - 5.0 with gcc-pre-3, probably this is in fact a
+  gcc problem. Anyway if there's a chance to put the afbackup
+  server on a Linux box, this should be done. Sorry, i'm aware
+  that the FreeBSD-freaks will flame me now, but facts are
+  facts.
+
+No other bugs known. At release time there are never known bugs.
+
+Please report bugs and suggestions for new features to:
+
+af@muc.de
+
+If you have problems, please add the last lines of the file(s)
+.../client/var/backup.log and .../server/var/backup.log to
+your posting, if present. Please add everything, too, that you
+think might be important.
+
+If you want to be informed about important changes or bugfixes,
+monitor the desired releases on
+http://www.sourceforge.net/projects/afbackup
+
+
+TO DO
+-----
+
+Reduce the limitations.
+Port the client side to other platforms.
+Enhance jukebox support
+
+
+CONTRIBUTIONS
+-------------
+
+* restore.pl
+
+Toivo Pedaste contributed the perl script restore.pl, a
+specialized replacement for afrestore. To work with the
+individual configuration, it needs some adjustments, see
+the first lines of the script for hints. The functionality:
+
+This is a Perl program I use for restoring files. You give
+it a string, and it displays which files on the backups have
+names containing the string and on which tapes they are, and
+you select which one to restore.
+
+Currently it only works for a single file or directory.
+
+
+* simple_tape_barcodes.pl
+
+Also contributed by Toivo Pedaste. It can be used to keep
+afbackup tape numbering according to tape labels readable
+by a changer device. The last two digits of the labels are
+used to reflect the afbackup label numbers. This is not
+a really general solution, but might be sufficient for
+some installations. In most cases it will be necessary to
+review and modify some variable settings in the first few
+lines of the script. Unfortunately Mr. Pedaste did not
+tell us how to use the script in the configuration, but
+most likely it should be configured as SetCartridgeCommand
+
+
+* Webadmin-Module
+
+Dirk Wallmeier is developping a module for webadmin. The project
+homepage is http://sourceforge.net/projects/afbackup-webmin .
+I have no experience with webadmin and the security impacts
+or considerations of that software. Thus i can only tell it
+exists and might be helpful, but can't give any recommendation.
+
+* RPM Spec Files
+
+As far as i remember, afbackup.spec.rtc and afbackup.spec.egidy
+have been contributed by Gerd v. Egidy <egidy@deam.de>.
+
+
+THANKS TO
+---------
+
+ (in chronological order)
+- The people at "Zentrum fuer Neuroinformatik" for being so
+  kind in letting me put this into the PD.
+- Rick Macdougall at Axess Communications for reviewing my
+  bad English. (A lot of text has been added up to now, he
+  had no chance to review it - so it's my fault, if there is
+  a lot of nonsense)
+- Lars Koeller at the University of Bielefeld, Germany, for
+  doing the FreeBSD-port and giving me some important hints.
+- Christian Meder at the University of Stuttgart, Germany,
+  for bug reports, fixes, making the whole package autoconfig-
+  -urable and Debian-ready, extracting the man-pages and a lot
+  more
+- Ivan N. Kokshaysky at the Moscow State University for making
+  afbackup libc-6 (ie. glibc) - ready
+- Katharina Hoffman at Infomedia GmbH for doing a lot of tests
+- GianPiero Puccioni (gip@ino.it) at "Istituto Nazionale di Ottica"
+  in Firenze for doing a lot of testing and problem determination,
+  furthermore contributing the mtx.c program for using DAT
+  autochangers, all on HP-UX.
+- Tuomo Soini (tis@foobar.fi) for 'feature' fixing
+- Andreas Wehler at CAD/CAM Straessle GmbH in Düsseldorf/Germany
+  for intensive testing and helpful suggestions
+- Scott C. Ostrander and Dave Williams for proof-reading and
+  correcting the documentation texts
+- Piotr Klaban in Torun, Poland for numerous hints, suggestions
+  and bug fixes (sometimes i have the suspicion he knows my
+  software better than me)
+- Jerome Lovy for helping to track down the truncated files problem
+  (to different behaviour or zlib-s) making zlib use more robust
+- Toivo Pedaste for several helpful hints
+- Many thanks for "Lele Gaifax" for implementing the I18N/L10N
+  gettext stuff and translating all the messages to Italian
+- Jalon Q. Zimmerman at "coldworld" for setting up, hosting and
+  sponsoring the afbackup.org domain, website and mailing lists
+- Ken R. (?) for some English fixes in the documentation
+- Stefan Scholl at Infineon Technologies for a concept to start
+  programs remotely without having login permission to a host
+- Oliver Hartmann, Mainz for contributing the chio changer config
+- Johann Pfefferl, Munich for contributing the sch/mover config
+- Peter 'Rattercrash' Backes for adding the disable threads option
+  and other improvements and suggestions
+- Mr. Neil Darlow for a *LOT* of useful hints concerning FreeBSD,
+  IDE tapes and more
+- Devin Reade for reviewing large parts of the code
+- Torsten Werner at Auswärtiges Amt, Berlin (earlier at the Dresden
+  University of Technology, Germany), for adopting the maintenance
+  of the afbackup Debian package, several hints, fixes and continuous
+  support
+- Dan Debertin for porting to NetBSD
+- Rudolf Cejka at Brno University of Technology for enhancements and
+  UnixWare fixes
+- Vlad Solopchenko for a bug fix
+- Jeannot Langlois for the uninstall targets in the Makefile

@@ -1,0 +1,1158 @@
+2.1 - 2.1.pl1
+	- minor bugfix in restore script
+
+2.1.pl1 - 2.1.pl2
+	- Bugfix in configuration programs.
+	  Affects:    cartridge handling systems without a special
+	              command to set the cartridge, that therefore
+	              must be set to sequential mode.
+	  Workaround: Comment out the line starting with Setcart-Command
+	              in .../backup/server/lib/backup.conf
+
+2.1.pl2 - 2.1.pl3
+	- Fix of stupid bug produced while fast-hacking pl2
+
+2.1 - 2.2
+	- automatic tape labeling and consistency check
+	- directories can selectively be excluded from backup
+	- cleverer device access, two stage timeout: 1st stage
+	  sends email to maintainer, 2nd stage exits
+	- facilities for recovery from hard crash with lost
+	  filename logfiles
+	- reduced unnecessary tape movements
+
+2.2 - 2.3
+	- Maintain a lock file to prevent concurrent tape access of
+	  different server processes
+	- Optional compressing of the filename logfiles
+	- Client side parameters RootDirectory and BackupHost can
+	  be overridden with command line options of restore
+
+2.3 - 2.4
+	- Block and character device special files can be saved
+	- Storing the file contents can be forced independently of
+	  the file type (useful for saving raw partitions or so)
+	- option -N for the client side program for saving only
+	  files newer than a given one
+	- small bug fixed concerning zero-length files
+
+2.4 - 2.5
+	- File contents (see 2.3 - 2.4) can be compressed
+	- Sockets can be saved
+	- full_backup, incr_backup and restore are now binaries
+	- print_errors is a new command
+	- Weird problem workarounded with I/O-Error on interrupted
+	  backup
+	- If filename logfiles should be compressed, no uncompressed
+	  files ever appear
+	- Directory path patterns can be supplied for excluding files
+	  or directories
+	- Support for a max of 16777215 cartridges with 2147483647
+	  files on each (please consider configuring several backup
+	  servers ;-) )
+	- Restore can be called with glob-style filename patterns
+	- For the client side a lockfile is maintained as well, so
+	  several backup or restore programs can't be run simultaneuosly
+	  on one client causing trouble on the logfiles
+
+2.5 - 2.6
+	- File contents can not only be specified with prefixes /../
+	  or //../, but also by option -r or -R
+	- Saving files can be limited to device/filesystem
+
+2.6 - 2.6.1
+	- New client- and serverside parameter EncryptionKeyFile
+	  for the authentication mechanism
+	- New clientside-parameter VarDirectory for varying files
+	- Default-configuration files in /etc/buclient.conf and
+	  /etc/buserver.conf
+
+2.6.1 - 2.7
+	- New clientside parameter CompressBackupedFiles for choosing
+	  compression of files and filename logfiles separately
+	- Clientside request-queue for asynchronous communication with
+	  the server (hopefully much better performance)
+	- New serverside command "label_tape" to manually write a label
+	  to the tape currently in the drive
+	- Default-configuration files can also be (Debian needs)
+	  /etc/afbackup/client.conf and /etc/afbackup/server.conf
+	- Bug (typo) fixed: Entry for locking file in the server
+	  configuration file has been ignored
+	- HOWTO-file is maintained now
+
+2.7 - 2.7pl1
+	- Better connection failure handling. Up to now with DAT data
+	  on tape might be lost on a connection breakdown
+
+2.7 - 2.8
+	- Normal filesystems can be used for backups instead of tapes,
+	  thus also removable media
+	- A file with a special name can be placed in any directory
+	  containing names or patterns of files and subdirectories to
+	  be excluded from backup
+	- Compression attempts can be avoided on already compressed
+	  files by supplying appropriate filename patterns
+	- Slight further speedup
+	- Small bug fixed (sometimes a "Connection ... lost" occurs)
+
+2.8 - 2.8plX
+	- Bugfixes, more logging, more diagnostic messages, more
+	  safety
+
+2.8 - 2.8.1
+	- Port number can be configured in the configuration file
+	  of the client side
+
+2.8.1 - 2.8.2
+	- FreeBSD supported
+	- Wrapper script for mt added: __mt (FreeBSD's mt does not
+	  accept 0 as repeat count)
+	- Non-GNU-make can be used (under Solaris it's a little
+	  annoying) and is recognized automatically
+
+2.8.2 - 2.8.2.pl1
+	- Bug ignoring several -m or similar in file list fixed
+
+2.8.2 - 2.9
+	- Several sets of cartridges can be used on the server side
+	- Verify is now possible
+	- restore does not restore the same file several times
+	  from different backups
+	- memory leak fixed (a quite harmless one, quasi more a
+	  theoretical one, no sole reason for an upgrade)
+	- Documentation reviewed and lots added, e.g. an INTRO
+	- An exit command can be configured, usable for reporting
+	  successes and statistics to an administrator
+	- Ordinary users can restore their own files and directories
+
+2.9 - 2.9.pl1
+	- With several cartridge sets configured reading over end of
+	  tape of the last cartridge change to the first cartridge
+	  of the same set and not to cartridge 1. This was a bug
+
+2.9 - 2.10
+	- Byte Sums are no longer of type "long int", now "double"
+	  ("long long int" is a portability problem)
+	- Buffering also on the server side. Especially read
+	  operations (verify, restore) should be much faster now
+	- Stale lockfiles do not cause another server process or
+	  a highlevel client program to wait. This was a bug
+	- Several kill-s to the server don't harm, no stale lockfile
+	  is left over (of course not valid for a kill -9)
+	- Errors are immediately printed before completion of client
+	  programs. print_errors is not really necessary anymore,
+	  anyway i consider it helpful for later diagnostics
+	- No longer confusing message "Cannot find out number of
+	  lines in ..."
+	- No longer annoying message "/tmp/xxxxxx: No such file
+	  or directory"
+	- Safer tape handling (hopefully)
+	- Strange AIX problem workarounded (EIO at end of media
+	  instead of the documented ENXIO)
+	- A modified-before- and -after-date may be supplied with
+	  the restore program
+	- Autodetecting inserted cartridge, if tape is labeled or
+	  had already been used
+	- Strange wish behaviour (too flat window) workarounded
+	- Missing feature added: modification time is saved with
+	  file contents i.e. e.g. raw devices
+
+2.10 - 2.11
+	- Second possibility to save backups in a filesystem
+	  (without the need of symbolic links)
+	- Output of XXXXXXconfig is piped through more for
+	  convenient configuration from any terminal
+
+2.11 - 2.11.1
+	- libc-6 (i.e. glibc) - ready (see README: THANKS TO)
+
+2.11.1 - 2.11.2
+	- Insufficiency of the cartis script fixed: read the number
+	  of cartridge sets from the server configuration file
+	- (x)clientconfig and (x)serverconfig did not look for config
+	  files in all intended places, documentation incomplete
+
+2.11.2 - 2.11.3
+	- Minor inconsistencies fixed. Utilities added (yet unused)
+
+2.11.3 - 2.11.4
+	- Security hole fixed
+
+2.11.4 - 3.0
+	- Debianized
+	- Defaults changed somewhat
+	- Uses autoconfig
+	- full_backup, incr_backup, restore and verify can override
+	  most of the config file settings by commandline options
+	- New parameter: Device-probe interval
+	- New parameter: Skip-files Command
+	- Documentation reworked (including man-pages)
+	- restore now takes -C instead of -R, -R is still recognized.
+	  -C is now the changedir-option in conformance with the
+	  other commands (and BTW tar)
+	- label_tape has new -q option for reading the tape label
+	- Emergency restore without any input information (-E)
+	- Emergency restore or only the minimum restore info (-El)
+	  or only tape scanning (restore -En)
+	- Differential backup with option -a for incr_backup
+	- Hopefully more speed by use of appropriate TCP-options
+	- Option to use 128 Bit DES encryption for client-server
+	  authentication (requires Eric Young's libdes or openssl)
+	- cartready indicator file mechanism changed (other way round)
+	- Logging of the remote host name, if authentication fails
+	- Possibly conflicting program names prefixed with af
+	- Bug fixed setting the wrong cartridge for a set, if one set
+	  comprises of cartridge #1 only, what should be avoided anyway
+	- Senseless settings of maximum number of bytes per tape file
+	  caught and reset to reasonable value
+	- Year 2039-ready i.e. any length time_t on any architecture
+	- More appropriate filename handling on recursive extraction
+	  of directories
+	- Preferred serving of repeated requests from the same client
+	  to avoid race conditions
+	- Better locking algorithm for client start and server access
+	- SunOS 4.XYZ supported platform
+	- Symbolic links are allowed for all programs (full_backup, ...)
+	- On remote start the output of the remote command is transferred
+	  to the client side, also the exit status corresponds
+	- Generally better diagnostics for remote start
+	- Very stubborn problem on HP-UX-9 fixed, maybe the problem was
+	  leading to problems also on other architectures
+	- New parameter: InitProgram for the client side. StartupInfoProg
+	  is now ran later, when backup succeeded
+	- In serverside init and exit command %p is replaced with client's
+	  peername
+
+3.0 - 3.0.1
+	- New flag -w for afclient to check server side streamer state
+	- differential backup with incr_backup -a did not work yet (!)
+	  (implementation was lost probably due to multiple development
+	   locations and inconsistent code between them, sorry)
+
+3.0.1 - 3.0.2
+	- New flag -l for afclient to report the location of the server
+	  side for each file (preparation for storage pools)
+	- docs updated
+
+3.0.2 - 3.0.3
+	- restore -f was broken in 3.0.1 - 3.0.2
+
+3.0.3 - 3.0.4
+	- Server side rexec path had wrong default
+
+3.0.4 - 3.0.5
+	- Always use built-in fn_match instead of fnmatch
+
+3.0.5 - 3.1
+	- Several triples backup-host/backup-port/cartridge-set possible,
+	  all handled transparently to the user
+	- Server side lock bug fixed (caused minor requests like -q to
+	  hang, had to interrupt with Ctrl-C, bug appeared in 3.0.3)
+	- Also scripts (e.g. clientconfig) may be arbitrarily symlinked
+	- Preinstalled config file has now empty encryption file - caused
+	  confusing log message (" ... using compiled-in key")
+	- Install script supports change of afbackup service name
+	- Docs adapted
+	- Tape label extended by a comment and a possible secondary label
+	  number
+	- Bug concerning SetCartridgeCommand fixed
+	- Server side processing reworked for better throughput
+	- Protocol extended for raw accesses
+	- A lot of processing modularised
+	- A maximum number of bytes per tape can be configured, also
+	  varying for different tapes
+	- Tapes can be duplicated (command copy_tape)
+	- Duplication of tapes can be automated after performing a backup
+	  (script autocptapes)
+	- Backup levels of arbitrary (1..MAXINT) number (option -Q for
+	  incr_backup)
+	- Automatic switching from incremental to full backup for new
+	  entries in DirsToBackup...
+	- Verbose option -v for full_backup, incr_backup, ...
+	- GUI frontend xafrestore for the afrestore utility, still inferior
+
+3.1 - 3.1.1
+	- Some strange csh versions had problems with xafrestore
+	- Helper programs for fast command pipe startup (__piper) and
+	  encryption (__descrpt) added (mainly for use in CompressProgram)
+
+3.1.1 - 3.1.2
+	- Bug fixed: erasetape command was not always called when
+	  changing the cartridge
+
+3.1.2 - 3.1.3
+	- Compilation was broken on FreeBSD
+
+3.1.3 - 3.1.4
+	- Bug fixed: During save timestamps of filesystem entries were
+	  changed, that symlinks pointed to
+
+3.1.4 - 3.2
+	- ACLs supported on Solaris2 and HPUX-10, if available
+	- Also on Solaris >= 2.6 filesizes > 2GB supported
+	- Multi stream server
+	- Status file on server side, regularly updated during operation
+	- Descending into directories is now done like find -depth
+	- Hopefully even safer tape error handling
+	- Service names allowed wherever port numbers were to be given
+	- -v option for verify, restore and copy_tape
+	- Tapes can be set read-only
+	- Tapes are no longer overwritten, server keeps track, which
+	  tapes are needed for all the clients
+	- Admin must explicitly permit overwrite of needed tapes
+	- Verify is much faster now
+	- Bug fixed (tapeblocksize may now be > MaxBytesPerFile / 10)
+	- Init Media command for preparing the media for access, e.g.
+	  mounting a removble disk
+	- More versatile Change-Cart-Command (see FAQ Q6)
+	- Tape blocksize now written into the tape label
+	- Filelist recovery also restores uid fields
+	- Minimum restore info is no longer cumulative
+	- Configuration programs can get config file as argument
+	- label_tape now also labels "directory-tapes"
+
+3.2 - 3.2.1
+	- Compilation was broken with glibc and on FreeBSD, maybe others
+	- Bug fixed: differential backups did not work correctly when
+	  configuring several backup parts
+
+3.2.1 - 3.2.1pl1
+	- Bug fixed: Restore reported errors without real reason and
+	  probably restored in wrong order, when compiled with -O...,
+	  probably more side effects up to no working high-level
+	  programs (full_backup, incr_backup, verify, ...)
+
+3.2.1 - 3.2.2
+	- A full backup split into pieces does no longer modify the
+	  timestamp
+	- Built-in compression
+	- Faster (backward compatible) packing format
+	- Bug fixed requiring unnecessary workaround for
+	  afrestore -[eEf] on new installation
+	- Bug fixed, restore -[eEf] now works together with -[RC]
+
+3.2.2 - 3.2.3
+	- Option -G for (full|incr)_backup and afclient to request a
+	  new or reused cartridge
+	- Completely any-shit-in-filenames-safe, e.g. newlines or non-
+	  printable characters are allowed in filenames
+	- Cartridge sets may consist of arbitrary cartridges, not only
+	  consecutive ranges
+	- Enhanced database saving capability through command output
+	  saving / command input restoring feature
+	- Security fix: Client configuration file must be owned by root,
+	  so normal users can't supply their own ones
+
+3.2.3 - 3.2.4
+	- Client side ring buffer processing reworked, lots of unneeded
+	  system calls removed -> hopefully better performance, fewer
+	  problems on the Sun and other System-V like OSes
+	- Bug fixed: files with special characters in name were sometimes
+	  not found during restore with given filenames
+	- Bug fixed: __descrpt had a problem when reading a pipe
+	- Insufficiency fixed: client now tells server to not overwrite
+	  tapes relevant on this server only (before lock on all servers)
+	- Server ID introduced to be able to identify the same server
+	  under different hostname/port-combinations (e.g. single-multi)
+	- Server now tells about it's version, client evaluates this
+	- New option -r for command label_tape to delete the overwritten
+	  tape from the cartridge handling database
+	- label_tape now updates the cartridge handling database properly
+	- Better locking for the cartridge handling database files
+	- Bug fixed: memory allocation in del_one_from_Uns32Ranges
+	- Tape usage counter (file tape_uses)
+	- New serverside callback command Tape-Full-Command
+	- New helper program __numset
+	- Helper script cartagehandler to automatically move cartridges
+	  to other sets
+	- Variable client-server-protocol
+	- Throughput optimizer varying the client-server-protocol
+	- Annoyance fixed: verify no longer tells  x is larger than x
+	- Source reorganized: Utilities library can be used independently
+	  from afbackup, especially in other projects
+	- Bug fixed. When restoring relative to a directory, symlinks
+	  pointing to absolute pathnames were not created correctly
+	- Parts of restore reworked -> safer, faster: trying to put
+	  together subsequent tape files for restore; output modified
+	- Insufficiency fixed: -l and -n with -a allowed for afrestore
+	- Trivial but terrible (whoooooaaaaahhh) memory leak fixed
+	- Problem fixed with multi stream server when first/last client
+	  fails to connect successfully (thanks also to Pjotr Klaban)
+	- Bug fixed: The device access timeouts did not behave as
+	  documented when configuring 0
+	- Bug fixed: verify might have hung reading corrupt tape data
+	- Usage check for client program fixed
+	- Bug fixed: Documentation error on -R for restore stating a
+	  directory would be created
+	- Bug fixed: reread tape position file after waiting for write
+	- File truncation during restore tracked down to misbehaving zlib
+	- Default installation directory in Install script changed from
+	  /usr/backup to /usr/local/afbackup
+	- More appropriate position recording in file index -> faster
+	  restore
+
+3.2.4 - 3.2.5
+	- All arguments passed to mserver and not recognized are passed on
+	  to the server subprocess, thus -b possible in /etc/inetd.conf
+	- Fixed bogus error message during restore, stating that errors
+	  occurred, though there were none
+	- Optional CRC32 checksumming on each file, especially, if not
+	  compressed (zlib is required nonetheless)
+	- Real compression factor is reported in statistics taking only
+	  compressed files into account
+	- More detailed error messages
+	- Configurable server status file, optional append mode
+	- More convenience replacements in configuration files
+	- Timeout for logon to server
+	- Restore of filecontents can be forced to relative path, too
+	- Option -H removed from afrestore, -W should be used instead
+	- Bug fixed: On Solaris or HP-UX the multi stream server might
+	  segfault at startup with certain configurations
+	- More logical error handling on client side: distinguish between
+	  retryable and non-retryable errors
+	- Cartridge set access can be restricted to certain clients
+	- Bug fixed: Built-in authentication key stuff (no DES) was broken
+	- Restoring with unlink: If a directory is restored and an entry
+	  with that name exists, that is not a directory, it is unlinked
+	- Minor bug fixed: raw tape access was broken through the multi
+	  stream server (discouraged anyway) in 3.2.4
+	- Workaround for stupid bug in the IRIX-6.5 Headers
+	- On Sun and HP ask for and recommend using gcc
+	- Documentation errors concerning filesystems as storage media
+	  fixed
+
+3.2.5 - 3.2.6
+	- Fix for malloc problem on Digital Unix (and probably others (?))
+	- Optional full append mode
+	- Exit, if confirmation can't be read from TTY or on input timeout
+	- Bug fixed: When switching to another cartridge set for backup
+	  with a writing position on a tape, that has been set to read-only
+	  mode in the meantime, an immediately following verify asks for
+	  another tape first before requesting the correct one (this
+	  problem has never been reported to me and only matters for verify,
+	  not for restore or anything else, so i consider this a minor bug)
+	- Documentation update: How afbackup compares to amanda
+	- Two-column X-configuration programs
+	- I18N/L10N (thanks a lot to "Lele Gaifax" for implementing it)
+	- Option -n with -X for remote start will prefix the output lines
+	  with the name of the remote host and a colon
+	- Also negative timestamps possible (e.g. "supported" by Solaris)
+	- Additional security checking for wrong SUID/SGID Flags
+	- Multi stream server's client authentication timing reworked
+	  (might timeout during connect due to long tape operations)
+	- Option to refuse writing to tapes without valid labels
+	- Option -m for restore to prevent existing files from overwriting
+
+3.2.6 - 3.2.7
+	- Compress/Uncompress program parameters renamed to Process/Unprocess
+	  to stress their more general character
+	- The unprocess programs for the indexes are written to files, so
+	  the (un-)process programs can be safely changed at any time
+	- Seperately configurable process and unprocess commands for the
+	  index files
+	- The restore option -C really will create the directory as stated
+	  by earlier documentation
+	- Serverside bug fixed: In very rare cases the tape file count
+	  might become higher than reality. This makes, that full append
+	  mode for this tape does not work any longer, when it is deselected
+	  explicitly (cartis -i or clientside -G), No data is endangered to
+	  be erased, overwritten or some other way lost
+	- Optional variable append mode. Any tape of the right cartridge set
+	  with space left is accepted for writing. No fix writing position
+	- Some oddities in label_tape cleaned up, e.g. a cartridge will be
+	  removed from the set of read-only tapes, when labeled
+	- Bug fixed: (full|incr)_backup did not work with LANG != C or unset
+	- One more time workaround for IRIX-6 header bug
+	- When cartridges are removed on the server (using label_tape or
+	  the server message ReuseTapes) the client updates his information
+	  and prints a message at backup start time
+	- More robust client connect mechanism
+	- Multi stream server can be started as daemon (not using inetd)
+
+3.2.7 - 3.2.7pl1
+	- full_backup and incr_backup did not work with LANG != C
+
+3.2.7 - 3.2.8
+	- (3.2.8 is mainly a maintenance update)
+	- Symlinks owned by root:root in a user's directory could not be
+	  restored before. This works now, if there's no syscall lchown
+	- Tapes can be labeled, while server is waiting (option -F)
+	- Build machinery, especially autoconf, enhanced
+	- No more sideeffects when installing the programs not in an own,
+	  but a public directory
+	- Debian source build tree fixed
+	- Choice while running Install, whether chown of the serverside var
+	  directory and all it's contents should be performed
+	- Some texts were still not internationalized
+	- More documentation
+	- Workaround for remotely started daemons, that do not daemonize
+	  properly
+	- Most filedescriptors are closed on exec - cleaner implementation
+	- Authentication stuff implemented more generally reusable (for gnep)
+	- Problems with Tcl/Tk-strings on IRIX and Tk-4.0 fixed
+	- Also on Linux filesizes > 2GB supported (if Linux does)
+	- Server enhanced, so Solaris is now a tested server side platform
+	  (must be >= Solaris-2.6)
+	- Clientside logfile is only opened, when there is something to be
+	  appended, and closed afterwards - cleaner implementation
+	- The minimum restore info can be used in the clientside exit command
+	- Client gives up connecting immediately on sure authentication error
+
+3.2.8 - 3.2.8pl1
+	- afclient -GQ did not produce correct output on first invocation,
+	  what might break verify functionality (no data harmed)
+	- afclient's -n option in combination with -X was not documented
+	- Minimal restore info might not be found while tape scanning if
+	  written by the multi stream server
+	- afmserver did segfault, if tape blocksize was > 131076 bytes
+	- afmserver made afserver ignore the -b flag (nobuffering)
+
+3.2.8pl1 - 3.2.8pl2
+	- If there was an entry for the parameter "LastCartridges:" in the
+	  serverside configuration file (though this entry is an old
+	  fashioned one, it's use is discouraged, changing to the new style
+	  entry is described in the UPGRAGE file under 3.2.2 and the entry
+	  is automatically converted by either serverconfig or xserverconfig)
+	  AND the entry was empty AND there was no entry for the (new-style)
+	  parameter CartridgeSets, THEN the server misbehaved in that it
+	  requested cartridge n + 1, when cartridge n was full and there were
+	  only n cartridges configured
+
+3.2.8pl2 - 3.2.8pl4
+	- make install.client might fail, if DES encryption is not built in
+
+3.2.8pl4 - 3.2.8pl5
+	- Bug fixed: server might segfault when writing is requested and
+	  no tape with space is available
+
+3.2.8 - 3.3
+	- OpenBSD supported
+	- Tape locations database
+	- Media changer support (1 drive in a media changer per server)
+	- New command cart_ctl
+	- mtime is saved in index -> file selection/listing for restore
+	  using the modification time is correct now, but: index bigger and
+	  less compressable
+	- Contents of progress text window of xrestore always visible now
+	- Server can send mails to current users (%U) on clientside (%H)
+	- Server is configurable to write messages to syslog
+	- No longer strange server behaviour, if no logging is configured
+	- Path replacements also on server side (%L, %B, %V)
+	- afclient -v prints out software name and version
+	- Bug fixed: Toplevel directories with a name consisting of only 1
+	  character were only listed by restore, if the name was given exactly,
+	  thus not immediately visible in xafrestore
+	- Bug fixed: restoring a filesystem entry with ACLs and several
+	  hardlinks produced format error and possibly segfault
+	- Cleverer algorithm to select the tape files for emergency restore,
+	  -E and -e options of afrestore can be given several times
+	- Buggy function in libdes des_3cbc_encrypt only used on request
+
+3.3 - 3.3pl1
+	- Stray lines in afrestore -l output, thus also in xafrestore, fixed
+
+3.3pl1 - 3.3pl2
+	- copy_tape did not work any more with destination filesystem
+	- if built-in compression was turned on and an external program was
+	  configured to preprocess the saved files, under certain (in my
+	  opinion rare) circumstances verify might stop processing due to
+	  a condition similar to a race. Other functionalities e.g. backup
+	  or restore were not affected
+
+3.3 - 3.3.1
+	- For the entries to save a command can be supplied starting with | 
+	- Help dialog geometry adapts to the text length
+	- With older minimum restore info the older index is restored, not a
+	  new one created (like before). So also data can be restored, that
+	  is in indexes, that have already been removed, cause they left the
+	  range configured in the NumIndexesToStore parameter. Assumed is
+	  of course, that the needed tapes have not been overwritten
+	- Filename in minimum restore info is a temporary copy. The constant
+	  name turned out to be disadvantadgous for the previous topic
+	- New server message DeleteClient to free the tapes of a client
+	- When cartridges are removed on the server (using label_tape or the
+	  server message ReuseTapes) the clients also update the index files
+	- Tested on Linux-2.4
+	- The tape blocksize can be changed now without breaking access to
+	  older tapes. This feature was a horror to implement and test. If
+	  this was commercial software, i'm sure, this had never been done
+	- Restore only the newest version of a file, if no timestamp is given,
+	  not the same file several times
+	- Client requests authentication from server, too, to make sure, it is
+	  talking to an afserver, that is really knowing the key -> security
+	- Option -T for copy_tape to specify the directory for temporary space
+	- The clientside lockfile is now configurable
+	- Flag -i for afrestore to ignore the case in filenames
+	- Current index might have lost some contents when hitting Ctrl-C
+
+3.3.1 - 3.3.2
+	- Restore can be restricted to a supplied set of tapes
+	- New command update_indexes to ask the servers for erased tapes
+	  and to remove the appropriate entries from the indexes
+	- Index cleanup from erased tape entries is now done before backup
+	  when starting (full|incr)_backup, not afterwards
+	- With afrestore and update_indexes, certain arguments are ignored
+	  now, when started by normal users with SetUID root (security)
+	- NumIndexesToStore = 0 was incorrectly handled as 1
+	- Bug fixed: With certain configurations non-root restore was broken
+	- Opening a tape device to test availability should be non-blocking,
+	  so with an autochanger the server will never hang on an empty drive
+	- The find function did not always work properly with flags FIND_DEPTH
+	  and FIND_LOCAL_DEV set -> flag -m or .//. sometimes misbehaved
+	- The tape label comment is kept when the tape is automatically labeled
+	- The tape read and write positions were not reset when labeling a tape
+
+3.3.2 - 3.3.3
+	- Server multithreaded, if POSIX threads available (evtl. -> speed)
+	- New utility xafserverstatus
+	- Buffer behaviour enhanced for a little more speed on slow filesystems
+	- Cleaner implementation of handling trailing pad bytes
+	- label_tape on symlink pseudotapes in the filesystem was broken
+	- copy_tape reworked, so beginning of read and write can be set to
+	  a certain tape file number (option -F)
+	- Client identifier in index header line
+	- More reliable error detection on the target server during tape copy
+	- For writing the correct secondary cartridge number (i.e. a clone)
+	  is only accepted after error message and insisting by a maintainer
+	- Beautification: verifying the latest backup does no longer complain
+	  about a file, that is temporarily needed and saved, but was gone
+	- The program changerready (hardlink to cartready) was not installed
+
+3.3.3 - 3.3.3pl1
+	- xafrestore did not work, when vardir was not set in config file
+
+3.3.3pl1 - 3.3.3pl2
+	- Subprocess exit status sometimes incorrectly evaluated (observed only
+	  on Solaris, but maybe some rare confusions were caused by that, too)
+
+3.3.3pl2 - 3.3.3pl3
+	- cart_ctl -t should use the 'CartridgeInsertGracetime'
+	- cart_ctl -t should not set the cartridge location to unknown, if
+	  labeling fails
+
+3.3.3pl3 - 3.3.3pl4
+	- Build problems with disabled national language support fixed
+	- Wrong newline in changer.conf.chio for FreeBSD removed
+
+3.3.3pl4 - 3.3.3pl5
+	- Bug fixed: The current tape blocksize must not change during online
+	  server reconfiguration i.e. after a cartready command or similar
+	- Bug fixed: Default lockfile was not set correctly after online
+	  server reconfiguration
+
+3.3.3 - 3.3.4
+	- Option -e (eject) for cart_ctl
+	- Faster cleanup on client interruption
+	- Full installation support for use with xinetd
+	- Option -F plus format string for afrestore to print in user-defined
+	  format and possibly containing file attributes present in the index
+	- Details display also available in xafrestore GUI
+	- New tape position file format, needed for future handling of
+	  boxes with several streamer devices
+	- cartis is no longer a script, yet another link to label_tape
+	- Even safer cleanup on client interruption
+	- Option -l[a] for afverify to list available backups from the indexes
+	- Cleverer memory allocation strategy for names of files to restore to
+	  be able to hold more of them in memory
+	- POSIX ACLs supported
+	- OSF-1 (and derivatives) ACLs supported
+	- ACLs supported on IRIX
+	- When an index has moved to another client, it is no longer necessary
+	  to supply the -W <clientid> option to afverify or afrestore, when
+	  afrestore is used with files or filepatterns (i.e. not -aeEf)
+	- Clientside process calling chain reworked -> faster startup, less
+	  tape moving, easier handling of the minimum restore info, cleaner
+	  implementation, cleaner error handling, but: if a backup fails, a
+	  minimum restore info for this is nonetheless written to tape. But
+	  the advangages outweigh this little oddity
+	- print_errors removed. All errors go to the log and stderr, no longer
+	  mixed into the index files
+	- Emergency recovery with relocate now relocates also the var directory
+	  and creates it, if not existing
+	- Bug fixed: After an online server reconfiguration (e.g. following a
+	  cartready command) with directory pseudotapes it might happen, that
+	  the saving location of a few files was wrong in the index
+	- Bug fixed: afrestore -a with -C stopped prematurely in some rare
+	  cases, when there were incremantal backups with no saved files
+
+3.3.4 - 3.3.4pl1
+	- Bug fixed: Statistics output was wrong: wrong start and end tape
+	  position reported. Sideeffect: Use of cartridge 0 (not valid)
+	  reported and cartridge 0 protected from overwrite on the server.
+	  Mainly confusing, but not a really bad bug
+
+3.3.4pl1 - 3.3.4pl2
+	- Weird problem fixed: The multi stream server failed to demultiplex
+	  the data to clients when reading during interrupt check, but only
+	  with many clients saved in parallel, only on linux and only when
+	  compiled with -O2. Worked around it, but didn't really understand
+	  the problem. Suspect a libc error in getpeername
+
+3.3.4 - 3.3.5
+	- When encountering files of type "door" (cf. Solaris), do not throw
+	  warnings and do not back them up
+	- Remove old index files optionally by age, not by number of existing
+	- Optionally scan a maximum configured number of index files, possibly
+	  by age
+	- Use also builtin paths to locate configuration and other directories,
+	  even with ORIG_DEFAULTS defined. Thus the full path is no longer
+	  necessary in /etc/inetd.conf for argv[0] of the server entries
+	- Use /dev/(u)random, if available, for random numbers
+	- POSIX threads availability also recognized on FreeBSD and the like
+	- Optionally check, if the user has the access permissions to restore
+	  his own files, also in the case, that no relocation is done
+	- cart_ctl -l filters by changer device, if option -d is given
+	- Option to prefer cartridges available in a changer. Default is to
+	  cycle through all tapes independently from their current location
+	- Authentication key file can be configured individually for
+	  clients or groups of clients e.g. by command filtering
+	from a patch of Peter 'Rattacresh' Backes:
+	- Added --disable-threads option to configure.in and a corresponding
+	  question to Install.
+	- Fixed some questionable syntax combinations in Install like backspace
+	  at the end of a string literal, a double quote ended by a single one
+	  and a strange method of checking for the exit code
+
+3.3.5 - 3.3.5.1
+	- Install included libintl with x_utils, if required
+
+3.3.5 - 3.3.5.1pl1
+	- Avoid bogus messages: 'Wrong tape X accepted in drive for -1' and
+	  'Using cartridge N instead of the desired (N-1)'
+	- Bug fixed: server might crash or overwrite tape 1 without checking
+	  that the tape is free, after requesting to free tapes manually
+
+3.3.5.1pl1 - 3.3.5.1pl2
+	- Fix for 'Avoid bogus messages ...' in pl1 was bad
+
+3.3.5.1pl2 - 3.3.5.1pl3
+	- Memory allocation bug fixed in full_backup
+
+3.3.5.1 - 3.3.6
+	- Mostly RCSed
+	- Modified implementation of excluding files and directories. Now
+	  also toplevel subentries can be excluded writing ./whatever
+	- In addition to the mtime also the ctime can be used to select files
+	  for backup during incremental or level X backup. Then the atimes
+	  will not be preserved during backup
+	- Installation cleanup. The configuration files are now in choosable
+	  configdir, what is by default .../etc. A serverside logdir and a
+	  clientside confdir has been added. Upgrade will automatically move
+	  the configuration files to the new place
+	- Troubleshooting HowTo added
+	- Fixed, that the client side might hang due to unexpected errors
+	  on the server side during startup
+	- Fixed: If the first thing done after a fresh installation was a
+	  differential backup (?!?), the index count erroneously started with 0
+	- Cosmetical bug fixed: In the afrestore output "Found N matches on X
+	  servers, Y cartridges ..." X and Y were more phantasy than sth. real
+	- Insufficiency fixed: When the backup device had changed, the writing
+	  position was reported incorrectly at the first next client request
+	- If backup is started with files and directories to backup as command
+	  line arguments, don't save them in the save_entries file
+	- Do not store the clientside information about crucial tapes, if
+	  passing this info to the server fails (avoids confusing message)
+	- When finding files with l-bit set (if supported by platform), try
+	  to set read lock, then backup on success, otherwise throw warning
+	- Backward compatibility with servers < version 3.2 was broken 
+	- In/exclude filesystems in/from backup by type name
+	- Flag -H for incr_backup to release previous backups with a lower
+	  level or the previous differential backup in differential mode
+	- full_backup and friends can run without a configuration file applying
+	  defaults, what is not desirable in most cases except emergency i.e.
+	  disaster recovery starting afrestore with option -E or -e ...
+	- During disaster recovery, if an index file is directly restored from
+	  backup thus colliding with the one created by afrestore, the former
+	  one will be renamed and a warning issued, so a maintainer can choose,
+	  which one to use further
+	- Option -L for af(m)server to set a locale
+
+3.3.6 - 3.3.6pl1:
+	- Bug in the find algorithm fixed, that lead to segfault
+
+3.3.6pl1 - 3.3.6pl2
+	- Bug fixed: restore as normal user might segfault (thanks to Norbert
+	  Eicker at the University of Wuppertal for analysing the problem)
+
+3.3.6pl2 - 3.3.6pl3
+	- Workaround for drand48 on SunOS-4 extended, cause it is even heavier
+	  broken than assumed before
+	- Bug (?) fixed: on Solaris-2 sometimes it seems impossible to find out
+	  the filesystem type of a file (observed by 'customer', but not
+	  reproducible on Solaris-8 systems available to AF)
+	- Output of cart_ctl was wrong when requesting a manual move from a
+	  location outside a changer to a drive
+
+3.3.6pl3 - 3.3.6pl4
+	- xafserverstatus did not work on new installations
+
+3.3.6pl4 - 3.3.6pl5
+	- Issue 'Fixed, that the client side might hang ...' was not really
+	  fixed completely
+	- Modifications for debian package incorporated
+
+3.3.6pl5 - 3.3.6pl6
+	- Skipping filesystems by type did not work in combination with other
+	  restricting criteria e.g. time constraints e.g. incremental backup
+
+3.3.6 - 3.3.7
+	- Apply (configurable) watermarks to the fill rate of the tape buffer
+	  during writing or reading to decide whether to read/write or pause
+	- Buffer size configurable
+	- Buffer can be a file (mapped into address space)
+	- Tested with libcrypto from openssl instead of the libdes, hints added
+	- afmserver did not set keepalive mode (client did nonetheless)
+	- Extended check for erroneous set{u|g}id installation of client-side
+	  programs
+	- NetBSD supported
+	- Workaround for strange nonstandard fcntl semantics on certain (?)
+	  versions (?) of f...... HP-UX probably lacking patches (?). Don't
+	  buy HP
+	- Interrupt algorithm changed for {full|incr}_backup: optional fast
+	  termination on SIGTERM, SIGABRT, SIGQUIT (Ctrl-\) or several Ctrl-C
+	- Bug fixed: after labeling a used tape and if the current writing
+	  position was on that tape, the writing position was reset incorrectly
+	- Bug fixed: When removing a client or ALL it's reserved tapes from the
+	  precious_tapes file on the server, the indexes were not cleaned up
+	- Faster algorithm to find duplicate entries during restore, should
+	  lead to notable speedup when restoring > 100000 filesystem entries
+	- Multi stream server more verbose on errors, especially demultiplexing
+	  format errors
+	- According to the wish of a lot of people afbackup is now installing
+	  without creating hard links, but symbolic links instead
+
+3.3.7 - 3.3.7pl1
+	- Bug fixed: server might crash after manual tape change
+
+3.3.7pl1 - 3.3.7pl2
+	- Bug fixed: With variable append mode turned on, when a cartridge
+	  from another set was requested, but a different one inserted, the
+	  client's idea of the current tape on the server was temporarily wrong
+	- Bug fixed: full_backup, incr_backup, afrestore and afverify did
+	  segfault before exiting with bad status, when an index file could
+	  not be uncompressed
+
+3.3.7pl2 - 3.3.7pl3
+	- Throughput optimization disabled because of suspicions, that it
+	  corrupts data in rare cases
+	- Compiler optimization configurable interactively running Install
+	- Fix for FreeBSD-4.7 because with this release the SA driver has
+	  changed it's behaviour at end of tape (sigh)
+
+3.3.7pl3 - 3.3.7pl4
+	- Determine filesystems exactly regardless of duplicate device numbers
+	- Always set tape writing position to file 1, when tape is reused
+	- New configure flag --without-strip to disable stripping binaries
+	- Directory for temporary files configurable --with-tmpdir=/what/ever
+	- Fixes for UnixWare-5
+	- Newer ACL implementations on Linux require -lattr during linking
+
+3.3.7pl4 - 3.3.7pl5
+	- Throughput optimizer fixed and reenabled (was disabled in pl3).
+	  Numerical subtilities lead to about one corrupted block of data of
+	  a size 12 - 96 bytes among 500 Meg data
+	- On interrupt the server now kills subprocesses (e.g. mt commands)
+	  with signal KILL
+	- Bug fixed: Under certain circumstances the server had the wrong
+	  idea, what tape is currently in the drive. Detected and fix suggested
+	  by Vlad Solopchenko (thanks a lot)
+	- Install script extended to possibly add the afbackup services entries
+	  as alias names
+	- postinstall/preremove/checkinstall script, pkginfo and a map file
+	  for Solaris-2 packaging added to the distribution, see HOWTO Q 36
+	- HOWTO, FAQ and DO-DONT are separate files now
+	- files > 2 GB supported on HPUX
+
+3.3.7pl5 - 3.3.7pl6
+	- When afrestore -e has read the minimum restore information and no
+	  data matching the client id has been found, no appropriate output
+	  had been produced, but a senseless 'No Memory'
+	- Making backup into a filesystem on changable media without a media
+	  being initially available and inserted later the server did not
+	  recognize it sometimes (? observed by a collegue, but didn't look
+	  at the particular installation and was not able to reproduce it)
+	- Configuration with backup to filesystem and no cartridge handler
+	  (e.g. manual change e.g. for setting CDROM) supported
+	- Slightly more detailed mail, for what a requested cartridge is needed
+	- Bug fixed: if PreferCartInChanger was set, the configured cartridge
+	  sets were ignored, when selecting the next cartridge when the current
+	  one got full
+	- Reworked HOWTO Q 7 about how to recover from disaster using
+	  statically linked afbackup programs
+	- Script simple_tape_barcodes.pl added from Toivo Pedaste implementing
+	  a simple handling of changer device readable tape labels
+	- New option -r for cart_ctl equivalent to label_tape. Now cartridges
+	  are not automatically marked overwritable when labeled with option
+	  -t, this has to be specified explicitely using option -r. This was
+	  a feature request: it should be possible to label other tapes then
+	  the productive ones with the same label numbers without freeing the
+	  data on the productive tapes and without asking interactively
+
+3.3.7 - 3.3.8
+	- Modifications in the debian part contributed by the Debian afbackup
+	  maintainer Torsten Werner
+	- Insufficiency fixed: Restore might have segfaulted on corrupt index
+	- Option -t for afrestore to only list, what tapes are required for
+	  restore. This is helpful especially in the situation, that one wants
+	  to know in advance, which tapes to put into a changer before actually
+	  starting the restore
+	- Messages from the server, that up to now were only emailed by the
+	  server can now be output on the client side, if desired, configurable
+	  by operation mode (backup/verify/restore/copy_tape)
+	- Bug reading the minimum restore info from stdin fixed (Thanks to
+	  Arthur Korn)
+	- No more /tmp/afbsp_XXX files left over in /tmp after backup. Was
+	  necessary before to keep verify from complaining
+	- Install is now a sh script, no longer csh
+	- Calling afrestore with -A and/or -B did often use too many old tapes
+	  for restore unnecessarily
+	- Should be IPv6 safe (can do only minimum testing unfortunately)
+	- Build fixes for various operating systems
+	- Should be safe to be built as 64 bit binaries, at least with gcc -m64
+	- Fixes in autoconf to use gcc as preprocessor, if available
+	- Several type and header issues for better portability
+	- Debian upstream fix incorporated
+
+3.3.8 - 3.3.8pl1
+	- Autoconf modified to detect libacl and libattr more reliably
+	- Autoconf modified to be able to build even in quite strange
+	  environments by overriding system specifics (not documented)
+
+3.3.8pl1 - 3.3.8pl2
+	- Fixes in named data code, currently used only in other software, not
+	  in afbackup
+
+3.3.8pl2 - 3.3.8pl3
+	- Bug in tcp multiplexer code fixed (not sure, if it's really a bug in
+	  this code, could as well be considered a bug in some libc or header
+	  implementations) leading to segfault of afmserver under certain
+	  circumstances
+	- Bug in full_backup.c putting all lines output by a subprocess into
+	  one single line fixed
+
+3.3.8pl3 - 3.3.8.1
+	- Bug fixed: verify failed / hung in an endless loop, if during backup
+	  with only external compression configured a file attempted to be
+	  saved was not readable. With the fix still 'format error in input'
+	  errors might occur during verify of backups made with the unfixed
+	  software as the bug produced an invalid format to be written, what
+	  can hardly be workarounded, but can be considered an uncritical, just
+	  annoying warning
+	- Bug fixed (why the hell did i do it this way ?): afrestore -E over
+	  the multi stream port stopped after printing out the found minimum
+	  restore info(s) instead of starting to restore
+	- Tape device can be configured as - to prevent the server from logging
+	  a bogus warning, when it is used on clients only for remote start
+	- Bug fixed: Having UseCTime configured symlinks might not be written
+	  to the index
+	- Bug fixed: implementation error in setting the effective UIDs/GIDs,
+	  caused by a man page error in an older glibc, no impact on afbackup,
+	  only other software using the utilities library
+
+3.3.8.1 - 3.4
+	- Patterns %n and %m supported for the server's Init-Media-Command
+	- "Bug" 942640 (IMHO: Feature Request) fixed: The serverside ring
+	  buffer fill status is no longer written to the status file / display.
+	  If someone wants to see them, build with the environment variable
+	  EXTERNAL_INCLUDES set to -DAFB_SERVER_SHOW_BUFFER_STATUS before
+	  running configure or Install
+	- Client side backup progress log implemented: New configuration
+	  parameter added, current status is written to .../client/var/progress
+	  and can e.g. be watched using the script
+	   progress_display -f 3 /path/to/client/var/progress
+	- To make the packer/unpacker deal with arbitrary path lengths/depths
+	  memory must be allocated dynamically. The new version implements a
+	  highly efficient combination of dynamic and static memory allocation
+	  depending on the current requirements. Thus: Bug 582829 fixed
+	- If someone uses the afclient program as a simple file packer like
+	  tar: unpacking an archive of absolute paths forcing things to be
+	  relative and giving option -r two or three times to adapt the targets
+	  of symbolic links to be relative as well, if they are absolute in
+	  the archive, now finally does the right things. Up to now this was
+	  just a mess. But this functionality was never used when running
+	  the afbackup components in the normal way, so noone might ever have
+	  noticed that.
+	- uninstall targets added to Makefile, contributed by Jeannot Langlois
+	  at linuxmail DOT org, somewhat reworked, particularly turned the
+	  dependencies around: the common stuff may be removed with uninstall,
+	  but not with uninstall.client or uninstall.server only, and the like
+	  (to be frank: i don't see too much sense in an uninstall make target,
+	  IMHO install/uninstall should be subject of a package management)
+	- neglible bug in label_tape fixed: In extremely rare situations the
+	  program wanted to read from stdout after issuing a message
+	- fix label_tape and cartis to write files as the user, under whose id
+	  the server runs (device owner / var directory owner)
+	- With Solaris over NFS version 4 setting ACLs fails, when the numerical
+	  ID cannot be resolved to a name, so these particular ACL entries are
+	  skipped now and setting the ACL is attempted a second time
+	- Implementation problem with varargs fixed. When using v*printf or
+	  vsyslog the call must be enclosed in va_start and va_end (didn't
+	  find a hint to this in any documentation), otherwise strange data
+	  appears or even segfaults occur, the latter esp. with recent glibc
+	- Running full_backup/incr_backup/afrestore/afverify, when another
+	  process is already owning a lock, the operator now has the choice
+	  whether to steal a possibly existing lock or to leave it to the
+	  already running process
+	- Restore can be limited to certain backups supplying a timerange for
+	  the backup date (not only the file modification time), see options
+	  -A and -B of afrestore
+	- German translation errors fixed (Bug 1238131, thx to Torsten Werner)
+
+3.4 - 3.5
+	- Bug fixed: cart_ctrl -i aborted on unreadable tape
+	- Minor implementation enhancements e.g. for performance
+	- MacOS-X (10) supported, at least the client side has been tested
+	- Support for barcode tape labels, thus
+	- cart_ctl notably extended: Detailed listings, attribute assignments,
+	  cartridge descriptions etc.
+	- Usage output of server and mserver corrected
+	- Bug fixed: When packing (backup) with an external processing command
+	  (e.g. compression) and later during unpack the reverse processing
+	  command can not be executed, the afclient program terminated without
+	  any message
+	- debian subdirectory removed due to maintainer's request
+
+3.5 - 3.5.1
+	- Solaris-10's read(2) is a tiny bit different
+	- Solaris-10's implementation of NFS4 / ZFS ACLs supported
+	- Filemode differences during verify are printed in octal now
+	- Contributed text and Makefile patches from sourceforge applied
+	- Debian GNU/kFreeBSD supported (thanks to Thorsten Werner)
+	- No more trigraph warnings
+
+3.5.1 - 3.5.1pl1
+	- Bug fixed: In the change-cart-command %d was not always replaced like
+	  documented. Workaround was to configure the real device here
+
+3.5.1pl1 - 3.5.1pl2
+	- Bug fixed: When a changer had no loadports, cart_ctl -li showed 2
+	  bogus loadports
+
+3.5.1pl2 - 3.5.2
+	- Bug fixed: full_backup or incr_backup died on empty level_timestamps
+	  file
+	- Default username changed to afbackup in the Install script
+	- Install script enhanced to be more flexible in handling the services
+	  database file
+	- Syntax bugs fixed in Install script
+	- The multi stream server now exits immediately if the address to bind
+	  to in daemon mode is not free
+	- Init script added, adapted by configure and installed with the server
+	- For safer start and stop using the init script, the multi stream
+	  server writes and locks a pid file now
+	- full_backup (probably called as afrestore or other name) segfaulted
+	  on empty server IDs file (sourceforge bug # 1722155)
+	- Illegal stack access in the server (sourceforge bug # 1728238)
+
+3.5.2 - 3.5.2.1
+	- Handling of pref_client enhanced
+	- copy_tape did segfault without a target server specified
+	  (sourceforge bug # 1771280)
+
+3.5.2.1 - 3.5.2.2
+	- Build failed on Fedora-9 (or any other OS coming with the latest GNU
+	  regex politics implementations)
+
+3.5.2.2 - 3.5.3
+	- Structural rework of the cartridge setting code for higher robustness,
+	  better maintainability and to fix sourceforge bug #740423 (though
+	  this bug could never be reproduced ever since. More likely cause:
+	  faulty streamer firmware or bad tapes)
+	- Rework operation and documentation of changers in sequential mode
+	- HOWTO questions 32 - 37 got lost by editor / character set oddities
+
+3.5.3 - 3.5.4
+	- Bug fixed: When pressing the Stop button during restore in xafrestore
+	  started as normal user, then closing the window, a background process
+	  afrestore was left running who did perform the restore in spite of
+	  the kill issued by closing the window. The reason for this was:
+	- setuid() made afrestore unkillable by the user who started it, except
+	  by pressing Ctrl-C, so now seteuid() is called instead. With seteuid:
+	- access() almost never does, what i want, so use eaccess or better
+	  try to avoid
+	- Unclear error message, when the server hostname could not be resolved
+
+3.5.4 - 3.5.5
+	- Determining filesystems on Solaris now deals with oddities of ZFS
+	- Performance enhancement finding the filesystem by path
+	- Library fix: counting words can span several lines (no impact on the
+	  backup software itself, used in other software using the libraries)
+	- Library fix: possible segfault on string set intersection (dito)
+	- Makefile.in and autoconf stuff reworked to use libtool soon
+
+3.5.5 - 3.5.6
+	- goptions (command line argument parser) respects -- properly
+
+3.5.6 - 3.5.7
+	- lots of cleanup and minor bug fixes
+	- libz and libcrypto usability now autodetected
+	- Default is now to use DES encryption, if openssl is found.
+	  Run configure using option --without-des to override
+	- Building RPMs can now be done by 'make rpms' after configure
+	- afbackup.spec creation is now subject to autoconf
+	- afbackup.spec.rh added for fixed path RPM creation
+	- Modifications for latest glibc regex header changes
+	- poll used instead of select wherever many filedescriptors are needed
+	- subdirectory name appended by default changed from backup to afbackup
+	- the configure.sunos4 script is no longer attached. Use bash on SunOS4
+	- the default accountname to run the backup server changed to afbackup
+	- "neue deutsche Rechtschreibung", soweit ich davon nen Schimmer hab
+	- the readonly_tapes file needs not be created initially
+
+3.5.7 - 3.5.8
+	- albiutils commands and package integrated
+	- Minor fixes to check arguments and better error handling in
+	  stringlist functions
+	- rpmbuild on current Fedora ignores BuildRoot in spec file
+	  (why did they have to change this ?)
+	- get_ent is now permanent part of albiutils (getent on Linux is broken
+	  every now and then in ways phantasy can hardly imagine)
+
+3.5.8 - 3.5.8.1
+	- Some glibc versions to not reuse memory in re_compile_pattern, what
+	  leads to memory leaks. As a workaround no longer trust it
+
+3.5.8.1 - 3.5.8.2
+	- Bug fixed. Could have caused a strange superfluous file descriptor
+	- ssu (albiutils) can also set supplementary groups now
+
+3.5.8.2 - 3.5.8.3
+	- RPMs did not build with the *.rh files cause of wrong version string
+	- Building albiutils RPM with albiutils.spec.rh requires openssl-devel
+
+3.5.8.3 - 3.5.8.4
+	- TCP multiplexer API enhancement for better multithreading performance
+
+3.5.8.4 - 3.5.8.5
+	- Accept also IP6 addresses (not only IP4), where hostnames are allowed
+	- get_ent enhanced for IP-address syntax checking (option -i )
+
+3.5.8.5 - 3.5.8.6
+	- Bug fixed. Possible segfault caused by the change 3.5.8.3 - 3.5.8.4
+	- openssl utilities included
+
+3.5.8.6 - 3.5.8.7
+	- New phenomenon workarounded: poll with several filedescriptors
+	  returns indicating, that there is data available, but a second poll
+	  shows, this is not true. Very likely a highly OS dependent issue
+	- More utilities included
+
+3.5.8.7 - 3.5.8.8
+	- Bug in q_sort fixed. It might not have sorted actually with various
+	  consequences :-(
+
+3.5.8.8 - 3.5.8.9
+	- Introduce a new way to build debian packages (make debs)
+	- Better random key string creation
+	- Init script made conforming to LSB
+
+3.5.8.9 - 3.5.8.10
+	- albiutils can also be built as debian package (make albiutils.debs)
+	- make albiutils.solpkg did not work anymore on Solaris. Workarounded
+
+3.5.8.10 - 3.5.8.11
+	- ttywrap enhanced to check for the subprocess being alive
+	- options added to ttywrap to convert newline (aka LF) to CR or CRLF
+
+3.5.8.11 - 3.5.8.12
+	- Bug in stringlist_cat fixed (not triggered internally in afbackup)

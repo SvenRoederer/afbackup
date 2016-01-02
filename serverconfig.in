@@ -1,0 +1,699 @@
+#!/bin/sh
+################### Start of $RCSfile: serverconfig.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/serverconfig.in,v $
+# $Id: serverconfig.in,v 1.6 2005/02/13 14:09:36 alb Exp alb $
+# $Date: 2005/02/13 14:09:36 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+#
+# 2 configurable parts
+#
+
+if [ $# -gt 1 ] ; then
+  echo `T_ "Usage"`": `basename $0` [ <configfile> ]"
+  exit 2
+fi
+
+cleantmp(){
+  exit 3
+}
+
+echo_n(){
+  echo "$@" | $AWK '{printf "%s",$0}'
+}
+
+matches(){
+  N=`echo "$1" | egrep -i "$2" | wc -l`
+
+  echo $N
+
+  if [ $N -lt 1 ] ; then
+    return 1
+  fi
+
+  return 0
+}
+
+find_program(){
+  for dir in `echo $PATH | tr : " "` ; do
+    if [ -x "$dir"/"$1" ] ; then
+      echo "$dir"/"$1"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+T_(){
+  if [ _"$HAVE_GETTEXT" = _ ] ; then
+    GETTEXT=`find_program gettext`
+
+    if [ _"$GETTEXT" = _ ] ; then
+      HAVE_GETTEXT=no
+    else
+      HAVE_GETTEXT=yes
+
+      TEXTDOMAIN="@PACKAGE@"
+      TEXTDOMAINDIR="@commondatadir@/locale"
+      export TEXTDOMAIN TEXTDOMAINDIR
+    fi
+  fi
+
+  if [ $HAVE_GETTEXT = yes ] ; then
+    $GETTEXT "$1"
+    return $?
+  fi
+
+  echo "$1"
+}
+
+TN_(){
+  echo "$1"
+}
+
+repl_backsl_seq(){
+  $AWK '{a = "";while(a != $0){a=$0;sub("\\\\n","\n");sub("\\\\t","\t");}; print}'
+}
+
+fmt_output(){
+  $AWK '{printf "%s\n.br\n",$0}' | nroff | $AWK '{a[NR] = $0;n = NR;}END{while(n > 1 && match(a[n], "^[ 	]*$")) n--; for(i = 1; i <= n; i++) printf "%s\n",a[i];}'
+}
+
+spcext(){
+  echo "$1" | awk '{n = '"$2"'; printf "%s",$0; while(length($0) < n) { printf " "; n-- }}'
+}
+
+resolvepath(){
+  oldpath="$1"
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo "$oldpath"|sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      set oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  if [ _`echo "$oldpath"|cut -c1` = _"/" ] ; then
+    oldhead="/"`echo "$oldpath"|cut -c2-|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|cut -c2-|sed 's#^[^/]*/##'`
+  else
+    oldhead=`echo "$oldpath"|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|sed 's#^[^/]*/##'`
+  fi
+  if [ _"$oldpath" = _"$oldhead" ] ; then
+    oldtail=""
+  fi
+
+  while true ; do
+    if [ _"$oldhead" = _ ] ; then
+      oldhead="."
+    fi
+    if [ ! -f "$oldhead" -a ! -d "$oldhead" ] ; then
+      echo ""
+      return 0
+    fi
+
+    linkchar=`ls -ld "$oldhead"|cut -c1`
+    if [ $linkchar = 'l' ] ; then
+      points_to=`ls -ld "$oldhead"|sed 's#^.*->[ 	]*##g'`
+
+      if [ `echo "$points_to"|cut -c1` = '/' ] ; then
+        newpath="$points_to"/"$oldtail"
+      else
+        newpath=`dirname "$oldhead"`/"$points_to"/"$oldtail"
+      fi
+
+      echo `resolvepath "$newpath"`
+      return $?
+    fi
+
+    if [ _"$oldtail" = _ ] ; then
+      oldpath="$oldhead"
+      break
+    fi
+
+    oldhead="$oldhead"/`echo "$oldtail"|sed 's#/.*$##g'`
+    if [ `echo "$oldtail"|grep /|wc -l` -lt 1 ] ; then
+      oldtail=''
+    else
+      oldtail=`echo "$oldtail"|sed 's#^[^/]*/##g'`
+    fi
+  done
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo $oldpath|sed 's#[^/][^/]*/\.\./##g;s#[^/][^/]*/\.\.$##g;s#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  echo "$newpath"
+  return 0
+}
+
+set_var_params(){
+  if [ $num_var_sp_idx -gt 0 ] ; then
+    eval num_var_params='"$'values__$num_var_sp_idx'"'
+
+    if [ _"$num_var_params" = _ ] ; then
+      num_var_params=1
+    fi
+  else
+    num_var_params=0
+  fi
+
+  num_total_params=`expr $num_fix_params + $num_var_params`
+  first_var_param=`expr $num_fix_params + 1`
+}
+
+if [ _"$BACKUP_HOME" = _ ] ; then
+  p="$0"
+  pnam=$p
+  pnam=`basename $pnam`
+  if [ "$pnam" = "$0" ] ; then
+    p=`find_program "$pnam"`
+  fi
+  if [ _`echo "$p"|cut -c1` != "_/" ] ; then
+    p="`pwd`/$p"
+  fi
+
+  BACKUP_HOME=`resolvepath "$p"`
+  BINDIR=`dirname "$BACKUP_HOME"`
+  SBINDIR="$BINDIR"
+  BACKUP_HOME="$BINDIR"
+  if [ `basename "$BACKUP_HOME"` = bin -o `basename "$BACKUP_HOME"` = sbin ] ; then
+    BACKUP_HOME=`dirname "$BACKUP_HOME"`
+  fi
+  export BACKUP_HOME
+fi
+
+if [ _"$BINDIR" = _ ] ; then
+  BINDIR="$BACKUP_HOME/bin"
+fi
+if [ _"$SBINDIR" = _ ] ; then
+  SBINDIR="$BACKUP_HOME/sbin"
+fi
+
+PATH="$BINDIR":"$SBINDIR":"$PATH"
+export PATH
+
+unset AWK
+
+# the solaris' awk is a piece of shit
+for awk in nawk gawk awk ; do
+  AWK=`find_program $awk`
+  if [ _"$AWK" != _ ] ; then
+    break
+  fi
+done
+
+if [ _"$AWK" = _ ] ; then
+  echo `T_ "No awk ? Is this really a lovely UNIX ?"`
+  echo `T_ "Sorry. I have to exit."`
+  exit 1
+fi
+
+if [ _"$PAGER" = _ ] ; then
+  PAGER=`find_program less`
+  if [ _"$PAGER" = _ ] ; then
+    PAGER=more
+  else
+    PAGER="$PAGER -eX"
+  fi
+fi
+
+if [ $# -eq 1 ] ; then
+  configfile="$1"
+else
+  found=0
+
+#
+# configurable part: configuration files to look for
+#
+  configfiles="$BACKUP_HOME/etc/backup.conf $BACKUP_HOME/lib/backup.conf /etc/buserver.conf /etc/afbuserver.conf /etc/afserver.conf /etc/afbackup/server.conf @serverlibdir@/@serverconf@"
+#
+# end configurable part
+#
+
+  for configfile in $configfiles ; do
+    if [ -r $configfile ] ; then
+      found=1
+      break
+    fi
+  done
+  if [ $found -eq 0 ] ; then
+    echo `T_ "No configuration file found. Exiting."`
+    exit 2
+  fi
+fi
+
+configfile=`resolvepath $configfile`
+
+if [ ! -r $configfile ] ; then
+  echo `T_ "Error: Cannot read configuration file"`" $configfile. "`T_ "Exiting."`
+  exit 3
+fi
+
+configlines="`cat $configfile`"
+
+getparam(){
+  if [ _"$configlines" = _ ] ; then
+    configlines="`cat $configfile`"
+  fi
+
+  echo "$configlines" | $AWK '/^[ 	]*'"$1"'/{sub("'"$1"'[ 	]*",""); print}'
+}
+
+promptlen=32
+
+#
+# configurable part: the parameter values
+#
+
+num_fix_params=37
+num_var_sp_idx=0
+
+comments__1=`TN_ "\nSERVER SPECIFICATION\n\nThe identifier for the server"`
+comments__2=`TN_ "\nDEVICE SPECIFICATION\n\nThe device name (No-Rewind-Version !)"`
+comments__3=`TN_ "\nThe blocksize of the device"`
+comments__4=`TN_ "\nSpecification of the tape buffer (size, high-, lowmark, filename)"`
+comments__5=`TN_ "\nFlag, whether the device is a robot / cartridge handling system (0 or 1)"`
+comments__6=`TN_ "\nInsert your number of cartridges, whether you have a robot or not"`
+comments__7=`TN_ "\nThe specifiers of different cartridge sets, if requested.\nDefault is 1 set with cartridges ranging from 1 up to the\nprevious parameter. Specifiers of cartridge sets must be\nseparated by whitespace and may contain digits, commas and\ndashes. Examples: 1-3 4,8-10 6,7"`
+comments__8=`TN_ "\nThe maximum number of bytes per file on tape"`
+comments__9=`TN_ "\nThe maximum number of bytes per tape"`
+comments__10=`TN_ "\nAppend also to explicitly deselected cartridges"`
+comments__11=`TN_ "\nWrite to any supplied cartridge, that has space"`
+comments__12=`TN_ "\nRefuse to write to tapes, that do not have a valid label"`
+comments__13=`TN_ "\nPrefer writable cartridges available in a changer"`
+comments__14=`TN_ "\nTime to wait from the moment, a new cartridge has been inserted\nuntil a new action is attempted on the tape device"`
+comments__15=`TN_ "\nTime to wait while the device is unavailable until a mail is\nsent to the user in charge"`
+comments__16=`TN_ "\nTime to wait while the device is unavailable until abort"`
+comments__17=`TN_ "\nThe interval in seconds for probing, if device is ready, when\ninserting another cartridge is requested. 0 for no probing."`
+comments__18=`TN_ "\nConfiguration file for a media changer"`
+comments__19=`TN_ "\n\nSHELL-COMMANDS FOR TAPE HANDLING\n\nIn these commands %d is replaced by the device name,\n%n by the number, if within the command the count starts with 1,\n%m by the number, if the count starts with 0.\n\nCommand to set the file # on tape"`
+comments__20=`TN_ "\nCommand to skip to the next %n-th file on tape"`
+comments__21=`TN_ "\nIf there is a command to set the cartridge directly, supply it here"`
+comments__22=`TN_ "\nIf the cartridges can only by changed successively, insert the\ncommand to change them here. This is also the command, that unloads\nthe tape, if you have no cartridge handler."`
+comments__23=`TN_ "\nIf the media must be prepared for access in some way,\nthe appropriate command can be supplied here."`
+comments__24=`TN_ "\nThe command to erase the tape. This is necessary on some systems."`
+comments__25=`TN_ "\nCommand, that is called, when a tape is full."`
+comments__26=`TN_ "\n\nCONFIGURATION FOR NON-EXISTING CARTRIDGE HANDLING SYSTEM\n\nThe user to inform, if a cartridge should be changed manually"`
+comments__27=`TN_ "\nThe mail-program to use.\n\nInsert %u for the position, where the username has to appear,\n%U for the remote user, %H for the remote client host."`
+comments__28=`TN_ "\n\nFILES TO SAVE THE STATE AND LOGGINGS\n\nDirectory for changing and persistent files"`
+comments__29=`TN_ "\nFilename to save the current tape position"`
+comments__30=`TN_ "\nFilename for error loggings etc."`
+comments__31=`TN_ "\nFilename to write the current server status to"`
+comments__32=`TN_ "\nLocking file to prevent several server starts"`
+comments__33=`TN_ "\nLockfile for accessing a media changer"`
+comments__34=`TN_ "\nThe file with the authentication encryption key"`
+comments__35=`TN_ "\n\nCONFIGURATION FOR REMOTE_EXECUTION\n\nDirectory, where remotely started programs must reside"`
+comments__36=`TN_ "\n\nSERVER-STARTUP AND SHUTDOWN ACTIONS\n\nshell-command to perform, when the server starts"`
+comments__37=`TN_ "\nshell-command to perform, when the server exits"`
+
+names__1='ServerIdentifier'
+names__2='Backup-Device'
+names__3='Tape-Blocksize'
+names__4='Tape-Buffer'
+names__5='Cartridge-Handler'
+names__6='Number Of Cartridges'
+names__7='Cartridge-Sets'
+names__8='Max Bytes Per File'
+names__9='Max Bytes Per Tape'
+names__10='Full Append Mode'
+names__11='Variable Append Mode'
+names__12='Reject Unlabeled Tapes'
+names__13='Prefer Cartridge in Changer'
+names__14='Cart-Insert-Gracetime'
+names__15='Device Unavail Send mail after min'
+names__16='Device Unavail give up after min'
+names__17='Device-Probe Interval'
+names__18='Changer-Configuration-File'
+names__19='SetFile-Command'
+names__20='SkipFiles-Command'
+names__21='Set-Cart-Command'
+names__22='Change-Cart-Command'
+names__23='Init-Media-Command'
+names__24='Erase-Tape-Command'
+names__25='Tape-Full-Command'
+names__26='User To Inform'
+names__27='Mail-Program'
+names__28='VarDirectory'
+names__29='Tape-Pos-File'
+names__30='Logging-file'
+names__31='Status-file'
+names__32='Lock-file'
+names__33='Changer-Lockfile'
+names__34='Encryption-Key-File'
+names__35='Program-Directory'
+names__36='Init-Command'
+names__37='Exit-Command'
+
+patterns__1='[Ss]erver[-_ 	]*[Ii]denti(ty|fier):?'
+patterns__2='[Bb]ackup[-_ 	]*[Dd]evi?c?e?s?:?'
+patterns__3='[Tt]ape[-_ 	]*[Bb]lock[-_ 	]*[Ss]ize:?'
+patterns__4='([Ss]treamer|[Tt]ape)[-_	 ]*[Bb]uffer:?'
+patterns__5='[Cc]artr?i?d?g?e?[-_ 	]*[Hh]andler:?'
+patterns__6='[Nn]umb?e?r?[-_ 	]*[Oo]f[-_ 	]*[Cc]artr?i?d?g?e?s[-_ 	]*:?'
+patterns__7='[Cc]artr?i?d?g?e?[-_ 	]*[Ss]ets:?'
+patterns__8='[Mm]axi?m?u?m?[-_ 	]*[Bb]ytes[-_ 	]*[Pp]er[-_ 	]*[Ff]ile:?'
+patterns__9='[Mm]axi?m?u?m?[-_ 	]*[Bb]ytes[-_ 	]*[Pp]er[-_ 	]*[Tt]apes?:?'
+patterns__10='([Ff]ull[-_ 	]*)?[Aa]ppend([-_ 	]*[Mm]ode)?:?'
+patterns__11='[Vv]ar(iable)?[-_ 	]*[Aa]ppend([-_ 	]*[Mm]ode)?:?'
+patterns__12='[Rr]eject[-_ 	]*[Uu]nlabeled([-_ 	]*[Tt]apes?)?:?'
+patterns__13='[Pp]refer[-_ 	]*[Cc]artr?i?d?g?e?s?[-_ 	]*[Ii]n[-_ 	]*[Cc]hanger:?'
+patterns__14='[Cc]artr?i?d?g?e?[-_ 	]*[Ii]nse?r?t?[-_ 	]*[Gg]race[-_ 	]*[Tt]ime:?'
+patterns__15='[Dd]evi?c?e?[-_ 	]*[Uu]n[Aa]vaila?b?l?e?[-_ 	]*[Ss]end[-_ 	]*[Mm]ail[-_ 	]*([Aa]fter[-_ 	]*)?[Mm]inu?t?e?s?:?'
+patterns__16='[Dd]evi?c?e?[-_ 	]*[Uu]n[Aa]vaila?b?l?e?[-_ 	]*[Gg]ive[-_ 	]*[Uu]p[-_ 	]*([Aa]fter[-_ 	]*)?[Mm]inu?t?e?s?:?'
+patterns__17='[Dd]evi?c?e?[-_ 	]*[Pp]rob(e|ing)[-_ 	]*[Ii]nterval:?'
+patterns__18='[Cc][Hh][Aa][Nn][Gg][Ee][Rr][-_ 	]*[Cc][Oo][Nn][Ff][Ii][Gg]([Uu][Rr][Aa][Tt][Ii][Oo][Nn])?[-_ 	]*([Ff][Ii][Ll][Ee][-_ 	]*)?:?'
+patterns__19='[Ss]et[-_ 	]*[Ff]ile[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__20='[Ss]kip[-_ 	]*[Ff]iles?[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__21='[Ss]et[-_ 	]*[Cc]artr?i?d?g?e?[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__22='[Cc]hange[-_ 	]*[Cc]artr?i?d?g?e?[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__23='[Ii]nit[-_ 	]*[Mm]edia[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__24='[Ee]rase[-_ 	]*[Tt]ape[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__25='[Tt]ape[-_ 	]*[Ff]ull[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__26='[Uu]ser[-_ 	]*[Tt]o[-_ 	]*[Ii]nfor?m?:?'
+patterns__27='[Mm]ail[-_ 	]*[Pp]rogram:?'
+patterns__28='[Vv][Aa][Rr][-_ 	]*[Dd]ire?c?t?o?r?y?:?'
+patterns__29='[Tt]ape[-_ 	]*[Pp]osi?t?i?o?n?[-_ 	]*[Ff]ile:?'
+patterns__30='[Ll]ogg?i?n?g?[-_ 	]*[Ff]ile:?'
+patterns__31='[Ss]tatus[-_ 	]*[Ff]ile:?'
+patterns__32='[Ll]ocki?n?g?[-_ 	]*[Ff]ile:?'
+patterns__33='[Cc][Hh][Aa][Nn][Gg][Ee][Rr][-_ 	]*[Ll][Oo][Cc][Kk]([Ii][Nn][Gg])?[-_ 	]*[Ff][Ii][Ll][Ee]:?'
+patterns__34='([Ee]n)?[Cc]rypti?o?n?[-_ 	]*[Kk]ey[-_ 	]*[Ff]iles?:?'
+patterns__35='[Pp]rogram[-_ 	][Dd]ire?c?t?o?r?y?:?'
+patterns__36='[iI]niti?a?l?i?z?a?t?i?o?n?[-_ 	]*[Cc]o?mm?a?n?d:?'
+patterns__37='[eE]xit[-_ 	]*[Cc]o?mm?a?n?d:?'
+
+prompts__1=`TN_ "Server Identifier:"`
+prompts__2=`TN_ "Streamer device (no-rewind):"`
+prompts__3=`TN_ "Device Blocksize:"`
+prompts__4=`TN_ "Tape Buffer Specification:"`
+prompts__5=`TN_ "Cartridge handler:"`
+prompts__6=`TN_ "Number of cartridges:"`
+prompts__7=`TN_ "Cartridge Sets:"`
+prompts__8=`TN_ "Max. number of bytes per file:"`
+prompts__9=`TN_ "Max. number of bytes per tape:"`
+prompts__10=`TN_ "Full Append Mode:"`
+prompts__11=`TN_ "Variable Append Mode:"`
+prompts__12=`TN_ "Reject unlabeled tapes:"`
+prompts__13=`TN_ "Prefer Cartridges in Changer:"`
+prompts__14=`TN_ "Cartridge change gracetime:"`
+prompts__15=`TN_ "Device unav. send mail after:"`
+prompts__16=`TN_ "Device unavail. abort after:"`
+prompts__17=`TN_ "Device probing interval:"`
+prompts__18=`TN_ "Changer-Configuration-File:"`
+prompts__19=`TN_ "Set-file-command:"`
+prompts__20=`TN_ "Skip-files-command:"`
+prompts__21=`TN_ "Set-cartridge-command:"`
+prompts__22=`TN_ "Change-cartridge-command:"`
+prompts__23=`TN_ "Init-media-command:"`
+prompts__24=`TN_ "Erase-tape-command:"`
+prompts__25=`TN_ "Tape-full-command:"`
+prompts__26=`TN_ "User to inform:"`
+prompts__27=`TN_ "Mail program:"`
+prompts__28=`TN_ "Var-Directory:"`
+prompts__29=`TN_ "Tape-position savefile:"`
+prompts__30=`TN_ "Logging-file:"`
+prompts__31=`TN_ "Status-file:"`
+prompts__32=`TN_ "Lock-file:"`
+prompts__33=`TN_ "Changer-Lockfile:"`
+prompts__34=`TN_ "Encryption-Key-File:"`
+prompts__35=`TN_ "Program directory:"`
+prompts__36=`TN_ "Init command:"`
+prompts__37=`TN_ "Exit command:"`
+
+helps__1=`TN_ "The identifier for the server. Default: The official hostname, followed by a colon and the full path to the configuration file. The server identifier can be used to become independent of the server machine name. This might be helpful, if the backup server should move to another machine. Whitespace characters may be used in this identifier, but they are replaced with asterisks * before comparing, so they are not significant."`
+helps__2=`TN_ "This is the device, the backup is written to. It can be any tape device with the capability to distinguish several files on the media. It is mandatory to supply the no-rewind device here. Otherwise this package won't work properly. This may also be the path of a directory. Then the backup is written to files in this directory. Suitable device names for some OS-es:\nAIX:          /dev/rmt0.1\nSolaris:      /dev/rmt/0bn\nIRIX:         /dev/rmt/tps0d4nr\nHP-UX:        /dev/rmt/0hn\nLinux:        /dev/nst0\nDigital UNIX: /dev/nrmt0h\nFreeBSD:      /dev/nsa0\nIf the drive has a media handler attached, a specifier for this may follow the device name. The format for this is =<drive-count>@<device>#<num-slots>^<num-loadbays>, for example =1@/dev/sg0#6^2 . Whitespace before and following the special characters = @ and # is allowed for readability. The example means: The drive is number 1 in the changer, /dev/sg0 is the changer device, that has 6 media slots and 2 loadbays. The parts =<drive-count> and ^<num-loadbays> are optional.\nIf the server is only used for remote start and no real backup device should be accessed, a dash - should be configured here as device, so a respective warning to the server log will be suppressed."`
+helps__3=`TN_ "The blocksize of the tape device. This value specifies, how many bytes are written to tape or read from it in one system call. Usually this value is at least 512 or a multiple of it. It is not very important, whether the blocksize is set to 2048 or 1024. The main thing to keep in mind is that if there is a minimum, it should be respected (e.g. 1024 on AIX), otherwise media space is wasted."`
+helps__4=`TN_ "Three numbers and a filename can be given here. The first number is the desired size of the tape buffer in bytes. The optional second number is the high-watermark while writing in percent (default: 67), the optional third number is the low watermark, also in percent (default: 0). As long as the buffer fill rate does not reach the high watermark, nothing is written, but when it is reached, writing does not stop until the buffer fill rate is equal or below the low watermark. This procedure hopefully reduces tape wear and increases average writing speed, because excessive tape stops/starts are avoided. If the optional filename is given, buffering is done in the given file, which is mapped into the server's address space for that purpose. In the filename, patterns are replaced like with Changer-Configuration-File (18)."`
+helps__5=`TN_ "This value must be 1 or 0, what means, that you either have a cartridge handling system (i.e. some kind of robot) (1) or not (0). If you don't have a robot, you may nonetheless maintain a set of cartridges, that you have to number manually. The backup server side will inform you via email or console output, whenever another cartridge has to be inserted into the drive and what number it requires it is."`
+helps__6=`TN_ "This number specifies, how many cartridges you are maintaining. If you have a cartridge handling system (some kind of robot), this is usually the number of cartridges, your system is juggling."`
+helps__7=`TN_ "Several cartridge sets can be used. Here they can be specified. The specifiers for the cartridge sets must be separated by whitespace. Each specifier may consist of digits, commas and dashes. Examples for cartridge set specifiers: 1-5 7-9,12 6,10,11 This example shows how to specify three cartridge sets. If this parameter is not given, there is only the default set number 1 containing all available cartridges. Not all cartridges need to be included in a set and sets must not overlap. See the man-page of afserver.conf how to configure client access restrictions for cartridge sets individually."`
+helps__8=`TN_ "The stream of data, that represents your backup, is divided into pieces (files on tape). This is done to find the files faster during a restore. This value determines, how large the pieces on tape may be in bytes. Some good values for a few tape technologies:\n  DAT:              30000000\n  Exabyte:          50000000\n  DLT:             100000000"`
+helps__9=`TN_ "With this entry the number of bytes written to a single tape can be limited. Serveral entries with a leading range specifier allow to handle certain tapes differently. The range specifier must end in a colon : and may contain lists of ranges and numbers. A given number without a leading range specifier will be valid for all tapes not explicitly described. Default is use of full tape capacity. Several entries must be separated by whitespace and may look like the following examples: 4000000000 1,3-5:3500000000 7,9-:5000000000"`
+helps__10=`TN_ "Normally, when the insert (writing) position is forced to another tape with the cartis command or with the clientside option -G, the rest of the current tape remains unused. When this option is set to 1, it will nonetheless be used to write data on, if there is no free tape left."`
+helps__11=`TN_ "In default mode, the place (tape and tapefile), where the next data will be written, is fix and can only manipulated using the command cartis or the clientside option -G. When the server wants to write with variable append mode enabled, any cartridge, that is in the drive, is belonging to the right cartridge set and is allowed to be written, will be accepted and appended to. Note, that this will also override the settings of cartis or option -G."`
+helps__12=`TN_ "Default is to accept an unlabeled tape as the requested one and to label it automatically. If this behaviour is unwanted and only tapes with a recognized label should be permitted for writing, this parameter should be set."`
+helps__13=`TN_ "When a tape gets full and another one must be chosen to continue writing, the server does not make a difference, whether a tape is available in a changer or not, if this flag is not set. This is the default. If this parameter is set, the next cartridge is chosen from those, that are available in the slots of a changer, if present and configured. If there is no tape found inside the changer, that is allowed to be overwritten, manual administrator interaction is nonetheless required."`
+helps__14=`TN_ "This is the time in seconds, the program waits after another cartridge has been put into the drive. Normal devices need a certain time span to mount the tape to get it ready for use. Normally this value is not critical. If you estimate it too low, the ioctl-system-call will wait until the device becomes available. This time is sometimes longer than two minutes, so if you want to proceed quickly after a cartridge change, you may measure the maximum time, your system needs. Some tried values for a few tape technologies:\n  DAT:         30\n  Exabyte:     70\n  DLT:         70"`
+helps__15=`TN_ "If the streaming device is not accessible (i.e. an open or a tape handling command fails) or another backup server process is still running, the server process re-tries his attempts regularly. If it fails longer than the time in minutes supplied here, an e-mail is sent to the configured user in charge (see: User To Inform). Supplying 0 means: never send mail."`
+helps__16=`TN_ "If the streaming device is not accessible (i.e. an open or a tape handling command fails), the server process re-tries his attempts regularly. If it fails longer than the time in minutes supplied here, it exits silently leaving a warning in the log file. Supplying 0 means: try forever, never exit."`
+helps__17=`TN_ "This is the interval in seconds, after that regularly the device is probed to be ready for reading. Thus after having ejected a cartridge it is automatically recognized, if a new cartridge has been inserted. For other media (e.g. exchangeable disks) this may not be suitable. Supply a 0 in these cases for no probing."`
+helps__18=`TN_ "If a media changer is available and it should be used, this is the file to configure it. It must contain specifications of the commands, that are driving the media changer. %L will be replaced with the full path of the lib-directory of the server, %B with the bin-directory, %C with the configuration directory and %V with the var-directory. See the manual pages of cart_ctl, how to setup the media changer operation."`
+helps__19=`TN_ "This is the (shell-) command to run to position the tape to a certain file. Usually this is something like a combination of: mt -f <device> rewind  and  mt -f <device> fsf <number>. If the command you are supplying here starts to count with 1 for the first file on tape, you should insert %n for the <number>. If it starts with 0, replace <number> with %m. If you don't want to type the devicename again here, you may write %d instead. For more pattern replacements see Changer-Configuration-File (18)."`
+helps__20=`TN_ "This is the (shell-) command to run to skip over to a file later on tape. Usually this is something like\nmt -f <device> fsf <number>\nInsert %n, where the number of files to skip over must be supplied in the command, in the example instead of <number>, and %d, where the device should appear (here: <device>). For more pattern replacements see Changer-Configuration-File (18)."`
+helps__21=`TN_ "This is the (shell-) command to run to put a certain cartridge into the device. If the command you are supplying here starts to count with 1 for the first cartridge, you should insert %n in the place, where the cartridge number must appear. If it starts with 0, replace it with %m. If you don't want to type the devicename again here, you may write %d instead. If you don't have a command to perform this task, don't supply anything here. In this case you must set your cartridge handling system to sequential mode (automatically putting the next cartridge in, when the current one is ejected). For more pattern replacements see Changer-Configuration-File (18)."`
+helps__22=`TN_ "This is the (shell-) command to run to eject a cartridge currently placed inside the streamer device. This is normally something like  mt -f <device> rewoffl  (but better consult your man-pages). You have to supply this either if you have no cartridge handling system (robot) or if you have no command to set the cartridge directly by number. In the latter case this package tries to maintain the number of the current cartridge in a file and to (hopefully) keep it consistent with the reality. In this case the cartridge handling system must be configured to sequential mode (automatically putting the next cartridge in, when the current one is ejected). The pattern %c, if used in this command, will be replaced with number of the current cartridge, %n with the number of the next one, that is expected to be put into the streamer by a robot in sequential mode after eject. %b can be used instead of %c if counting of cartridges starts with 0 and not with 1. The same applies for %m, what means %n minus 1. %d is replaced with the device name. %N is replaced with the configured total number of cartridges. For more pattern replacements see Changer-Configuration-File (18)."`
+helps__23=`TN_ "The (shell-) command, the server runs before accessing the storage media for the first time or after changing it. %d will be replaced with the device. This command can be used e.g. to automatically mount a removable disk after inserting. This command might be called several times on the same media, this has to kept in mind when configuring it. %n is replaced with the number of the cartridge, that is expected to in the drive, when the next media access operation will take place. %m is replaced with %n - 1 i.e. assuming that the cartridge numbering starts with zero, not one. Note, that the cartridge, that will really be in the drive is not necessarily known at the time, the Init-Media-Command is running. Thus the term \"expected\". For more pattern replacements see Changer-Configuration-File (18)."`
+helps__24=`TN_ "The (shell-) command to run, if the tape must be erased. (actually not needed). For pattern replacements see Changer-Configuration-File (18)."`
+helps__25=`TN_ "The (shell-) command to run, when a tape is full. %d is replaced with the device name, %c with the number of the cartridge, that became full, %n with the number of cycles, the cartridge has become full until now and %C with the full path to the configuration file. For more pattern replacements see Changer-Configuration-File (18)."`
+helps__26=`TN_ "If you don't have a cartridge handling system (robot), a human maintainer must put the appropriate cartridge into the tape device. If you supply a mail program, an e-mail is sent to the user given here, which informs him, that and which cartridge (by number) must be put into the tape device. If a timespan is configured, after that an automatic e-mail should be sent due to an unaccessible tape device, it is directed to this user."`
+helps__27=`TN_ "The mail program used to send messages to a human maintainer. This is done, whenever another cartridge must be put into the tape device and it can't be done automatically (by a robot or whatever). If you don't want to type the username again here, you can instead write %u . The pattern %U will be replaced with the login name of a current user on the client side, %H with the name of the client host. If none could be figured out, the entire word containing %U or %H is deleted from the command. For more pattern replacements see Changer-Configuration-File (18). If you don't want mails to be sent, you may instead supply any other command, that reads the standard input and does something reasonable with it, e.g. redirects it to the console:  cat > /dev/console"`
+helps__28=`TN_ "The directory, where varying files should be put in. These files should not be deleted. The information they contain is necessary for the server to work properly."`
+helps__29=`TN_ "In this file some values are stored, e.g. the number of the cartridge currently placed inside the streamer device. For pattern replacements see Changer-Configuration-File (18)."`
+helps__30=`TN_ "Logging information concerning errors or other notable events is redirected to this file. If the first word of this entry is starting with @, then logging is directed to the syslog as well. If there are characters immediately following the @, this word is used as the syslog identifier, otherwise the identifier is afbackup. If writing to the syslog is configured, the rest of the entry is used as additional logging file, if present. For pattern replacements see Changer-Configuration-File (18)."`
+helps__31=`TN_ "The current status of the server is written to this file. If it starts with >>, then the file is created and status messages will be appended to it. Otherwise the file is removed before writing. For pattern replacements see Changer-Configuration-File (18)."`
+helps__32=`TN_ "To prevent the server program from being started several times a lock file is created and this is it's name. For pattern replacements see Changer-Configuration-File (18)."`
+helps__33=`TN_ "The name of a file, that a lock is set on, when a media changer is accessed. This is to prevent concurrent access, what might result in inconsistencies in the cartridge database. For pattern replacements see Changer-Configuration-File (18)."`
+helps__34=`TN_ "Entries specifying files, that contain encryption keys for authenticating backup clients to the server. Each entry consists of a filename, optionally followed by a colon : and a specifier for client selection. If an entry lacks a client selector, this one will apply for all clients, that are not matched by any other entry. The client selector is either a list of comma-separated hostnames, a filename starting with a slash / containing hostnames one per line, or a command starting with a bar, that is stripped off before starting the command. The command gets the current client name as input on stdin, aside from arguments containing patterns (see below). If the command returns an exit status of 0, the client name will match the entry. Entries are separated by whitespace. If an entry must contain whitespace, it must be enclosed by double quotes. If colons are needed within the filenames, they must be escaped using a backslash. Each key file must contain at least 5 characters and must not have read permission for group or world. The pattern %H is replaced with the client name resolved from the IP-address. %h is similar to %H, but everything from and including the first dot is stripped off. For more pattern replacements see Changer-Configuration-File (18)."`
+helps__35=`TN_ "If you are using the remote start option for backing up clients, this is the directory, where programs must reside, that can be started remotely. No other programs can be started remotely (for security reasons). For pattern replacements see Changer-Configuration-File (18)."`
+helps__36=`TN_ "Here you may supply a (shell-) command to be run, when the backup server side wakes up, i.e. the server process starts. A %p appearing in this command is replaced with the name of the client, that connected the backup service. For more pattern replacements see Changer-Configuration-File (18)."`
+helps__37=`TN_ "Here you may supply a (shell-) command to be run, when the backup server side goes to sleep, i.e. the server process ends. A %p appearing in this command is replaced with the name of the client, that connected the backup service. For more pattern replacements see Changer-Configuration-File (18)."`
+
+#
+# end configurable part
+#
+
+var_param_idx=`expr $num_fix_params + 2`
+
+echo_n `T_ "Reading current settings"`' '
+i=1
+while [ $i -le $num_fix_params ] ; do
+  eval pattern='"$'patterns__$i'"'
+  parvalue=`getparam "$pattern"`
+  eval values__"$i"='"$'parvalue'"'
+  echo_n .
+  i=`expr $i + 1`
+done
+set_var_params
+if [ $num_var_params -gt 1 ] ; then
+  j=1
+  while [ $j -le $num_var_params ] ; do
+    eval parname='"$'patterns__$var_param_idx'"'
+    parname=`echo "$parname"|sed 's/#num#/'$j/g`
+    parvalue=`getparam "$parname"`
+    eval values__"$i"='"$'parvalue'"'
+    j=`expr $j + 1`
+    i=`expr $i + 1`
+    echo_n .
+  done
+else
+  eval parname='"$'patterns__$first_var_param'"'
+  parvalue=`getparam "$parname"`
+  eval values__"$first_var_param"='"$'parvalue'"'
+  echo_n .
+fi
+
+#
+# SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT SHIT
+#
+if [ `echo $values__7 | wc -w` -eq 0 ] ; then
+  values__7=`$AWK '{if($0 ~ "^[ 	]*[Ll]ast[-_ 	]*[Cc]artr?i?d?g?e?s[-_ 	]*:?") {sub("^[^0-9]*",""); for(i=1;i<=NF;i++){idx=1;for(j=1;j<=NF;j++){if($j<$i && idx<$j+1) idx=$j+1;} printf " %d-%d",idx,$i;} printf "\n";}}' $configfile`
+fi
+#
+# END OF SHIT END OF SHIT END OF SHIT END OF SHIT END OF SHIT END OF SHIT
+#
+
+echo ' '`T_ "done"`
+
+while true ; do
+  set_var_params
+  clear
+  
+  trap cleantmp 2
+  trap cleantmp 15
+  trap cleantmp 1
+  
+  i=1
+ (
+  echo ' '
+  while [ $i -le $num_fix_params ] ; do
+    eval text='"$'prompts__$i'"'
+    eval value='"$'values__$i'"'
+    text=`T_ ''"$text"`
+    text=`spcext "$text" $promptlen`
+    head=`spcext "  [$i]" 6`
+    echo "$head ""$text"" $value"
+    i=`expr $i + 1`
+  done
+  j=1
+  if [ $num_var_params -gt 1 ] ; then
+    while [ $i -le $num_total_params ] ; do
+      eval text='"$'prompts__$var_param_idx'"'
+      text=`T_ ''"$text" | sed 's/#num#/'$j/g`
+      text=`spcext "$text" $promptlen`
+      eval value='"$'values__$i'"'
+      head=`spcext "  [$i]" 6`
+      echo "$head ""$text"" $value"
+      j=`expr $j + 1`
+      i=`expr $i + 1`
+    done
+  else
+    if [ $num_var_params -gt 0 ] ; then
+      eval text='"$'prompts__$first_var_param'"'
+      text=`T_ ''"$text"`
+      text=`spcext "$text" $promptlen`
+      eval value='"$'values__$first_var_param'"'
+      head=`spcext "  [$first_var_param]" 6`
+      echo "$head ""$text"" $value"
+    fi
+  fi
+
+  echo ' '
+  T_ "Please enter the number of the parameter you would like to modify. Then, if you want to clear the entry, hit the Space- and the Return-key. To get help enter: help, and the number of the parameter you need help on. To exit and write out the changes enter: ok. To exit without making any changes, enter: exit." | fmt_output | awk '{printf "  %s\n",$0}'
+ ) 2>/dev/null | $PAGER
+
+  c=blub
+  while [ `matches "$c" '^([1-9][0-9]*|help *[1-9][0-9]*|exit|quit|ok)$'` -eq 0 ] ; do
+    echo " "
+    echo_n `T_ "Your choice:"`' '
+    read c
+    if [ `matches "$c" '^([1-9][0-9]*|help *[1-9][0-9]*|exit|quit|ok)$'` -eq 0 ] ; then
+      echo " "
+      echo `T_ "Invalid choice. Please try again."`
+      continue
+    fi
+    if [ `matches "$c" '^[1-9][0-9]*$'` -gt 0 ] ; then
+      if [ $c -gt $num_total_params -o $c -lt 1 ] ; then
+	echo " "
+	echo `T_ "Invalid choice. Please try again."`
+	c=blub
+      else
+	break
+      fi
+    fi
+  done
+  
+  if [ `matches "$c" '^[1-9]'` -gt 0 ] ; then
+    echo ' '
+    if [ $c -gt $num_fix_params ] ; then
+      i=`expr $c - $num_fix_params`
+      if [ $num_var_params -gt 1 ] ; then
+	eval text='"$'prompts__$var_param_idx'"'
+	text=`T_ ''"$text"|sed 's/#num#/'"$i"'/g'`
+      else
+	eval text='"$'prompts__$first_var_param'"'
+	text=`T_ ''"$text"`
+      fi
+    else
+      eval text='"$'prompts__$c'"'
+      text=`T_ ''"$text"`
+    fi
+    eval value='"$'values__$c'"'
+    echo `echo $text | repl_backsl_seq`" $value"
+    echo_n `T_ "Please enter new value:"`' '
+    i=`awk '{print ; exit}'`
+    if [ _"$i" != _ ] ; then
+      eval values__"$c"='"'"$i"'"'
+    fi
+
+    continue
+  fi
+  
+  if [ `matches "$c" quit` -gt 0 -o `matches "$c" exit` -gt 0 ] ; then
+    exit 0
+  fi
+  
+  if [ `matches "$c" ok` -gt 0 ] ; then
+    /bin/rm -f $configfile
+    touch $configfile
+    i=1
+    while [ $i -le $num_total_params ] ; do
+      eval value='"$'values__$i'"'
+      eval comment='"$'comments__$i'"'
+      eval name='"$'names__$i'"'
+      comment=`echo "$comment" | repl_backsl_seq`
+      if [ $i -le $num_fix_params ] ; then
+	T_ ''"$comment" | awk '{printf "# %s\n",$0}' >> $configfile
+	if [ `echo "$value"|wc -w` -eq 0 ] ; then
+	  echo "#$name":"		$value" >> $configfile
+	else
+	  echo "$name":"		$value" >> $configfile
+	fi
+      else
+	j=`expr $i - $num_fix_params`
+	if [ $num_var_params -gt 1 ] ; then
+	  eval comment='"$'comments__$var_param_idx'"'
+	  eval name='"$'names__$var_param_idx'"'
+	  comment=`echo "$comment" | repl_backsl_seq`
+	  T_ ''"$comment" | sed 's/#num#/'$j/g | awk '{printf "# %s\n",$0}' >> $configfile
+	  if [ `echo "$value"|wc -w` -eq 0 ] ; then
+	    echo "#$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  else
+	    echo "$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  fi
+	else
+	  eval comment='"$'comments__$first_var_param'"'
+	  eval name='"$'names__$first_var_param'"'
+	  comment=`echo "$comment" | repl_backsl_seq`
+	  T_ ''"$comment" | awk '{printf "# %s\n",$0}' >> $configfile
+	  if [ `echo "$values[$i]"|wc -w` -eq 0 ] ; then
+	    echo "#$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  else
+	    echo "$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  fi
+	fi
+      fi
+      i=`expr $i + 1`
+    done
+    exit 0
+  fi
+  
+  if [ `matches "$c" help` -gt 0 ] ; then
+    num=`echo "$c"|cut -c5-|awk '{print $1}'`
+    if [ $num -le $num_fix_params ] ; then
+      eval help='"$'helps__$num'"'
+      help=`echo "$help" | repl_backsl_seq`
+      T_ ''"$help" | fmt_output | awk '{printf "  %s\n",$0}' | $PAGER
+    else
+      if [ $num_var_params -gt 1 ] ; then
+	j=`expr $num - $num_fix_params`
+	eval help='"$'helps__$var_param_idx'"'
+	help=`echo "$help" | repl_backsl_seq`
+	T_ ''"$help" | sed 's/#num#/'$j/g | fmt_output | awk '{printf "  %s\n",$0}' | $PAGER
+      else
+	eval help='"$'helps__$first_var_param'"'
+	help=`echo "$help" | repl_backsl_seq`
+	T_ ''"$help" | sed 's/#num#/'"$c"'/g' | fmt_output | awk '{printf "  %s\n",$0}' | $PAGER
+      fi
+    fi
+    echo " "
+    echo `T_ "Hit Return, when done."`
+    read d
+  fi
+  
+done

@@ -1,0 +1,26 @@
+1.0.0 - 1.0.1
+	- ttywrap reworked (but not fully working on HPUX when reading a pipe)
+	- I18N in autoconf reworked
+	- Build fixes for several platforms
+
+1.0.1 - 1.0.2
+	- Modifications for building with the utilities library coming with
+	  afbackup-3.3.6 or higher
+	- New program udf
+
+1.0.2 - 1.1
+	- af-lockfile reworked, so it can be run under different accounts
+	  controlling the access to the lockfile with group permissions
+	- albiutils.rh added for fixed path RPM creation
+	- the configure.sunos4 script is no longer attached. Use bash on SunOS4
+	- Building RPMs can now be done by 'make rpms' after configure
+	- libz and libcrypto usability now autodetected
+	- Default is now to use DES encryption, if openssl is found.
+	  Run configure using option --without-des to override
+	- New programs base64enc base64dec secbydate datebysec
+	- Integrated into afbackup package
+
+1.1 - 3.5.8
+	- integrated into afbackup
+
+For further changes see the common ChangeLog file

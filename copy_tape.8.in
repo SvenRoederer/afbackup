@@ -1,0 +1,141 @@
+.TH COPY_TAPE 8 "2001 April 1" "Debian Project"
+.SH NAME
+copy_tape \- make a duplicate of a tape
+.SH SYNOPSIS
+.B copy_tape 
+[ -v ] [ -c <configuration-file> ] [ -l <logfile> ]
+[ -T <tmpdir> ]
+[ -M <server-message-config> ]
+[ -h <source-server> ] [ -P <source-serverport> ]
+[ -F <tape-filenumber> ]
+[ -C <source-cartridge> ] [ -k <source-encryption-key-file> ]
+[ -D [ -h <target-server> ] [ -P <target-serverport> ]
+[ -C <target-cartridge> ] [ -k <target-encryption-key-file> ] ]
+.SH DESCRIPTION
+This command connects to one or two backup servers and
+makes an identical copy of a tape to another one. The
+tape label is rewritten, so that the destination
+tape keeps it's primary cartridge number, but gets
+the number of the source tape as secondary number.
+Thus it can be used instead of the tape with that
+primary number. In fact both numbers are accepted
+for backup, restore or other operations except the
+copy_tape operation itself. Recursively copying an
+already duplicated tape does not further change the
+secondary cartridge number, so e.g. any copy of
+cartridge number 3 will be usable as such. Copying
+cartridge 3 to cartridge 5 and then 5 to 8 does
+not make cartridge number 8 usable as cartridge 5,
+but still as cartridge number 3.
+.LP
+When the backup server sees a cartridge with the
+wrong primary number, but the correct secondary
+number, this cartridge is accepted, but a warning
+is written to the serverside log.
+.LP
+The defaults for the copying source are taken from
+the client side configuration file. Default source
+cartridge is the one currently loaded in the drive
+on the server, that will be asked for this information.
+If no target parameters are supplied, they get the
+values of the appropriate source parameters as default.
+So if no arguments are supplied, the current tape would
+be copied to itself, what is prevented while printing
+an error message.
+.LP
+Target (or: destination) parameters must always be
+following the -D option, source parameters must be
+supplied in an earlier position.
+.LP
+If the source tape is operated by a different server
+than the target, copying goes straight from one to
+the other. As two servers (with a different port
+number) can reside on one host, this process does not
+necessarily imply a network connection.
+If source and target tape are handled by the same
+server, the data to be copied must be stored somewhere
+inbetween. For this purpose a temporary directory is
+created on the client, where this program is started,
+usually in /tmp or /var/tmp (see: tmpnam(3)). The
+filesystem, where this directory lives, must have a
+free capacity of at least the largest occurring tape
+file. This maximum tape file size is configured on
+the server side by the parameter MaxBytesPerFile
+(see: afserver.conf(8)). If there is not enough space,
+the duplication of the tape fails. The copying program
+writes as many tape files to disk as it can, while
+a certain amount will remain free. Then it ejects
+the source cartridge and loads the target cartridge.
+Now the files in the temporary directory are written
+to the target tape while immediately removing files,
+that are no longer needed. The more space is available
+in the temporary directory, the fewer cartridge
+loads/ejects are necessary.
+.PP
+.TP
+.B -C <cartridge>
+The number of the cartridge to use as copying
+source or target (depends on argument position:
+before or behind -D).
+.TP
+.B -c <configfile>
+Use the given file for configuration information
+.TP
+.B -F <tape-filenumber>
+If reading and writing should not start at the
+beginning of the tape, but at the tape file with
+the given number. This can avoid the overhead of
+copying entire tapes, when only some tape files
+have been appended
+.TP
+.B -h <hostname>
+The name of the backup server host, where the
+source or target cartridge is handled, respectively
+.TP
+.B -k <file>
+Use the contents of the given file as encryption
+key for authenticating to the server, where the
+source or target cartridge is handled, respectively
+.TP
+.B -l <logfile>
+A file to write log information to
+.TP
+.B -M <server-message-config>
+The configuration to output messages from the server,
+that normally are sent only via mail to a maintainer.
+The first word consisting of the letters b r v and c
+tells, whether to output messages during backup,
+restore, verify and copy-tape, respecively. The next
+words must name the service name or port number of
+the single stream servers, related to the option -P .
+For each multi stream service configured with -P or
+in the configuration file, the respective single
+stream service must be given here
+.TP
+.B -P <portnum>
+The port number of the backup server on the backup
+server host, where the source or target cartridge
+is handled
+.TP
+.B -T <tmpdir>
+use the given directory for temporarily storing the
+tapefiles, when copying on one server
+.TP
+.B -v
+Verbose option, tell more about what is going on
+.SH FILES
+.IP @clientconfdir@/@clientconf@
+Client configuration file
+.IP @clientlogdir@
+The directory for logging the client backups
+.IP @clientvardir@
+Some internal state information of the client backups.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8),
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de).

@@ -1,0 +1,36 @@
+# $Id: albiutils.proto.in,v 1.1 2012/11/01 09:53:03 alb Exp alb $
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/albiutils.proto.in,v $
+#
+# Prototype file for Solaris packaging
+#
+d none @prefix@ 755 root sys
+d none @prefix@/bin 755 root sys
+d none @prefix@/man 755 root sys
+d none @prefix@/man/man1 755 root sys
+d none @prefix@/man/man5 755 root sys
+d none @prefix@/man/man8 755 root sys
+f none @prefix@/bin/af-lockfile=root@prefix@/bin/af-lockfile 555 root root
+s none @prefix@/bin/bufrate=af-lockfile
+s none @prefix@/bin/choice=af-lockfile
+s none @prefix@/bin/numset=af-lockfile
+s none @prefix@/bin/rotor=af-lockfile
+s none @prefix@/bin/ssu=af-lockfile
+s none @prefix@/bin/ttywrap=af-lockfile
+s none @prefix@/bin/udf=af-lockfile
+#s none @prefix@/bin/get_ent=af-lockfile
+s none @prefix@/bin/base64enc=af-lockfile
+s none @prefix@/bin/base64dec=af-lockfile
+s none @prefix@/bin/datebysec=af-lockfile
+s none @prefix@/bin/secbydate=af-lockfile
+@DESCOMM@ f none @prefix@/bin/descrypt=root@prefix@/bin/descrypt 555 root root
+f none @prefix@/man/man8/af-lockfile.8=root@prefix@/man/man8/af-lockfile.8 444 root root
+f none @prefix@/man/man8/bufrate.8=root@prefix@/man/man8/bufrate.8 444 root root
+f none @prefix@/man/man8/choice.8=root@prefix@/man/man8/choice.8 444 root root
+@DESCOMM@ f none @prefix@/man/man8/descrypt.8=root@prefix@/man/man8/descrypt.8 444 root root
+f none @prefix@/man/man8/numset.8=root@prefix@/man/man8/numset.8 444 root root
+f none @prefix@/man/man8/rotor.8=root@prefix@/man/man8/rotor.8 444 root root
+f none @prefix@/man/man8/ssu.8=root@prefix@/man/man8/ssu.8 444 root root
+f none @prefix@/man/man8/ttywrap.8=root@prefix@/man/man8/ttywrap.8 444 root root
+f none @prefix@/man/man8/udf.8=root@prefix@/man/man8/udf.8 444 root root
+i pkginfo=root/pkginfo
+i checkinstall=./checkinstall

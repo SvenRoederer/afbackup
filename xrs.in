@@ -1,0 +1,1034 @@
+#!/usr/bin/wish
+################### Start of $RCSfile: xrs.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/xrs.in,v $
+# $Id: xrs.in,v 1.5 2008/11/17 20:09:42 alb Exp alb $
+# $Date: 2008/11/17 20:09:42 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+set prefix "@prefix@"
+set TEXTDOMAIN "@PACKAGE@"
+set TEXTDOMAINDIR "@commondatadir@/locale"
+
+proc T_ { text } {
+  global TEXTDOMAIN TEXTDOMAINDIR
+
+  return [ INTL_gettext $text $TEXTDOMAIN $TEXTDOMAINDIR ]
+}
+
+proc TN_ { text } {
+  return $text
+}
+
+# user settable section
+
+set BACKUP_HOME_DEFAULT $env(BACKUP_HOME_DEFAULT)
+set BINDIR "@clientbindir@"
+
+set poss_binsubs { bin sbin "" }
+
+if { [ info exists env(BACKUP_HOME) ] } {
+  set BACKUP_HOME $env(BACKUP_HOME)
+
+  foreach binsub $poss_binsubs {
+    if { [ file executable "$BACKUP_HOME/$binsub/afrestore"
+      set BINDIR "$BACKUP_HOME/$binsub"
+    }
+  }
+}
+
+if { [ llength $argv ] > 1 } {
+  set usagestr [ T_ "Usage" ]
+  append usagestr [ TN_ ": " ] [ file tail $argv0 ] { [ <config-file> ]}
+  puts stderr $usagestr
+  exit 2
+}
+
+set found 0
+if { [ llength $argv ] == 1 } {
+  set configfile [ lindex $argv 0 ]
+  if { [ file readable $configfile ] } {
+    set found 1
+  }
+} else {
+  set configfiles "$BACKUP_HOME_DEFAULT/etc/backup.conf $BACKUP_HOME_DEFAULT/lib/backup.conf /etc/buclient.conf /etc/afbuclient.conf /etc/afclient.conf /etc/afbackup/client.conf"
+  lappend configfiles "@clientconfdir@/@clientconf@" "@clientlibdir@/@clientconf@"
+  foreach configfile "$configfiles" {
+    if { [ file readable $configfile ] } {
+      set found 1
+      break
+    }
+  }
+}
+if { ! $found } {
+  puts stderr [ T_ "Error: Cannot read configuration file. Exiting." ]
+  exit 2
+}
+
+set CMDPREFIX "||| "
+set cmdprefixlast [ expr [ string length $CMDPREFIX ] - 1 ]
+
+source "@commonshlibdir@/aftcllib.tcl"
+
+set restoreprog "$BINDIR/afrestore -c '$configfile'"
+set packprog "$BINDIR/__packpats"
+
+if { ! [ file executable $packprog ] } {
+  puts stderr [ format [ T_ "Error: Program %s not executable. Exiting." ] $packprog ]
+  exit 1
+}
+
+set num_fix_params	21
+set num_var_sp_idx	21
+
+set var_param_idx [ expr $num_fix_params + 2 ]
+set fix_param_idx [ expr $num_fix_params + 1 ]
+
+set patterns(1) {[Bb]ackup[ \t_-]*[Hh]ost:?}
+set patterns(2) {[Bb]ackup[ \t_-]*[Pp]ort:?}
+set patterns(3) {[Cc]artr?i?d?g?e?[-_ \t]*[Ss]et:?}
+set patterns(4) {[Cc]ompress[-_ \t]*[Cc]o?m?ma?n?d:?}
+set patterns(5) {[Uu]ncompress[-_ \t]*[Cc]o?m?ma?n?d:?}
+set patterns(6) {[Ii]ndex[ \t_-]*[Ff]ile[ \t_-]*[Pp]art:?}
+set patterns(7) {[Cc]ompress[-_ \t]*[Bb]ackupe?d?[-_ \t]*([Ff]iles)?:?}
+set patterns(8) {[Cc]ompress[-_ \t]*[Ll]ogg?i?n?g?[-_ \t]*[Ff]iles:?}
+set patterns(9) {[Dd]o[-_ \t]*[Nn][\'o]?t[-_ \t]*[Cc]ompress:?}
+set patterns(10) {[Nn]um[-_ \t]*[Ii]nd(ic|ex)es[-_ \t]*[Tt]o[ \t_-]*[Ss]tore:?}
+set patterns(11) {[Ll]ogg?i?n?g?[-_ \t]*[Ff]ile:?}
+set patterns(12) {[Vv][Aa][Rr][-_ \t]*[Dd]ire?c?t?o?r?y?:?}
+set patterns(13) {([Ee]n)?[Cc]rypti?o?n?[ \t_-]*[Kk]ey[ \t_-]*[Ff]ile:?}
+set patterns(14) {[Ss]tartu?p?[-_ \t]*[Ii]nfo[-_ \t]*[Pp]rogram:?}
+set patterns(15) {[Ii]nit[-_ \t]*[Pp]rogram:?}
+set patterns(16) {[Ee]xit[-_ \t]*[Pp]rogram:?}
+set patterns(17) {[Rr]oot[ \t_-]*[Dd]ire?c?t?o?r?y?:?}
+set patterns(18) {[Ff]iles[ \t_-]*[Tt]o[ \t_-]*[Ss]kip:?}
+set patterns(19) {[Dd]ire?c?t?o?r?i?e?s[ \t_-]*[Tt]o[ \t_-]*[Ss]kip:?}
+set patterns(20) {[Ee]xclu?d?e?[-_ \t]*[Ll]ist[-_ \t]*[Ff]ile[-_ \t]*[Nn]?a?m?e?:?}
+set patterns(21) {[Nn]um[-_ \t]*[Bb]ackup[-_ \t]*[Pp]arts:?}
+set patterns(22) {[Dd]ire?c?t?o?r?i?e?s[ \t_-]*[Tt]o[ \t_-]*[Bb]ackup:?}
+set patterns(23) {[Dd]ire?c?t?o?r?i?e?s[ \t_-]*[Tt]o[ \t_-]*[Bb]ackup[ \t]*#num#[ \t]*:?}
+
+set varnames { i backuphosts backupports cartridgesets compresscmd
+		uncompresscmd indexfilepart compressdata compressindex
+		dontcompress numindexes logfile vardir encrkeyfile
+		startinfoprog initprog exitprog rootdir filestoskip
+		dirstoskip excludelistfile numparts dirstobackup dirstobackup }
+
+for { set i 1 } { $i <= $var_param_idx } { incr i } {
+  set types($i) s
+}
+set types(7) b
+set types(8) b
+
+# end of user settable section
+
+set var_param_idx [ expr $num_fix_params + 2 ]
+set fix_param_idx [ expr $num_fix_params + 1 ]
+
+
+proc getparam { pat } {
+  global configfile
+
+  set pattern {^[ \t]*}
+  append pattern $pat
+  append pattern {[ \t]*}
+
+
+  set errfl [ catch { set fp [ open $configfile r ] } ]
+  if { $errfl } {
+    puts stderr [ format [ T_ "Error: Cannot open file `%s'" ] $configfile ]
+
+    exit 0
+  }
+
+  while { [ gets $fp line ] >= 0 } {
+    if { [ regexp -indices $pattern $line i1 ] } {
+      close $fp
+      set idx [ expr [ lindex $i1 1 ] + 1 ]
+      return [ string trim [ string range $line $idx end ] ]
+    }
+  }
+
+  close $fp
+  return ""
+}
+
+set varnames [ GStr_replSubstring $varnames "\n" " " ]
+
+for { set i 1 } { $i <= $num_fix_params } { incr i } {
+  set values($i) [ getparam $patterns($i) ]
+  set [ lindex $varnames $i ] $values($i)
+}
+if { $num_var_sp_idx > 0 } {
+  set num_var_params $values($num_var_sp_idx)
+} else {
+  set num_var_params 0
+}
+if { $num_var_params > 0 } {
+  if { $num_var_params > 1 } {
+    for { set i 0 } { $i < $num_var_params } { incr i } {
+      set l [ expr $num_fix_params + $i + 1 ]
+      set j [ expr $i + 1 ]
+      set pattern [ GStr_replSubstring $patterns($var_param_idx) {#num#} $j ]
+      set values($l) [ getparam $pattern ]
+      set vnam [ lindex $varnames $var_param_idx ]
+      append vnam "($j)"
+      set $vnam $values($l)
+    }
+  } else {
+    set values($fix_param_idx) [ getparam $patterns($fix_param_idx) ]
+    set [ lindex $varnames $fix_param_idx ] $values($fix_param_idx)
+  }
+}
+
+if { $vardir == "" } {
+  unset vardir
+}
+
+if { ! [ info exists vardir ] } {
+  set vardir "@clientvardir@"
+  if { [ info exists BACKUP_HOME ] } {
+    set vardir "$BACKUP_HOME/var"
+  }
+}
+
+set numfile "$vardir/num"
+
+set errfl [ catch { set fp [ open $numfile r ] } ]
+if { $errfl } {
+  puts stderr [ format [ T_ "Error: Cannot read current backup number file %s." ] $numfile ]
+  exit 1
+}
+
+gets $fp bunum
+close $fp
+
+set indexfiles ""
+
+while { 1 } {
+  set r [ file readable "$indexfilepart$bunum" ]
+  set rz [ file readable "$indexfilepart$bunum.z" ]
+
+  if { ! $r && ! $rz } {
+    break
+  }
+
+  if { $r } {
+    set indexfiles [ linsert $indexfiles 0 "$indexfilepart$bunum" ]
+  }
+  if { $rz } {
+    set indexfiles [ linsert $indexfiles 0 "$indexfilepart$bunum.z" ]
+  }
+
+  incr bunum -1
+}
+
+proc show_details { widget } {
+  global	ignore_case restoretapes restoreprog detailfmt pathentry
+
+  set filterargs ""
+
+  set allnsel [ $widget curselection ]
+
+  if { [ llength $allnsel ] == 0 } {
+    GGUI_errorDialog [ T_ "Nothing has been selected." ]
+
+    return
+  }
+
+  foreach nsel $allnsel {
+    set sel [ $widget get $nsel ]
+
+    if { $sel == ".." || $sel == "" || $sel == "." } {
+      continue
+    }
+
+    set dirsep [ string first "/" $sel ]
+    set pathlen [ string length $pathentry ]
+    incr pathlen -1
+    if { [ string index $pathentry $pathlen ] == "/" || $pathentry == "" } {
+      set newentry "$pathentry$sel"
+    } else {
+      set newentry "$pathentry/$sel"
+    }
+
+    set newentry [ GStr_replSubstring $newentry "\\" "\\\\" ]
+
+    append filterargs " -p '$newentry'"
+  }
+
+  set restoreopt [ restore_date_opt shell ]
+
+  if { $ignore_case } {
+    set restoreopt "$restoreopt -i"
+  }
+
+  set cmd {/bin/sh -c "}
+  append cmd "$restoreprog -l -F '$detailfmt' $filterargs $restoreopt" {"}
+
+  GGUI_runCommand [ T_ "Details" ] $cmd
+}
+
+proc run_list_program { pathfilter matches } {
+  upvar $matches lines
+  global	uncompresscmd restoreprog packprog ignore_case restoretapes
+  global	cmdprefixlast CMDPREFIX
+
+  set restoreopt [ restore_date_opt shell ]
+
+  if { $ignore_case } {
+    set restoreopt "$restoreopt -i"
+  }
+
+  if { [ llength [ string trim $restoretapes ] ] > 0 } {
+    set restoreopt "$restoreopt -T '$restoretapes'"
+  }
+
+  set pathfilter1 [ GStr_replSubstring $pathfilter "\\" "\\\\" ]
+
+  set cmd {| /bin/sh -c "echo y | }
+  append cmd "$restoreprog -qL $restoreopt -p '$pathfilter1*' 2>/dev/null | $packprog '$pathfilter1'"
+  append cmd {"}
+
+  set errfl [ catch { set fp [ open $cmd r ] } ]
+  if { $errfl } {
+    return ""
+  }
+
+  if { $pathfilter != "/" && $pathfilter != "" } { 
+    append pathfilter "/"
+  }
+  set plen [ string length $pathfilter ]
+  incr plen -1
+
+  set subentmsg [ T_ "Found subentry" ]
+
+  while { [ gets $fp new_line ] >= 0 } {
+    set nline [ string trim $new_line ]
+    if { $nline == "" || [ string index $nline 0 ] == "#" } {
+      continue
+    }
+
+    if { [ string range $nline 0 $cmdprefixlast ] == $CMDPREFIX } {
+      if { [ lsearch -exact $lines $nline ] < 0 } {
+        lappend lines $nline
+      }
+      continue
+    }
+
+    set path [ string range $new_line 0 $plen ]
+#    if { "$path" == "$pathfilter" } {
+#      set name [ file tail $path ]
+#      if { [ lsearch -exact $lines $name ] < 0 } {
+#	 lappend lines $name
+#      }
+#    } else 
+    if { "$path" == "$pathfilter" } {
+      set name [ string range $new_line [ expr $plen + 1 ] end ]
+      set i [ string first "/" $name ]
+      if { $i == 0 && $path == "" } {
+	continue
+      }
+      set ispath [ expr $i >= 0 ? 1 : 0 ]
+      if { $ispath } {
+	incr i -1
+	set name [ string range $name 0 $i ]
+      }
+      set notempty [ string length $name ]
+      set exists_exact [ lsearch -exact $lines $name ]
+      set exists_dir [ lsearch -exact $lines "$name/" ]
+      if { $ispath } {
+	append name "/"
+      }
+      if { $notempty && $exists_exact < 0 && $exists_dir < 0 } {
+	lappend lines $name
+
+	show_status "$subentmsg: $name ..."
+      }
+      if { $exists_exact >= 0 && $ispath } {
+	set lines [ lreplace $lines $exists_exact $exists_exact $name ]
+
+	show_status "$subentmsg: $name ..."
+      }
+    }
+  }
+
+  close $fp
+
+  return $lines
+}
+
+proc filter_indexfiles { pathpattern } {
+  global	indexfiles dirscache
+
+  if { [ info exists dirscache($pathpattern) ] } {
+    return $dirscache($pathpattern)
+  }
+  
+  show_status [ T_ "Scanning index ..." ]
+
+  set matches ""
+
+  run_list_program $pathpattern matches
+
+  set dirscache($pathpattern) [ lsort $matches ]
+
+  show_status [ T_ "Done scanning index." ]
+
+  return $dirscache($pathpattern)
+}
+
+proc show_win { } {
+  global	num_fix_params values prompts num_var_sp_idx
+  global	var_param_idx fix_param_idx types num_var_params
+  global	textwidth entrywidth varnames statuswidget
+  global	selected_dirs initlist
+
+  eval global $varnames
+
+  frame .top
+  
+  frame .top.mbar -relief raised -bd 2
+  frame .top.dirs -borderwidth 2 -relief sunken
+  frame .top.sel -borderwidth 2 -relief sunken
+  frame .top.opts -borderwidth 2 -relief sunken
+  frame .top.cmds -borderwidth 2 -relief sunken
+
+  frame .top.dirs.path
+  frame .top.dirs.subdirs
+  frame .top.stat
+  
+  menubutton .top.mbar.help -text [ T_ "Help" ] -underline 0 -menu .top.mbar.help.menu
+  menu .top.mbar.help.menu
+  .top.mbar.help.menu add command -label [ T_ "What now ?" ] -command what_now -underline 0
+
+  label .top.dirs.path.label -text [ T_ "Path:" ] -anchor w
+  entry .top.dirs.path.entry -textvariable pathentry -width $entrywidth
+  
+  label .top.dirs.subdirs.label -text [ T_ "Subentries:" ] -anchor w
+  frame .top.dirs.subdirs.list
+  listbox .top.dirs.subdirs.list.listbox -selectmode extended -yscrollcommand ".top.dirs.subdirs.list.scrollbar set"
+  scrollbar .top.dirs.subdirs.list.scrollbar -command ".top.dirs.subdirs.list.listbox yview"
+  
+  frame .top.sel.frame1
+  button .top.sel.frame1.button1 -text [ format "v %s v" [ T_ "Select" ] ] -command { select_callback .top.dirs.subdirs.list.listbox }
+  button .top.sel.frame1.button2 -text [ T_ "Show Details" ] -command { show_details .top.dirs.subdirs.list.listbox }
+  frame .top.sel.list
+  button .top.sel.button2 -text [ T_ "Delete" ] -command { deselect_callback .top.sel.list.listbox }
+  listbox .top.sel.list.listbox -selectmode extended -yscrollcommand ".top.sel.list.scrollbar set"
+  scrollbar .top.sel.list.scrollbar -command ".top.sel.list.listbox yview"
+
+  button .top.opts.button -text [ T_ "Options ..." ] -command { GGUI_basicDialog [ T_ "Restore Options" ] show_options_dialog }
+
+  button .top.cmds.go -text [ T_ "Start Restore" ] -command "do_restore .top.sel.list.listbox"
+  button .top.cmds.exit -text [ T_ "Exit" ] -command "exit 0"
+
+  label .top.stat.label
+  set statuswidget .top.stat.label
+  $statuswidget configure -text [ T_ "Ready for operation." ]
+
+  pack .top.mbar.help -fill x -side right
+
+  pack .top.sel.list.listbox .top.sel.list.scrollbar -side left -fill both
+  pack .top.sel.list.listbox -expand 1
+  pack .top.sel.frame1.button1 -expand 1 -side left
+  pack .top.sel.frame1.button2 -expand 1 -anchor e -after .top.sel.frame1.button1
+  pack .top.sel.frame1 -expand 1 -fill x
+  pack .top.sel.list -side top -fill both -expand 1
+  pack .top.sel.button2 -side top -pady 2
+
+  pack .top.dirs.subdirs.list.listbox .top.dirs.subdirs.list.scrollbar -side left -fill both
+  pack .top.dirs.subdirs.list.listbox -expand 1
+  pack .top.dirs.subdirs.label .top.dirs.subdirs.list -side top -fill x
+  pack .top.dirs.subdirs.list -fill both -expand 1
+  
+  pack .top.dirs.path.label .top.dirs.path.entry -side left -fill both
+  pack .top.dirs.path.entry -expand 1
+  
+  pack .top.dirs.path .top.dirs.subdirs -side top -fill x
+  pack .top.dirs.subdirs -fill both -expand 1
+  
+  pack .top.opts.button -pady 2
+
+  pack $statuswidget -fill x
+
+  pack .top.cmds.go .top.cmds.exit -pady 2 -side left -expand 1
+
+  pack .top.mbar .top.dirs .top.sel .top.opts .top.cmds .top.stat -side top -fill x -pady 2 -padx 2
+  pack .top.sel -fill both -expand 1
+  pack .top.dirs -fill both -expand 1
+  pack .top.cmds -fill both -expand 1
+
+  pack .top -fill both -expand 1
+
+  bind .top.dirs.path.entry <Return> { update_list .top.dirs.subdirs.list.listbox }
+  bind .top.dirs.subdirs.list.listbox <ButtonPress-3> { button3_callback .top.dirs.subdirs.list.listbox %x %y }
+  bind .top.dirs.subdirs.list.listbox <Double-Button-1> 
+
+  bind .top.dirs.path.entry <F1> help_on_path
+  bind .top.dirs.path.entry <F2> help_on_path
+  bind .top.dirs.path.entry <Escape> help_on_path
+  bind .top.dirs.subdirs.list.listbox <F1> help_on_subentries
+  bind .top.dirs.subdirs.list.listbox <F2> help_on_subentries
+  bind .top.dirs.subdirs.list.listbox <Escape> help_on_subentries
+  bind .top.sel.list.listbox <F1> help_on_selected
+  bind .top.sel.list.listbox <F2> help_on_selected
+  bind .top.sel.list.listbox <Escape> help_on_selected
+
+  set_list .top.dirs.subdirs.list.listbox $initlist
+
+  wm title . [ T_ "AF's Restore Utility" ]
+}
+
+proc show_options_dialog { parent tkpvar } {
+  global	tkPriv relocdir dirscache
+  global	hour_a min_a day_a month_a year_a
+  global	hour_b min_b day_b month_b year_b
+  global	hour_abu min_abu day_abu month_abu year_abu
+  global	hour_bbu min_bbu day_bbu month_bbu year_bbu
+
+  set p $parent
+
+  frame $p.rel -relief sunken -borderwidth 2
+  label $p.rel.label -text [ T_ "Relocate to directory:" ] -anchor w
+  entry $p.rel.entry -textvariable relocdir
+  button $p.rel.button -text [ T_ "Browse" ] -command "file_browse relocdir"
+
+  frame $p.par -relief sunken -borderwidth 2
+  checkbutton $p.par.merge -variable keep_existing
+  label $p.par.label -text [ T_ "Do not overwrite existing files" ]
+
+#  frame $p.case -relief sunken -borderwidth 2
+#  checkbutton $p.case.ignore -variable ignore_case
+#  label $p.case.label -text [ T_ "Ignore case in filenames" ]
+
+  frame $p.date_a -relief sunken -borderwidth 2
+  label $p.date_a.label -text [ T_ "Modified after date:" ]
+  set date_a_w [ GGUI_chooseTimeDateWidget $p.date_a min_a hour_a day_a month_a year_a ]
+
+  frame $p.date_b -relief sunken -borderwidth 2
+  label $p.date_b.label -text [ T_ "Modified before date:" ]
+  set date_b_w [ GGUI_chooseTimeDateWidget $p.date_b min_b hour_b day_b month_b year_b ]
+
+  frame $p.date_abu -relief sunken -borderwidth 2
+  label $p.date_abu.label -text [ T_ "Backup after date:" ]
+  set date_abu_w [ GGUI_chooseTimeDateWidget $p.date_abu min_abu hour_abu day_abu month_abu year_abu ]
+
+  frame $p.date_bbu -relief sunken -borderwidth 2
+  label $p.date_bbu.label -text [ T_ "Backup before date:" ]
+  set date_bbu_w [ GGUI_chooseTimeDateWidget $p.date_bbu min_bbu hour_bbu day_bbu month_bbu year_bbu ]
+
+  frame $p.tapes -relief sunken -borderwidth 2
+  label $p.tapes.label -text [ T_ "Use Tapes:" ]
+  entry $p.tapes.entry -textvariable restoretapes
+
+  frame $p.detailfmt -relief sunken -borderwidth 2
+  label $p.detailfmt.label -text [ T_ "Details Format:" ]
+  entry $p.detailfmt.entry -textvariable detailfmt
+
+  frame $p.clcache -relief sunken -borderwidth 2
+  button $p.clcache.button -text [ T_ "Clear Cache" ] -command { catch { unset dirscache } }
+
+  frame $p.cmds -relief sunken -borderwidth 2
+  button $p.cmds.button -text [ T_ "Done" ] -command "set tkPriv($tkpvar) 1"
+  button $p.cmds.help -text [ T_ "Help" ] -command help_on_options
+
+  bind $p.rel.entry <F1> help_on_relocate
+  bind $p.rel.entry <F2> help_on_relocate
+  bind $p.rel.entry <Escape> help_on_relocate
+
+  pack $p.rel.label $p.rel.entry -side left -fill both
+  pack $p.rel.entry -expand 1
+  pack $p.rel.button -side top -pady 2
+
+  pack $p.par.merge $p.par.label -side left -fill both
+
+#  pack $p.case.ignore $p.case.label -side left -fill both
+
+  pack $p.date_a.label $date_a_w -side left -expand 1 -fill x
+
+  pack $p.date_b.label $date_b_w -side left -expand 1 -fill x
+
+  pack $p.date_abu.label $date_abu_w -side left -expand 1 -fill x
+
+  pack $p.date_bbu.label $date_bbu_w -side left -expand 1 -fill x
+
+  pack $p.tapes.label $p.tapes.entry -side left -fill x
+  pack $p.tapes.entry -expand 1
+
+  pack $p.detailfmt.label $p.detailfmt.entry -side left -fill x
+  pack $p.detailfmt.entry -expand 1
+
+  bind $p.tapes.entry <F1> help_on_restoretapes
+  bind $p.tapes.entry <F2> help_on_restoretapes
+  bind $p.tapes.entry <Escape> help_on_restoretapes
+
+  pack $p.clcache.button -expand 1 -side left
+
+  pack $p.cmds.button $p.cmds.help -expand 1 -side left
+
+  pack $p.rel $p.par $p.date_a $p.date_b $p.date_abu $p.date_bbu $p.tapes $p.detailfmt $p.clcache $p.cmds -side top -fill x -pady 2 -expand 1
+}
+
+proc flat_text { text } {
+  set text [ GStr_replSubstring $text "\n" " " ]
+  return [ GStr_replSubstring $text "\\" "\n" ]
+}
+
+proc what_now { } {
+  global	genericDialogWidth
+
+  set genericDialogWidth 7i
+
+  GGUI_genericDialog .help [ T_ "Help on: Restore program" ] [ T_ "The `Subentries' list allows to browse through the index of saved files and directories. Clicking with the left mouse key selects an entry, so it can be copied to the lower list pressing the `Select' key. When entries are selected, details can be listed for them pressing the `Show Details' button. The format string from the Options dialog will be used. Clicking the right mouse button over an item in the `Subentries' list climbs down (or up in case of the item ..) the tree. The character / (slash) at the end of a `Subentries' item indicates, that navigation below this item is possible. Several items in the subentries can be selected.\nAt top level there are two entries: The slash / and a dot . The slash represents the absolute entries in the backup file index, the dot all relative entries (the recommended way). Clicking on items in the list below is useful for deselection pressing the `Delete' button.\nNavigation to a known subentry (i.e. a full path) is possible editing the top entry under `Path' and pressing the Return key. The path, that will prefix the recovered files and directories, can be adjusted changing the relocation directory in the `Options' dialog. A browser can be opened for this purpose.\nPressing `Start Restore' will start the recovery of the items in the lower list. A window displaying the messages of the restore program will pop up.\nSelecting a directory will restore everything below.\nThe Exit button terminates the program.\nA status display on the bottom of the window indicates the progress of index scans etc. Please be patient, scanning the index can be very time consuming, if it is big, and due to the terrible implementation of this program.\nContext sensitive help is available, when F1 is pressed over an item of the dialog, that has the input focus (can be changed using the TAB key)." ] "" 0 OK
+}
+
+proc help_on_path { } {
+  GGUI_genericDialog .help [ T_ "Help on: Directory index path" ] [ T_ "Here a known directory path can be typed. This speeds up the search in the index, cause fewer entries must be processed and this leads faster to the path, you are interested in. When done entering the path, press the Return key." ] "" 0 OK
+}
+
+proc help_on_subentries { } {
+  global	genericDialogWidth
+
+  set genericDialogWidth 7i
+
+  GGUI_genericDialog .help [ T_ "Help on: Subentries" ] [ T_ "This list displays the entries found in the current directory shown in the path entry. These are not the entries currently found in the filesystem, but those stored in the backup and thus present in the file index. One or more entries can be selected using the left mouse key and the Shift or Ctrl key in the usual manner. Pressing the `Select' button below moves them into the list below, that shows the entries selected for restore. Pressing the right mouse key over an item with a trailing slash / will navigate to this entry and show all the subentries i.e. files and subdirectories of this entry. Pressing the right mouse key over .. (which can't be selected for restore) will go up one step in the hierarchy. If you are using this program as normal user (and not as superuser), you will only see the entries, that you own." ] "" 0 OK
+}
+
+proc help_on_selected { } {
+  global	genericDialogWidth
+
+  set genericDialogWidth 5i
+
+  GGUI_genericDialog .help [ T_ "Help on: Selected entries" ] [ T_ "This list shows all items selected for restore. If a directory entry with a trailing slash / is selected, everything below this directory will be restored. Items can be moved into this list from the above one selecting them and pressing the `Select' button. Items can be deleted selecting them in this list and pressing the `Delete' button. Pressing `Start Restore' below will initiate the recovery of all selected entries." ] "" 0 OK
+}
+
+proc help_on_options { } {
+  global	genericDialogWidth
+
+  set genericDialogWidth 5i
+
+  GGUI_genericDialog .help [ T_ "Help on: Restore Options" ] [ T_ "The relocation directory is the place, where recovered files and directories should be put. The `Modified after date' specifies a time, that the stored files should have as the earliest modification time stamp. Versions stored earlier are not recovered or browsed. For the `Modified before date' the inverse criterion applies. The settings 'Backup after date' and 'Backup before date' refer to the backup starting time. If given, browsing and restore applies for filesystem entries written in backups, that started after / before the given time, respectively. All four dates can be given. For each of them: if the time is not fully specified, 00:00 is assumed. If the year is not given, the current year is used. Day and month must both be present, only one of them is not sufficient, or both may be omitted. In the latter case the year is ignored. If no date is given, the latest version of a file is restored. The `Clear Cache' button clears the index scanning cache. When Before- or After- dates are changed, the index cache is quite likely invalid. Pressing this button enforces a rescan. The `Details Format' string will be used when listing file details. For applicable patterns see the section FORMAT STRING in the manual pages of afrestore." ] "" 0 OK
+}
+
+proc help_on_relocate { } {
+  global	genericDialogWidth
+
+  set genericDialogWidth 5i
+
+  GGUI_genericDialog .help [ T_ "Help on: Relocation directory" ] [ T_ "This entry shows the directory, where all recovered files are relocated to. The stored path will be appended to the path shown here. The path can be selected using a file browser. To open the browser press the `Browse' button on the right. If this program is run as normal user and the relocation directory is not the one configured in the client side configuration file, the relocation directory must be owned by the user running this program." ] "" 0 OK
+}
+
+proc help_on_restoretapes { } {
+    global	genericDialogWidth
+
+  set genericDialogWidth 5i
+
+  GGUI_genericDialog .help [ T_ "Help on: Use Tapes" ] [ T_ "If this entry is not empty and numbers of tapes are supplied using digits, commas and dashes (e.g. 3,6-8,1), only those are used for restore and only files saved on these tapes are displayed in the browse list" ] "" 0 OK
+}
+
+proc file_browse { varname } {
+  upvar	$varname path
+
+  set path [ GGUI_fileSelDialog [ T_ "Select Relocation Directory" ] [ T_ "Set Directory" ] path ]
+}
+  
+proc show_status { text } {
+  global	statuswidget
+
+  $statuswidget configure -text $text
+
+  update idletasks
+}
+
+proc select_callback { widget } {
+  global selected_paths pathentry
+  
+  set allnsel [ $widget curselection ]
+
+  if { ! [ info exists selected_paths ] } {
+    set selected_paths ""
+  }
+
+  foreach nsel $allnsel {
+    set sel [ $widget get $nsel ]
+
+    if { $sel == ".." || $sel == "" || $sel == "." } {
+      continue
+    }
+
+    set dirsep [ string first "/" $sel ]
+#    if { $dirsep >= 0 && $sel != "/" } {
+#      incr dirsep -1
+#      set sel [ string range $sel 0 $dirsep ]
+#    }
+    set pathlen [ string length $pathentry ]
+    incr pathlen -1
+    if { [ string index $pathentry $pathlen ] == "/" || $pathentry == "" } {
+      set newentry "$pathentry$sel"
+    } else {
+      set newentry "$pathentry/$sel"
+    }
+
+    set sidx [ lsearch -exact $selected_paths $newentry ]
+    if { $sidx < 0 } {
+      lappend selected_paths $newentry
+    }
+  }
+
+  set_list .top.sel.list.listbox $selected_paths
+}
+
+proc deselect_callback { widget } {
+  global selected_paths pathentry
+  
+  set allnsel [ $widget curselection ]
+
+  foreach nsel $allnsel {
+    set sel [ $widget get $nsel ]
+
+    set sidx [ lsearch -exact $selected_paths $sel ]
+
+    set selected_paths [ lreplace $selected_paths $sidx $sidx ]
+  }
+
+  set_list .top.sel.list.listbox $selected_paths
+}
+
+proc button3_callback { widget x y } {
+  global pathentry
+  
+  set sel [ string trim [ $widget get [ $widget nearest $y ] ] ]
+  set dirsep [ string first "/" $sel ]
+  if { $dirsep >= 0 && $sel != "/" } {
+    incr dirsep -1
+    set sel [ string range $sel 0 $dirsep ]
+  }
+  
+  if { $sel != ".." && $dirsep < 0 && $sel != "." } {
+    return
+  }
+  
+  case $sel in {
+   "" {
+      return
+   }
+   
+   "/" {
+    set pathentry "/"
+    
+    update_list $widget
+   }
+   
+   ".." {
+    if { $pathentry == "/" || $pathentry == ""
+			|| [ file tail $pathentry ] == $pathentry } {
+      set pathentry ""
+      
+      set_list $widget "/ ."
+    } else {
+      set pathentry [ file dirname $pathentry ]
+    
+      update_list $widget
+    }
+   }
+
+   "." {
+    set pathentry ""
+    
+    update_list $widget
+   }
+  
+   default {
+    append_to_path $widget $sel
+   }
+  }
+}
+
+proc append_to_path { widget selection } {
+  global pathentry
+  
+  set separator "/"
+  if { $pathentry == "/" || $pathentry == "" } {
+    set separator ""
+  }
+  append pathentry $separator $selection
+  
+  update_list $widget
+}
+
+proc set_list { widget list } {
+  $widget delete 0 end
+  
+  foreach m $list { $widget insert end $m }
+}
+
+proc update_list { widget } {
+  global pathentry
+  
+  set matches [ filter_indexfiles $pathentry ]
+  set matches [ linsert $matches 0 ".." ]
+  
+  $widget delete 0 end
+  
+  foreach m $matches { $widget insert end $m }
+}
+
+proc do_restore { widget } {
+  global	relocdir restoreprog rootdir
+  global	cmdprefixlast CMDPREFIX
+
+  set allsel [ $widget curselection ]
+  set paths ""
+  foreach sel [ $widget get 0 end ] {
+    if { [ string range $sel 0 $cmdprefixlast ] == $CMDPREFIX } {
+      append paths " -p '$sel'"
+      continue
+    }
+
+    set plen [ string length $sel ]
+    incr plen -1
+    if { [ string range $sel $plen $plen ] == "/" } {
+      incr plen -1
+      append paths " -p '$sel*' -p '" [ string range $sel 0 $plen ] "'"
+    } else {
+      append paths " -p '$sel'"
+    }
+  }
+
+  if { [ llength $paths ] < 1 } {
+    GGUI_errorDialog [ T_ "Nothing has been selected." ]
+    return
+  }
+
+  set rootdir [ GFile_cleanPath $rootdir ]
+  set relocdir [ GFile_cleanPath $relocdir ]
+
+  if { $relocdir == "" } {
+    set relocdir $rootdir
+  }
+
+  set restore_opts [ restore_all_opts shell ]
+
+  if { ! [ file exists $relocdir ] } {
+    GGUI_warningDialog [ format [ T_ "The relocation directory `%s' does not exist." ] $relocdir ]
+  }
+
+  set pid [ pid ]
+  set n [ clock seconds ]
+  while { 1 } {
+    set tmpfile "/tmp/xrs.$pid.$n"
+    if { ! [ file exists $tmpfile ] } {
+      break
+    }
+    incr n -1
+  }
+
+  set restorescript {#!/bin/sh} 
+  lappend restorescript "/bin/rm -f $tmpfile"
+  lappend restorescript "echo '>>> Restore command: $restoreprog $restore_opts $paths'"
+  lappend restorescript {echo ' '} {echo '*** Restore program starting ***'} {echo ' '}
+  set restorecmd "echo n | $restoreprog $restore_opts $paths 2>&1 &"
+  append restorecmd { RPID=$! }
+  lappend restorescript $restorecmd
+  lappend restorescript {trap "kill -2 $RPID" 2}
+  lappend restorescript {trap "kill -15 $RPID" 15}
+  lappend restorescript wait
+  lappend restorescript {echo ' '; echo '*** Restore program finished ***'}
+
+  set success [ GFile_writeFile $tmpfile restorescript [ llength $restorescript ] list ]
+  if { $success != 0 } {
+    GGUI_errorDialog [ format [ T_ "Cannot create script file `%s'." ] $tmpfile ]
+    catch { file delete $tmpfile }
+
+    return 1
+  }
+
+  GGUI_runCommand Restore "/bin/sh $tmpfile"
+
+  # program should delete itself, nontheless, just in case:
+  catch { file delete $tmpfile }
+}
+
+proc restore_all_opts { mode } {
+  global	keep_existing ignore_case restoretapes
+
+  set all_opts "[ restore_reloc_opt $mode ] [ restore_date_opt $mode ]"
+
+  if { $keep_existing } {
+    append all_opts " -m"
+  }
+
+  if { $ignore_case } {
+    append all_opts " -i"
+  }
+
+  if { [ llength $restoretapes ] > 0 } {
+    set all_opts " -T '$restoretapes'"
+  }
+
+  return $all_opts
+}
+
+proc restore_reloc_opt { mode } {
+  global	relocdir rootdir
+
+  set relocopt ""
+  if { $relocdir != $rootdir } {
+    set relocopt "-C $relocdir"
+  }
+
+  return $relocopt
+}
+
+proc restore_date_opt { mode } {
+  set opt ""
+
+  set a [ after_date ]
+  set b [ before_date ]
+  set abu [ after_bu_date ]
+  set bbu [ before_bu_date ]
+
+  if { $a != "" || $abu != "" } {
+    if { $abu != "" } {
+      append a " % $abu"
+    }
+    case $mode in {
+      shell {
+	append opt " -A '$a'"
+      }
+      open {
+	append opt " -A {$a}"
+      }
+      default {
+	GGUI_errorDialog [ format [ T_ "Unknown mode: %s, internal error. Please report." ] $mode ]
+      }
+    }
+  }
+  if { $b != "" || $bbu != "" } {
+    if { $bbu != "" } {
+      append b " % $bbu"
+    }
+    case $mode in {
+      shell {
+	append opt " -B '$b'"
+      }
+      open {
+	append opt " -B {$b}"
+      }
+    }
+  }
+
+  return $opt
+}
+
+proc after_date { } {
+  global	hour_a min_a day_a month_a year_a
+
+  return [ construct_date_spec $min_a $hour_a $day_a $month_a $year_a ]
+}
+
+proc before_date { } {
+  global	hour_b min_b day_b month_b year_b
+
+  return [ construct_date_spec $min_b $hour_b $day_b $month_b $year_b ]
+}
+
+proc after_bu_date { } {
+  global	hour_abu min_abu day_abu month_abu year_abu
+
+  return [ construct_date_spec $min_abu $hour_abu $day_abu $month_abu $year_abu ]
+}
+
+proc before_bu_date { } {
+  global	hour_bbu min_bbu day_bbu month_bbu year_bbu
+
+  return [ construct_date_spec $min_bbu $hour_bbu $day_bbu $month_bbu $year_bbu ]
+}
+
+proc construct_date_spec { m h D M Y } {
+  set date ""
+
+  if { $D != "" && $M != "" } {
+    append date " [ GDate_getMonthname $M ] $D"
+
+    if { $Y != "" } {
+      append date " $Y"
+    }
+  }
+
+  if { $m != "" && $h != "" } {
+    append date " $h:$m"
+  }
+
+  return [ string trim $date ]
+}
+
+
+set relocdir "/"
+set pathentry ""
+set initlist "/ ."
+set keep_existing 0
+set ignore_case 0
+set restoretapes ""
+set detailfmt [ T_ "\\n%n\\nOwner:         %O\\nLast Modified: %M\\nBackup Time:   %T\\n" ]
+
+if { [ info exists env(HOME) ] } {
+  file stat $env(HOME) hstat
+  if { $hstat(uid) } {
+    set hdir [ GFile_resolvePath__ $env(HOME) ]
+    set alldirstobu ""
+
+    if { $numparts == 1 } {
+      eval lappend alldirstobu $dirstobackup
+    } else {
+      for { set i 1 } { $i <= $numparts } { incr i } {
+	eval lappend alldirstobu $dirstobackup($i)
+      }
+    }
+
+
+    foreach d $alldirstobu {
+      if { [ string range $d 0 0 ] == "/" } {
+	if { [ string match [ GFile_cleanPath "$d*" ] $hdir ] } {
+	  set pathentry [ file dirname $hdir ]
+	  set list [ file tail $hdir ]
+	  break
+	}
+      } else {
+	if { [ string match [ GFile_cleanPath "$rootdir/$d*" ] $hdir ] } {
+	  set rdir [ GFile_cleanPath $rootdir ]
+	  set plen [ string length $rdir ]
+	  set relhdir [ string range $hdir $plen end ]
+	  while { [ string range $relhdir 0 0 ] == "/" } {
+	    set relhdir [ string range $relhdir 1 end ]
+	  }
+
+	  set pathentry [ file dirname $relhdir ]
+	  set list [ file tail $relhdir ]
+	  break
+	}
+      }
+    }
+
+    if { [ info exists list ] } {
+      set initlist ".. $list/"
+    }
+  }
+}
+
+foreach var "hour_a min_a day_a month_a year_a hour_b min_b day_b month_b year_b hour_abu min_abu day_abu month_abu year_abu hour_bbu min_bbu day_bbu month_bbu year_bbu" {
+  set $var ""
+}
+
+set entrywidth 60
+
+show_win
+

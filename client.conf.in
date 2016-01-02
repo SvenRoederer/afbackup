@@ -1,0 +1,116 @@
+#
+# The backup server host
+BackupHosts:		backuphost
+#
+# The port number to use
+#BackupPorts:		2988
+#
+# The cartridge set to use
+#CartridgeSets:		1
+#
+# Server Messages Output Configuration.
+#PrintServerMessages:	r 2988
+#
+# The directory, where to run the backup
+RootDirectory:		/
+#
+# The subdirectories of the RootDirectory to backup (wildcards are allowed)
+# Attention: this also descends into NFS-mounted directories. Please
+# configure properly, use the -m option (don't descend cross filesystems)
+# where appropriate
+DirsToBackup:		*
+# Filenames to be skipped during the backup (wildcards are allowed)
+FilesToSkip:		*.obj core
+# directory names to be skipped during the backup (wildcards are allowed)
+DirsToSkip:		lost+found proc
+# Name of a file containing a (pattern) list of files/directories to skip 
+ExcludeListFile:	.buexcl
+# Filesystem types to save, skip (-) or prune (/)
+FilesystemTypes:	/autofs /proc /devpts /usbdevfs /sysfs /tmpfs
+# Whether to write CRC32 checksums for each file to the backup
+WriteChecksums:		no
+# Whether to use the ctime in addition to mtime during incremental backup
+UseCTime:		no
+# Whether to write the progress to the file progress in the var directory
+#ReportProgress:	no
+
+#
+# The number of parts of the full backup (if this takes a long time)
+NumBackupParts:		1
+# The subdirectories of the RootDirectory to backup in parts
+#DirsToBackup1:		mass-store/disk0 mass-store/disk1/part[0-1] home* opt* usr/lib/X11/ncd var/boot tftpboot
+#DirsToBackup2:		mass-store/disk1/part[2-4] mass-store/disk1/[a-oq-z]*
+#
+# The programs to process the files, that are saved, and the counterpart to
+# do the reverse processing, if desired. In most cases compression and
+# uncompression
+#ProcessCmd:		gzip -1
+#
+#UnprocessCmd:		gunzip
+#
+# Whether to use built-in compression
+BuiltinCompressLevel:	2
+#
+# Which files no processing should be attempted
+DoNotProcess:		*.gz *.bz2 *.[Zz] *.[Zz][Ii][Pp] *.jpg *.jpeg *.mpg *.mpeg *.rpm *.deb
+#
+# Whether to process the saved files
+ProcessBackupedFiles:	1
+#
+
+#
+# The part of the file, where the saved filenames are stored.
+# The current number will be appended.
+IndexFilePart:		%V/backup_log.
+#
+# The programs to process the file indexes and the counterpart to do
+# the reverse processing, if desired. In most cases compression
+# and uncompression
+IndexProcessCmd:	gzip -9
+#
+IndexUnprocessCmd:	gunzip
+#
+# The number of such files, that are maintained. More (older ones) are removed.
+NumIndexesToStore:	5
+# Alternatively the maximum age of index files to be kept in days
+# older ones are removed
+#DaysToStoreIndexes:	90
+#
+# The maximum number of previous index files, that are scanned for restore
+#NumIndexesToScan:	5
+# Alternatively the maximum age of index files in days to be scanned for
+# restore
+#DaysToScanIndexes:	90
+#
+# The file where to log events
+LoggingFile:		%I/client.backup.log
+#
+# Whether to process the filename logfiles
+ProcessLogfiles:	1
+
+#
+# For restore: Check, whether the user has sufficient permissions
+# to restore files to the same place, from where they were saved
+CheckRestoreAccessPerms:	0
+
+#
+# Identifier for the backup client (needed, if several afbackup
+# installations reside on one host)
+#Client-Identifier:	
+#
+# Filename with encryption key for authentication
+#EncryptionKeyFile:	%C/cryptkey
+#
+# Directory for varying files
+VarDirectory:		@clientvardir@
+
+#
+# The program to process startup messages. Normally used for
+#  saving logs to recover from hard crashs
+StartupInfoProgram:	tee -a %V/bumsgs
+#
+# The program to be executed when everything requested is done.
+# %l is replaced by the filename-logfile, %r by the file with
+# the report statistics %e by the overall exit status, %i with
+# the minimum restore information
+ExitProgram:		(echo '[Afbackup]: Overall exit status: %e';echo " ";echo Minimum restore information:; echo "%i";echo " "; cat %r; uuencode %l `basename %l`)|mail root

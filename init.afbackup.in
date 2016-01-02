@@ -1,0 +1,179 @@
+#!/bin/sh
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/init.afbackup.in,v $
+# $Id: init.afbackup.in,v 1.2 2013/12/21 11:34:43 alb Exp alb $
+#
+# chkconfig: - 95 05
+# description: Starts and stops the @PACKAGE@ multi stream daemon
+# processname: afmserver
+# config: @serverconfdir@/@serverconf@
+# pidfile: @servervardir@/afmserver.pid
+#
+### BEGIN INIT INFO
+# Provides: afmserver afserver
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $network
+# Short-Description: start and stop the @PACKAGE@ multi stream daemon
+# Description: @PACKAGE@ multi stream daemon to serve several clients in parallel
+### END INIT INFO
+#
+# startupconfig: 2345 012345S 95 05
+
+CONFIGFILE=@serverconfdir@/@serverconf@
+
+VARDIR=@servervardir@
+
+CFVARDIR=`egrep '^[ 	]*[Vv][Aa][Rr][-_ 	]*[Dd]ire?c?t?o?r?y?:?[ 	]*' "$CONFIGFILE" 2>/dev/null | sed 's/^[ 	]*[Vv][Aa][Rr][-_ 	]*[Dd]ir[^ 	]*[ 	]*//g' | tail -1`
+if [ `echo "$CFVARDIR" | wc -w` -gt 0 ] ; then
+  VARDIR="$CFVARDIR"
+fi
+
+PIDFILE="$VARDIR"/afmserver.pid
+
+set_start_user(){
+  VARDIROWNER=`/bin/ls -ldL "$VARDIR" 2>/dev/null | awk '{print $3}'`
+  if [ `echo "$VARDIROWNER" | wc -w` -lt 1 ] ; then
+    echo "WARNING: Cannot determine owner of directory $VARDIR" >&2
+    VARDIROWNER=""
+  fi
+
+  DEVICEOWNER=""
+  DEVICE=`egrep '^[ 	]*[Bb]ackup[-_ 	]*[Dd]evi?c?e?s?:?[ 	]*' "$CONFIGFILE" 2>/dev/null | sed 's/^[ 	]*[Bb]ackup[-_ 	]*[Dd]ev[^ 	]*[ 	]*//g' | tail -1 | awk '{print $1}' | sed 's/[@#^=].*$//g'`
+  if [ _"$DEVICE" = _- ] ; then
+    DEVICEOWNER='-'
+  else
+    DEVICEENTRY=`/bin/ls -lLd "$DEVICE" 2>/dev/null`
+    if [ $? -ne 0 ] ; then
+      # Probably the device is a symlink to a directory, that does not
+      # (yet) exist. In this case, the base directory must exist and be
+      # owned by the backup server user
+      #
+      if [ _`/bin/ls -l "$DEVICE" | cut -c1` = _l ] ; then
+	DEVDIR=`dirname "$DEVICE"`
+	RESOLVED=`/bin/ls -l "$DEVICE" | sed 's/^.* -> *//g'`
+	TDEVDIR=`dirname "$RESOLVED"`
+	DEVICEENTRY=`( cd "$DEVDIR" && /bin/ls -lLd "$TDEVDIR" ) 2>/dev/null`
+	if [ $? -ne 0 ] ; then
+	  DEVICEENTRY=""
+	fi
+      fi
+    fi
+    if [ _"$DEVICEENTRY" != _ ] ; then
+      DEVICEOWNER=`echo "$DEVICEENTRY" | awk '{print $3}'`
+    else
+      echo "WARNING: Cannot determine owner of backup device $DEVICE" >&2
+    fi
+  fi
+
+  STARTUSER=root
+  if [ _"$DEVICEOWNER" != _ -a _"$VARDIROWNER" != _ ] ; then
+    if [ _"$DEVICEOWNER" != _"$VARDIROWNER" -a _"$DEVICEOWNER" != _- ] ; then
+      echo "WARNING: Owner of $VARDIR and of $DEVICE differ. Must start as root to be operational." >&2
+    else
+      STARTUSER="$VARDIROWNER"
+    fi
+  else
+    echo "WARNING: Some ownership could not be determined. Must start as root to be operational." >&2
+  fi
+}
+
+#
+# cheap trick, might fail, then set PS properly
+#
+PS="ps uxawwww"
+$PS >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+  PS="ps -uxawwww"
+  $PS >/dev/null 2>&1
+  if [ $? -ne 0 ] ; then
+    PS="ps -ef"
+  fi
+fi
+
+check_running(){
+  PID=''
+  if [ -f "$PIDFILE" ] ; then
+    for P in `fuser "$PIDFILE" 2>&1 | awk '{for(i=1;i<=NF;i++)if($i ~ /[0-9]/ && $i !~ /\//) print $i }' | sed 's/[^0-9]//g'` ; do
+      if $PS | awk '$2 == "'"$P"'" {print $0}' | egrep '[ 	/]afmserver([ 	].*)?$' >/dev/null ; then
+	PID="$P"
+	break
+      fi
+    done
+    if [ `echo "$PID" | wc -w` -lt 1 ] ; then
+      PID=`cat "$PIDFILE" 2>/dev/null`
+      echo "$PID" | grep '^[0-9][0-9]*$' >/dev/null
+      if [ $? -ne 0 ] ; then
+	PID=''
+      fi
+    fi
+  fi
+  if [ `echo "$PID" | wc -w` -lt 1 ] ; then
+    PID=`$PS|grep -v grep|egrep '[ 	/]afmserver([ 	].*)?$' |grep -v init.d|awk '{print $2}'`
+  fi
+  if [ `echo "$PID" | wc -w` -gt 0 ] ; then
+    echo "$PID"
+    $PS | awk '$2 == "'"$PID"'" {print $0}' | egrep '[ 	/]afmserver([ 	].*)?$' >/dev/null
+    if [ $? -eq 0 ] ; then
+	return 1
+    fi
+  fi
+  return 0
+}
+
+case "$1" in
+    start)
+	PID=`check_running`
+	if [ $? -gt 0 ] ; then
+		echo "An AF-Backup server seems to be already running with PID $PID"
+		exit 0
+	fi
+
+	set_start_user
+	echo "Starting AF-Backup multi stream server as user $STARTUSER."
+
+        su "$STARTUSER" -c "@serverbindir@/afmserver -d -p afmbackup $CONFIGFILE"
+	sleep 1
+
+	check_running >/dev/null
+	if [ $? -lt 1 ] ; then
+		echo "Could not start the AF-Backup server. Check the logs for errors."
+		exit 2
+	fi
+
+	;;
+
+    stop)
+	PID=`check_running`
+	if [ $? -gt 0 ] ; then
+		echo "Stopping AF-Backup multi stream server."
+		kill $PID
+		I=0
+		while true ; do
+			check_running >/dev/null
+			if [ $? -lt 1 ] ; then
+				break
+			fi
+			I=`expr $I + 1`
+			if [ $I -gt 30 ] ; then
+				echo "AF-Backup multi stream server could not be stopped within 30 seconds. Doing hard kill."
+				kill -9 $PID
+				break
+			fi
+			sleep 1
+		done
+	else
+		echo "AF-Backup multi stream server not running."
+	fi
+
+	;;
+
+    *)
+	echo "Usage: $0 {start|stop}"
+
+	exit 1
+
+	;;
+esac
+
+exit 0
+

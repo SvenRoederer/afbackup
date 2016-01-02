@@ -1,0 +1,13 @@
+
+proc run_full_backup {
+  global env
+}
+
+frame .title
+frame .full
+frame .incr
+button .full.start -text "Full Backup" -command run_full_backup
+button .incr.start -text "Incremental Backup" -command run_incr_backup
+pack .full.start -fill x
+pack .incr.start -fill x
+pack .full .incr -side top -fill x

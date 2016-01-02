@@ -1,0 +1,7401 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-11-04 20:44+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: cartready.c:39
+#, c-format
+msgid "usage: %s\n"
+msgstr ""
+
+#: cartready.c:69
+#, c-format
+msgid ""
+"Warning: File `%s' does not exist.\n"
+" Probably a new tape has been detected automatically\n"
+" and thus this file has been removed.\n"
+msgstr ""
+
+#: cartready.c:73
+#, c-format
+msgid ""
+"Warning: File `%s' does not exist.\n"
+" Probably someone else has already issued this\n"
+" command and thus this file has been removed.\n"
+msgstr ""
+
+#: cartready.c:79
+#, c-format
+msgid "Error: Cannot remove file `%s': %s\n"
+msgstr ""
+
+#: client.c:264
+#, c-format
+msgid "%sError: %s"
+msgstr ""
+
+#: client.c:264 client.c:1080
+msgid "Server "
+msgstr ""
+
+#: client.c:276
+#, c-format
+msgid "%s got signal %d, exiting.\n"
+msgstr ""
+
+#: client.c:1079
+#, c-format
+msgid ""
+"%sError: unexpected fault receiving from server: %s. Trying to continue ...\n"
+msgstr ""
+
+#: client.c:1806
+msgid "unknown fault"
+msgstr ""
+
+#: client.c:1843
+msgid "Warning: Empty command supplied. Nothing happens"
+msgstr ""
+
+#: client.c:1913
+#, c-format
+msgid ">>> Remote process exited with status %d, but produced no output.\n"
+msgstr ""
+
+#: client.c:2125
+#, c-format
+msgid "Error: Cannot remove report file `%s'\n"
+msgstr ""
+
+#: client.c:2131
+#, c-format
+msgid "Error: Cannot write report file `%s'\n"
+msgstr ""
+
+#: client.c:2135
+msgid "Backup statistics:\n"
+msgstr ""
+
+#: client.c:2138
+#, c-format
+msgid ""
+"Client Identifier:             %s\n"
+"\n"
+msgstr ""
+
+#: client.c:2139
+#, c-format
+msgid ""
+"Exit Status:                   %ld\n"
+"\n"
+msgstr ""
+
+#: client.c:2140
+#, c-format
+msgid "Start-Time:                    %s\n"
+msgstr ""
+
+#: client.c:2141
+#, c-format
+msgid ""
+"End-Time:                      %s\n"
+"\n"
+msgstr ""
+
+#: client.c:2142
+#, c-format
+msgid "Backup Server:                 %s\n"
+msgstr ""
+
+#: client.c:2143
+#, c-format
+msgid "Backup Port:                   %d\n"
+msgstr ""
+
+#: client.c:2144
+#, c-format
+msgid "First Cartridge used:          %ld\n"
+msgstr ""
+
+#: client.c:2145
+#, c-format
+msgid "First Tapefile accessed:       %ld\n"
+msgstr ""
+
+#: client.c:2146
+#, c-format
+msgid "Last Cartridge used:           %ld\n"
+msgstr ""
+
+#: client.c:2147
+#, c-format
+msgid "Last Tapefile accessed:        %ld\n"
+msgstr ""
+
+#: client.c:2148 full_backup.c:3787
+msgid "Used Cartridges:"
+msgstr ""
+
+#: client.c:2150
+#, c-format
+msgid "Stored filesystem entries:     %ld\n"
+msgstr ""
+
+#: client.c:2151
+#, c-format
+msgid "Bytes written to media:        %s\n"
+msgstr ""
+
+#: client.c:2153
+#, c-format
+msgid "Sum of filesizes:              %s\n"
+msgstr ""
+
+#: client.c:2155
+#, c-format
+msgid "Sum of compressed filesizes:   %s\n"
+msgstr ""
+
+#: client.c:2157
+#, c-format
+msgid "Sum of uncompressed filesizes: %s\n"
+msgstr ""
+
+#: client.c:2160
+#, c-format
+msgid "Total compression factor:      %.2f\n"
+msgstr ""
+
+#: client.c:2164
+#, c-format
+msgid "Real compression factor:       %.2f\n"
+msgstr ""
+
+#: client.c:2319 label_tape.c:3931
+msgid "Description"
+msgstr ""
+
+#: client.c:2320
+msgid "==========="
+msgstr ""
+
+#: client.c:2322
+msgid "This program is used to maintain archives on a backup server"
+msgstr ""
+
+#: client.c:2323
+msgid "host or in a file. Archives can be created, extracted or their"
+msgstr ""
+
+#: client.c:2324
+msgid "contents be listed. At least one of the following flags has to"
+msgstr ""
+
+#: client.c:2325
+msgid "be supplied:"
+msgstr ""
+
+#: client.c:2327
+msgid " -c  to create an archive"
+msgstr ""
+
+#: client.c:2329
+msgid " -x  to extract from an archive"
+msgstr ""
+
+#: client.c:2331
+msgid " -t  to list the contents of an archive"
+msgstr ""
+
+#: client.c:2333
+msgid " -d  to verify (compare) the contents of an archive"
+msgstr ""
+
+#: client.c:2335
+msgid " -C  to set a certain cartridge on the backup server"
+msgstr ""
+
+#: client.c:2336
+msgid "       (makes only sense extracting or listing with -x or"
+msgstr ""
+
+#: client.c:2337
+msgid "        -t, the writing position can't be changed by clients)"
+msgstr ""
+
+#: client.c:2339
+msgid " -F  to set a certain file on the backup server's tape"
+msgstr ""
+
+#: client.c:2340
+msgid "       (the same applies as for -C)"
+msgstr ""
+
+#: client.c:2342
+msgid " -q  to printout the current cartridge and tape file number"
+msgstr ""
+
+#: client.c:2343
+msgid "       on the backup server"
+msgstr ""
+
+#: client.c:2345
+msgid " -Q  to printout the cartridge and tape file number for the"
+msgstr ""
+
+#: client.c:2346
+msgid "       the next write access on the backup server"
+msgstr ""
+
+#: client.c:2348
+msgid " -X  followed by the full path name of a program to be started on"
+msgstr ""
+
+#: client.c:2349
+msgid "       the client. This can be used to trigger a backup remotely."
+msgstr ""
+
+#: client.c:2350
+msgid "       If the program needs arguments, the command together with"
+msgstr ""
+
+#: client.c:2351
+msgid "       the arguments has to be enclosed by quotes"
+msgstr ""
+
+#: client.c:2353
+msgid " -I  to printout an index of the backups written to the current"
+msgstr ""
+
+#: client.c:2354
+msgid "       cartridge"
+msgstr ""
+
+#: client.c:2356
+msgid " -w  to check the status of the streamer on the server side, e.g."
+msgstr ""
+
+#: client.c:2357
+msgid "       whether it is ready and waiting for requests to service"
+msgstr ""
+
+#: client.c:2359
+msgid " -G  to request a new cartridge for the next writing operation."
+msgstr ""
+
+#: client.c:2360
+msgid "       If the current writing position is already at the beginning"
+msgstr ""
+
+#: client.c:2361
+msgid "       of a new or reused tape, nothing happens"
+msgstr ""
+
+#: client.c:2363
+msgid " -D <destination> to make an exact copy of a tape to another one"
+msgstr ""
+
+#: client.c:2364
+msgid "       (duplicate). See below how to specify the destination tape."
+msgstr ""
+
+#: client.c:2365
+msgid "       Duplication can be either from one cartridge to another on"
+msgstr ""
+
+#: client.c:2366
+msgid "       the same server, or from one server to another one. When"
+msgstr ""
+
+#: client.c:2367
+msgid "       copying to the same server chunks of data are stored in a"
+msgstr ""
+
+#: client.c:2368
+msgid "       temporary directory on the client, where the command is"
+msgstr ""
+
+#: client.c:2369
+msgid "       started, what should preferably be the source server"
+msgstr ""
+
+#: client.c:2371
+msgid " -M <message> send a message to the server. Messages will in the"
+msgstr ""
+
+#: client.c:2372
+msgid "       most cases contain whitespace, so they should be enclosed"
+msgstr ""
+
+#: client.c:2373
+msgid "       in quotes. Server messages should be sent to the single"
+msgstr ""
+
+#: client.c:2374
+msgid "       stream server (port), the multi stream server might hang"
+msgstr ""
+
+#: client.c:2375
+msgid "       receiving a message due to systematical reasons. Several"
+msgstr ""
+
+#: client.c:2376
+msgid "       messages can be put into the string. They must be separated"
+msgstr ""
+
+#: client.c:2377
+msgid "       by a real newline character or the usual C-like \\n ."
+msgstr ""
+
+#: client.c:2378
+msgid "       The following messages are currently supported:"
+msgstr ""
+
+#: client.c:2380
+msgid "        PreciousTapes: <client-id> <list-of-tapes>"
+msgstr ""
+
+#: client.c:2381
+msgid "                   The list of tapes is inserted into the table"
+msgstr ""
+
+#: client.c:2382
+msgid "                   with the tapes, that are crucial for clients"
+msgstr ""
+
+#: client.c:2383
+msgid "                   to restore all files, that are listed in all"
+msgstr ""
+
+#: client.c:2384
+msgid "                   existing index files. The list is assigned to"
+msgstr ""
+
+#: client.c:2385
+msgid "                   the client with the given client identifier,"
+msgstr ""
+
+#: client.c:2386
+msgid "                   regardless of an id suppied with option -W ."
+msgstr ""
+
+#: client.c:2387
+msgid "                   These tapes will not be overwritten until it"
+msgstr ""
+
+#: client.c:2388
+msgid "                   is explicitly permitted. This message is sent"
+msgstr ""
+
+#: client.c:2389
+msgid "                   automatically by full_backup or incr_backup"
+msgstr ""
+
+#: client.c:2390
+msgid "                   and should not be used in other user contexts"
+msgstr ""
+
+#: client.c:2392
+msgid "        ReuseTapes: <list-of-tapes>"
+msgstr ""
+
+#: client.c:2393
+msgid "                   The opposite of PreciousTapes. Sending this"
+msgstr ""
+
+#: client.c:2394
+msgid "                   message permits the server to overwrite the"
+msgstr ""
+
+#: client.c:2395
+msgid "                   listed tapes, though they are crucial for"
+msgstr ""
+
+#: client.c:2396
+msgid "                   some client"
+msgstr ""
+
+#: client.c:2398
+msgid "        TapesReadOnly: <list-of-tapes>"
+msgstr ""
+
+#: client.c:2399
+msgid "                   The list of tapes is inserted into the file"
+msgstr ""
+
+#: client.c:2400
+msgid "                   listing the files, that should not be written"
+msgstr ""
+
+#: client.c:2401
+msgid "                   any more for whatever reason"
+msgstr ""
+
+#: client.c:2403
+msgid "        TapesReadWrite: <list-of-tapes>"
+msgstr ""
+
+#: client.c:2404
+msgid "                   This reverts the status of tapes set read-only"
+msgstr ""
+
+#: client.c:2405
+msgid "                   to read-write, the opposite of TapesReadOnly"
+msgstr ""
+
+#: client.c:2407
+msgid "        CartridgeReady"
+msgstr ""
+
+#: client.c:2408
+msgid "                   When an operator is requested to do something"
+msgstr ""
+
+#: client.c:2409
+msgid "                   the server is waiting for, this message can be"
+msgstr ""
+
+#: client.c:2410
+msgid "                   sent to trigger the server to proceed. This"
+msgstr ""
+
+#: client.c:2411
+msgid "                   message has the same effect as the cartready"
+msgstr ""
+
+#: client.c:2412
+msgid "                   command"
+msgstr ""
+
+#: client.c:2414
+msgid "        DeleteClient: <client-identifier>"
+msgstr ""
+
+#: client.c:2415
+msgid "                   The tapes, that are marked as reserved for a"
+msgstr ""
+
+#: client.c:2416
+msgid "                   client to recover all the data in his indexes,"
+msgstr ""
+
+#: client.c:2417
+msgid "                   are freed. That is, the appropriate line is"
+msgstr ""
+
+#: client.c:2418
+msgid "                   removed from the server's precious_tapes file"
+msgstr ""
+
+#: client.c:2420
+msgid " -m [ <interval> ] poll the current message from the server and"
+msgstr ""
+
+#: client.c:2421
+msgid "       write it to standard output, if it is new. Polling is"
+msgstr ""
+
+#: client.c:2422
+msgid "       done regularly with the given interval in seconds, default"
+msgstr ""
+
+#: client.c:2423
+msgid "       interval is 3 seconds"
+msgstr ""
+
+#: client.c:2425
+msgid "-c, -x, -t, -d, -X, -D, -I and -m are mutual exclusive. The other"
+msgstr ""
+
+#: client.c:2426
+msgid "options can be supplied as needed. To set the cartridge and/or"
+msgstr ""
+
+#: client.c:2427
+msgid "the tape file on the backup server is only making sense when not"
+msgstr ""
+
+#: client.c:2428
+msgid "creating an archive. The serial order of writing to tape is"
+msgstr ""
+
+#: client.c:2429
+msgid "handled by the server machine independently of the client."
+msgstr ""
+
+#: client.c:2432
+msgid "Filenames"
+msgstr ""
+
+#: client.c:2434
+msgid "The names of the files and directories, that have to be put"
+msgstr ""
+
+#: client.c:2435
+msgid "into or extracted from an archive are by default read from the"
+msgstr ""
+
+#: client.c:2436
+msgid "standard input. If filenames are supplied in the command line"
+msgstr ""
+
+#: client.c:2437
+msgid "the -a flag is given when extracting, standard input is not read."
+msgstr ""
+
+#: client.c:2438
+msgid "The same applies, when filenames are read from a file with the"
+msgstr ""
+
+#: client.c:2439
+msgid "-T option. When reading the names from a file or from standard"
+msgstr ""
+
+#: client.c:2440
+msgid "input, they must be given one per line. If a name contains"
+msgstr ""
+
+#: client.c:2441
+msgid "special characters (like newline or nonprintable ones), they"
+msgstr ""
+
+#: client.c:2442
+msgid "have to be specified using backslash-sequences like in C-code,"
+msgstr ""
+
+#: client.c:2443
+msgid "e.g. \\n for newline."
+msgstr ""
+
+#: client.c:2444
+msgid "In save mode (-c) filenames can be prefixed with character"
+msgstr ""
+
+#: client.c:2445
+msgid "sequences, that have special meanings (no space between prefix"
+msgstr ""
+
+#: client.c:2446
+msgid "and filename):"
+msgstr ""
+
+#: client.c:2448
+msgid " /../   The file is not saved with all attributes present in"
+msgstr ""
+
+#: client.c:2449
+msgid "        the inode, but only the contents are saved. This might"
+msgstr ""
+
+#: client.c:2450
+msgid "        be useful for saving raw-devices"
+msgstr ""
+
+#: client.c:2451
+msgid " //../  With /../ the configured processing is not applied to"
+msgstr ""
+
+#: client.c:2452
+msgid "        the file contents for safety reasons. With this prefix"
+msgstr ""
+
+#: client.c:2453
+msgid "        processing can be forced nonetheless"
+msgstr ""
+
+#: client.c:2454
+msgid " |||    and a mandatory space character indicates, that the"
+msgstr ""
+
+#: client.c:2455
+msgid "        following characters up to (but not including) another"
+msgstr ""
+
+#: client.c:2456
+msgid "        triple bar ||| should be interpreted as a shell command,"
+msgstr ""
+
+#: client.c:2457
+msgid "        that is started and whose standard output is written to"
+msgstr ""
+
+#: client.c:2458
+msgid "        the backup. At restore time the command following the"
+msgstr ""
+
+#: client.c:2459
+msgid "        second triple bar is started and the data stream read"
+msgstr ""
+
+#: client.c:2460
+msgid "        at backup time is written to it's standard input. This"
+msgstr ""
+
+#: client.c:2461
+msgid "        might be useful for saving e.g. databases. The second"
+msgstr ""
+
+#: client.c:2462
+msgid "        command may be terminated by a triple sharp ###, that"
+msgstr ""
+
+#: client.c:2463
+msgid "        starts an optional comment. Example:"
+msgstr ""
+
+#: client.c:2464
+msgid "        ||| pg_dumpall ||| psql db_tmpl ### Store Postgres DBs"
+msgstr ""
+
+#: client.c:2467
+msgid "Destination"
+msgstr ""
+
+#: client.c:2469
+msgid "The destination tape for the duplicate operation can be given"
+msgstr ""
+
+#: client.c:2470
+msgid "in two ways: either with the options -h, -p, -C and -k following"
+msgstr ""
+
+#: client.c:2471
+msgid "the -D immediately without space and enclosed in quotes, so that"
+msgstr ""
+
+#: client.c:2472
+msgid "they appear as an own argument list in one real argument, e.g.:"
+msgstr ""
+
+#: client.c:2473
+msgid " -D' -C 5 -h targethost -p targetport'"
+msgstr ""
+
+#: client.c:2474
+msgid "(double quotes are of course also possible ...)."
+msgstr ""
+
+#: client.c:2475
+msgid "The second format is as follows:"
+msgstr ""
+
+#: client.c:2476
+msgid " [<targetcart>][@<targethost>][%<targetport>][:<targetcryptkeyfile>]"
+msgstr ""
+
+#: client.c:2477
+msgid "At least one of the specifiers must be present. Examples:"
+msgstr ""
+
+#: client.c:2478
+msgid " 5@otherhost  5%2990:/keyfile/for/target/server @otherhost%2970"
+msgstr ""
+
+#: client.c:2479
+msgid "If one of the specifiers is omitted, it is assumed identical with"
+msgstr ""
+
+#: client.c:2480
+msgid "the copy source specified in the normal options -h, -p, -C and -k."
+msgstr ""
+
+#: client.c:2481
+msgid "Copying a tape to itself is prevented."
+msgstr ""
+
+#: client.c:2484
+msgid "More options in alphabetical order:"
+msgstr ""
+
+#: client.c:2486
+msgid " -            in combination with -c: read standard input and"
+msgstr ""
+
+#: client.c:2487
+msgid "                write it to tape, in combination with -x: read"
+msgstr ""
+
+#: client.c:2488
+msgid "                tape and write it to standard output"
+msgstr ""
+
+#: client.c:2490
+msgid " -A <time>    process files (save or extract) modified after"
+msgstr ""
+
+#: client.c:2491 client.c:2497
+msgid "                the given time in seconds since 1.1.1970 00:00"
+msgstr ""
+
+#: client.c:2493
+msgid " -a           in combination with -x: extract all files and"
+msgstr ""
+
+#: client.c:2494
+msgid "                directories in the archive"
+msgstr ""
+
+#: client.c:2496
+msgid " -B <time>    process files (save or extract) modified before"
+msgstr ""
+
+#: client.c:2499
+msgid " -b           don't enter buffering mode"
+msgstr ""
+
+#: client.c:2501
+msgid " -e <errlog>  Use the file <errlog> to write error messages to"
+msgstr ""
+
+#: client.c:2502
+msgid "                instead of the standard error output"
+msgstr ""
+
+#: client.c:2504
+msgid " -f <file>    write to or read from a file instead of querying"
+msgstr ""
+
+#: client.c:2505
+msgid "                the backup server"
+msgstr ""
+
+#: client.c:2507
+msgid " -g           while extracting/reading: ignore leading garbage,"
+msgstr ""
+
+#: client.c:2508
+msgid "                suppress error messages at the beginning. This"
+msgstr ""
+
+#: client.c:2509
+msgid "                is useful when extracting from tape files, that"
+msgstr ""
+
+#: client.c:2510
+msgid "                are not the first ones of a whole archive."
+msgstr ""
+
+#: client.c:2512
+msgid " -H <header>  put the supplied informational header to the begin"
+msgstr ""
+
+#: client.c:2513
+msgid "                of the backup. If a - is supplied (no space may"
+msgstr ""
+
+#: client.c:2514
+msgid "                follow -H i.e. -H-) the information is read from"
+msgstr ""
+
+#: client.c:2515
+msgid "                the first line of stdin. Backslash sequences of"
+msgstr ""
+
+#: client.c:2516
+msgid "                C-like style are replaced"
+msgstr ""
+
+#: client.c:2518
+msgid " -h <host>    use the backup server with the name <host>"
+msgstr ""
+
+#: client.c:2519
+msgid "                default host is the machine with the name"
+msgstr ""
+
+#: client.c:2520
+msgid "                backuphost"
+msgstr ""
+
+#: client.c:2522
+msgid " -i           while extracting: ignore the stored ownership and"
+msgstr ""
+
+#: client.c:2523
+msgid "                do not restore it"
+msgstr ""
+
+#: client.c:2525
+msgid " -j           when starting to write: request starting a new"
+msgstr ""
+
+#: client.c:2526
+msgid "                tape file"
+msgstr ""
+
+#: client.c:2528
+msgid " -K           when packing, do not keep the access time of the"
+msgstr ""
+
+#: client.c:2529
+msgid "                file. By default after packing a filesystem entry"
+msgstr ""
+
+#: client.c:2530
+msgid "                it's previous atime is restored"
+msgstr ""
+
+#: client.c:2532
+msgid " -k <file>    use the contents of the given file as encryption"
+msgstr ""
+
+#: client.c:2533
+msgid "                key for authenticating to the server"
+msgstr ""
+
+#: client.c:2535
+msgid " -l           for each packed or unpacked filename, if sending"
+msgstr ""
+
+#: client.c:2536 client.c:2546
+msgid "                to or receiving from a backup server in verbose"
+msgstr ""
+
+#: client.c:2537
+msgid "                   mode in combination with -n:"
+msgstr ""
+
+#: client.c:2538
+msgid "                printout server name and port number at the"
+msgstr ""
+
+#: client.c:2539
+msgid "                beginning of the line, e.g.: orion%2988!"
+msgstr ""
+
+#: client.c:2541
+msgid " -N <file>    while archiving: ignore files with a modification"
+msgstr ""
+
+#: client.c:2542
+msgid "                time before the one of the given file, only save"
+msgstr ""
+
+#: client.c:2543
+msgid "                newer files or such with the same age in seconds"
+msgstr ""
+
+#: client.c:2545
+msgid " -n           for each packed or unpacked filename, if sending"
+msgstr ""
+
+#: client.c:2547
+msgid "                   mode:"
+msgstr ""
+
+#: client.c:2548
+msgid "                printout cartridge and tape file number at the"
+msgstr ""
+
+#: client.c:2549
+msgid "                beginning of the line, e. g.: 7.15: <filename>"
+msgstr ""
+
+#: client.c:2550
+msgid "                In combination with -X: precede each line of"
+msgstr ""
+
+#: client.c:2551
+msgid "                output received from the remotely started program"
+msgstr ""
+
+#: client.c:2552
+msgid "                with the identifier of the remote host and a"
+msgstr ""
+
+#: client.c:2553
+msgid "                colon, e. g.:  darkstar: Full backup finished."
+msgstr ""
+
+#: client.c:2555
+msgid " -O           for each packed file creating a backup in verbose"
+msgstr ""
+
+#: client.c:2556
+msgid "                mode: printout the user-ID of the file owner at"
+msgstr ""
+
+#: client.c:2557
+msgid "                the beginning of the line prefixed with a bar |"
+msgstr ""
+
+#: client.c:2558
+msgid "                eventually behind cartridge and file number"
+msgstr ""
+
+#: client.c:2560
+msgid " -o <uid>     archive or extract only files owned by the user"
+msgstr ""
+
+#: client.c:2561
+msgid "                with the given user-ID (an integer)"
+msgstr ""
+
+#: client.c:2563
+msgid " -p <portno>  use a different port number for communicating with"
+msgstr ""
+
+#: client.c:2564
+msgid "                the backup server. Default is TCP-Port 2988"
+msgstr ""
+
+#: client.c:2566
+msgid " -R           pack or extract directories recursively with all"
+msgstr ""
+
+#: client.c:2567
+msgid "                of their contents"
+msgstr ""
+
+#: client.c:2569
+msgid " -r           use filenames relative to the current directory,"
+msgstr ""
+
+#: client.c:2570
+msgid "                whether they start with a slash or not. If -r"
+msgstr ""
+
+#: client.c:2571
+msgid "                is given more then 1 time, also let symlinks"
+msgstr ""
+
+#: client.c:2572
+msgid "                originally pointing to absolute paths now point"
+msgstr ""
+
+#: client.c:2573
+msgid "                to paths relative to the directory, where the"
+msgstr ""
+
+#: client.c:2574
+msgid "                symlink will be created. If given twice, the"
+msgstr ""
+
+#: client.c:2575
+msgid "                current directory is assumed to be the relative"
+msgstr ""
+
+#: client.c:2576
+msgid "                root directory for the symbolic link target."
+msgstr ""
+
+#: client.c:2577
+msgid "                If given three times, the root directory of the"
+msgstr ""
+
+#: client.c:2578
+msgid "                current process is used as the relative root"
+msgstr ""
+
+#: client.c:2579
+msgid "                directory of the symbolic link targets"
+msgstr ""
+
+#: client.c:2581
+msgid " -S <cartset> The cartridge set to use, where <cartset> is the"
+msgstr ""
+
+#: client.c:2582
+msgid "                number of a valid cartridge set on the server"
+msgstr ""
+
+#: client.c:2583
+msgid "                side. Default is 1. This option makes sense only"
+msgstr ""
+
+#: client.c:2584
+msgid "                when creating backups with -c"
+msgstr ""
+
+#: client.c:2586
+msgid " -s <filepat> do not attempt processing on files matching the"
+msgstr ""
+
+#: client.c:2587
+msgid "                given filename pattern. This parameter may"
+msgstr ""
+
+#: client.c:2588
+msgid "                appear several times"
+msgstr ""
+
+#: client.c:2590
+msgid " -T <file/dir> read the filenames to process from the <file>."
+msgstr ""
+
+#: client.c:2591
+msgid "                The filenames must be separated by whitespace."
+msgstr ""
+
+#: client.c:2592
+msgid "                If whitespace is part of a filename, it has to"
+msgstr ""
+
+#: client.c:2593
+msgid "                be enclosed by double quotes. Double quotes or"
+msgstr ""
+
+#: client.c:2594
+msgid "                backslashes within the filename have to be"
+msgstr ""
+
+#: client.c:2595
+msgid "                preceded by a backslash. In combination with"
+msgstr ""
+
+#: client.c:2596
+msgid "                -D: the tape files to be copied are temporarily"
+msgstr ""
+
+#: client.c:2597
+msgid "                stored in the given directory instead of the"
+msgstr ""
+
+#: client.c:2598
+msgid "                default directory /tmp"
+msgstr ""
+
+#: client.c:2600
+msgid " -U           for each packed file creating a backup in verbose"
+msgstr ""
+
+#: client.c:2601
+msgid "                mode: printout the modification time of the file"
+msgstr ""
+
+#: client.c:2602
+msgid "                in seconds since 1970/1/1 0:00 at the beginning"
+msgstr ""
+
+#: client.c:2603
+msgid "                of the line prefixed with a tilde ~ eventually"
+msgstr ""
+
+#: client.c:2604
+msgid "                behind cartridge number, file number and owner"
+msgstr ""
+
+#: client.c:2606
+msgid " -u           while extracting: remove existing files with the"
+msgstr ""
+
+#: client.c:2607
+msgid "                same name as found in the archive. Otherwise"
+msgstr ""
+
+#: client.c:2608
+msgid "                no existing files are overwritten"
+msgstr ""
+
+#: client.c:2610
+msgid " -V <file>    write a report containing statistics at the end of"
+msgstr ""
+
+#: client.c:2611
+msgid "                a backup to the <file>"
+msgstr ""
+
+#: client.c:2613
+msgid " -v           verbose mode: print the filenames while creating"
+msgstr ""
+
+#: client.c:2614
+msgid "                or extracting, be a little more verbose while"
+msgstr ""
+
+#: client.c:2615
+msgid "                listing contents. If -v is the only given flag:"
+msgstr ""
+
+#: client.c:2616
+msgid "                print out software name and version"
+msgstr ""
+
+#: client.c:2618
+msgid " -W <id>      identify as <id> to the server. This is needed when"
+msgstr ""
+
+#: client.c:2619
+msgid "                connecting a multi-stream server to distinguish"
+msgstr ""
+
+#: client.c:2620
+msgid "                between the clients. Default is the string"
+msgstr ""
+
+#: client.c:2621
+msgid "                \"<client-program>\""
+msgstr ""
+
+#: client.c:2623
+msgid " -z <z> <uz>  use <z> as the command, that is used to process"
+msgstr ""
+
+#: client.c:2624
+msgid "                files, <uz> for the corresponding unprocess."
+msgstr ""
+
+#: client.c:2625
+msgid "                The command has to read from stdin and to write"
+msgstr ""
+
+#: client.c:2626
+msgid "                to stdout. If arguments have to be supplied to"
+msgstr ""
+
+#: client.c:2627
+msgid "                <z> and/or <uz>, don't forget to use quotes. If"
+msgstr ""
+
+#: client.c:2628
+msgid "                built-in compression is desired, the command for"
+msgstr ""
+
+#: client.c:2629
+msgid "                processing has to start with a dot (.), followed"
+msgstr ""
+
+#: client.c:2630
+msgid "                by a space and a number ranging from 1 to 9, that"
+msgstr ""
+
+#: client.c:2631
+msgid "                specifies the compression level. If an additional"
+msgstr ""
+
+#: client.c:2632
+msgid "                external command should process the data, it may"
+msgstr ""
+
+#: client.c:2633
+msgid "                follow, separated from the compression level by"
+msgstr ""
+
+#: client.c:2634
+msgid "                whitespace. The order of processing is: First the"
+msgstr ""
+
+#: client.c:2635
+msgid "                external program processes the data, then built-in"
+msgstr ""
+
+#: client.c:2636
+msgid "                compression is applied. An empty string has to be"
+msgstr ""
+
+#: client.c:2637
+msgid "                supplied for <uz> (or any other dummy is ok), if"
+msgstr ""
+
+#: client.c:2638
+msgid "                only built-in compression is desired."
+msgstr ""
+
+#: client.c:2639
+msgid "                Examples for <z>:"
+msgstr ""
+
+#: client.c:2640
+msgid "                 gzip       (run external command gzip),"
+msgstr ""
+
+#: client.c:2641
+msgid "                 \"gzip -2\"  (the same with an argument),"
+msgstr ""
+
+#: client.c:2642
+msgid "                 \". 8\"      (only built-in compression level 8),"
+msgstr ""
+
+#: client.c:2643
+msgid "                 \". 3 __descrpt -k /my/key\" (run command __descrpt"
+msgstr ""
+
+#: client.c:2644
+msgid "                            and apply built-in compression level 3)"
+msgstr ""
+
+#: client.c:2646
+msgid " -Z           while printing out the contents: check those files"
+msgstr ""
+
+#: client.c:2647
+msgid "                in the archive that are processed for integrity."
+msgstr ""
+
+#: client.c:2648
+msgid "                While creating an archive: write a CRC32 checksum"
+msgstr ""
+
+#: client.c:2649
+msgid "                for each file, file contents or command output to"
+msgstr ""
+
+#: client.c:2650
+msgid "                the backup stream"
+msgstr ""
+
+#: client.c:2653
+msgid " -?           to printout this text"
+msgstr ""
+
+#: client.c:2666
+#, c-format
+msgid "usage: %s -{c|x|t|d|I|D<dest>|M<msg>|m[<poll-interval>]} \\\n"
+msgstr ""
+
+#: client.c:2667
+msgid "               [ -[RraunlOUvgiqQwZbGK] ] \\\n"
+msgstr ""
+
+#: client.c:2668
+msgid "               [ -h <backup-server> ] \\\n"
+msgstr ""
+
+#: client.c:2669
+msgid "               [ -z <proccmd> <unproccmd> ] \\\n"
+msgstr ""
+
+#: client.c:2670
+msgid "               [ -T <to-extract-filename> ] \\\n"
+msgstr ""
+
+#: client.c:2671
+msgid "               [ -C <cartridge-number> ] \\\n"
+msgstr ""
+
+#: client.c:2672
+msgid "               [ -F <filenumber-on-tape> ] \\\n"
+msgstr ""
+
+#: client.c:2673
+msgid "               [ -f <archive-filename> ] \\\n"
+msgstr ""
+
+#: client.c:2674
+msgid "               [ -e <errorlog-filename> ] \\\n"
+msgstr ""
+
+#: client.c:2675
+msgid "               [ -p <server-port-number> ] \\\n"
+msgstr ""
+
+#: client.c:2676
+msgid "               [ -N <newer-than-filename> ] \\\n"
+msgstr ""
+
+#: client.c:2677
+msgid "               [ -o <user-ID> ] \\\n"
+msgstr ""
+
+#: client.c:2678
+msgid "               [ -W <client-identifier> ] \\\n"
+msgstr ""
+
+#: client.c:2679
+msgid "               [ -k <encryption-key-file> ] \\\n"
+msgstr ""
+
+#: client.c:2680
+msgid "               [ -s <dont-process-filepattern> [ -s ... ] ] \\\n"
+msgstr ""
+
+#: client.c:2681
+msgid "               [ -V <statistics-report-file> ] \\\n"
+msgstr ""
+
+#: client.c:2682
+msgid "               [ -A <after-time-seconds> ] \\\n"
+msgstr ""
+
+#: client.c:2683
+msgid "               [ -B <before-time-seconds> ] \\\n"
+msgstr ""
+
+#: client.c:2684
+msgid "               [ <files> <directories> ... ]\n"
+msgstr ""
+
+#: client.c:2685
+#, c-format
+msgid ""
+"\n"
+"       %s -X <program> \\\n"
+msgstr ""
+
+#: client.c:2686
+msgid "               [ -h <backup-client> ]\n"
+msgstr ""
+
+#: client.c:2687
+#, c-format
+msgid ""
+"\n"
+"       %s -\\?  (to get help)\n"
+msgstr ""
+
+#: client.c:2753
+msgid "Error: Server did not proof authentication correctly. "
+msgstr ""
+
+#: client.c:2754
+msgid "Possible authentication key spoofing.\n"
+msgstr ""
+
+#: client.c:2813
+msgid ""
+"Error: long int is wider than 4 Bytes. Inform author about machine type.\n"
+msgstr ""
+
+#: client.c:2878
+#, c-format
+msgid "Error: The server message length must be smaller than %d"
+msgstr ""
+
+#: client.c:2886
+msgid "You may supply only one of the flags: cxtdJXIDm"
+msgstr ""
+
+#: client.c:2895
+msgid "Version"
+msgstr ""
+
+#: client.c:2899
+msgid "You have to supply one of the flags: cxtCFqQwXIDMGm"
+msgstr ""
+
+#: client.c:2903
+msgid "The flag - may only be given in combination wit -x or -c"
+msgstr ""
+
+#: client.c:2907
+msgid "The flag -T may only be given in combination wit -x, -c or -D"
+msgstr ""
+
+#: client.c:2911
+msgid "The flags -T and -a don't make sense together. Ignoring -a"
+msgstr ""
+
+#: client.c:2915
+msgid ""
+"If you name files and/or directories in the commandline,\n"
+" -a or -T don't make any sense. Using filenames from the command line"
+msgstr ""
+
+#: client.c:2920
+msgid "Warning: the flag -a makes only sense in combination with -x"
+msgstr ""
+
+#: client.c:2923
+msgid "Warning: the flag -u makes only sense in combination with -x"
+msgstr ""
+
+#: client.c:2926
+msgid "Warning: the flag -R makes only sense in combination with -x or -c"
+msgstr ""
+
+#: client.c:2929
+msgid "Warning: the flag -r makes only sense in combination with -x or -d"
+msgstr ""
+
+#: client.c:2932
+msgid "Warning: the flag -i makes only sense in combination with -x"
+msgstr ""
+
+#: client.c:2935
+msgid "Warning: the flag -N only makes sense in combination with -c"
+msgstr ""
+
+#: client.c:2938
+msgid "Warning: -N and -A may not be specified together, -N ignored."
+msgstr ""
+
+#: client.c:2942
+msgid "Warning: to specify (un-)processing is only allowed with -c"
+msgstr ""
+
+#: client.c:2945
+msgid ""
+"Warning: the flag -Z makes only sense in combination with -t, -x or -c. "
+"Ignoring -Z"
+msgstr ""
+
+#: client.c:2949
+msgid "Error: You cannot get a tape index (-I) of a file (-f)"
+msgstr ""
+
+#: client.c:2953
+msgid "Error: You cannot duplicate a file (-f) to tape"
+msgstr ""
+
+#: client.c:2957
+msgid "Error: You may not specify -h and -f together"
+msgstr ""
+
+#: client.c:2961
+msgid ""
+"Error: with a file (-f) you cannot set/get cartridge and/or tape position"
+msgstr ""
+
+#: client.c:2965
+msgid "Warning: -n makes no sense in combination with -f. -n is ignored"
+msgstr ""
+
+#: client.c:2969
+msgid "Warning: -l makes no sense in combination with -f. -l is ignored"
+msgstr ""
+
+#: client.c:2973
+msgid ""
+"Warning: -O is only supported in combination with -c, -x or -t, -O ignored"
+msgstr ""
+
+#: client.c:2977
+msgid "Warning: -k makes no sense in combination with -f"
+msgstr ""
+
+#: client.c:2980
+msgid "Warning: -W makes no sense in combination with -f, -W ignored."
+msgstr ""
+
+#: client.c:2983
+#, c-format
+msgid "Error: requested file number is too high - must be <= %ld"
+msgstr ""
+
+#: client.c:2989
+msgid "Error: program line supplied with -X is too long (max. 250 chars)"
+msgstr ""
+
+#: client.c:2997 unpack.c:770 unpack.c:1100 unpack.c:1422 unpack.c:2597
+#: unpack.c:3080 unpack.c:3361 unpack.c:4323 unpack.c:4962 unpack.c:5606
+msgid "Warning: CRC32 checksumming not available (requires zlib)\n"
+msgstr ""
+
+#: client.c:3017 client.c:3203
+msgid "Error: cannot allocate memory"
+msgstr ""
+
+#: client.c:3047 client.c:4550
+#, c-format
+msgid "Warning: Cannot read enough characters from encryption key file `%s'"
+msgstr ""
+
+#: client.c:3049 client.c:4552
+msgid "         Ignoring file, using compiled-in key"
+msgstr ""
+
+#: client.c:3062
+msgid "Warning: Identity string is too long, truncating to 128 characters"
+msgstr ""
+
+#: client.c:3094
+msgid ""
+"Warning: Built-in compression not available (not compiled in). Ignoring "
+"built-in compression request."
+msgstr ""
+
+#: client.c:3132
+#, c-format
+msgid "Warning: Cannot stat file `%s'. Option ignored"
+msgstr ""
+
+#: client.c:3143
+#, c-format
+msgid "Warning: Could not read upper time limit from `%s'. Option ignored"
+msgstr ""
+
+#: client.c:3151
+#, c-format
+msgid "Warning: Could not read lower time limit from `%s'. Option ignored"
+msgstr ""
+
+#: client.c:3163
+#, c-format
+msgid "Error: Cannot open file `%s' for reading"
+msgstr ""
+
+#: client.c:3176
+#, c-format
+msgid "Error: cannot open file `%s'"
+msgstr ""
+
+#: client.c:3189
+#, c-format
+msgid "Exiting, because %s does not contain any filename"
+msgstr ""
+
+#: client.c:3190
+msgid "input"
+msgstr ""
+
+#: client.c:3212
+#, c-format
+msgid "Error: cannot open error log file `%s'"
+msgstr ""
+
+#: client.c:3214
+msgid "       Writing errors to stdout"
+msgstr ""
+
+#: client.c:3237 client.c:4374
+#, c-format
+msgid "Error: Cannot resolve hostname %s"
+msgstr ""
+
+#: client.c:3249
+#, c-format
+msgid "Error: Cannot open communication socket: %s"
+msgstr ""
+
+#: client.c:3250
+msgid "Unknown error"
+msgstr ""
+
+#: client.c:3263 client.c:4500
+#, c-format
+msgid "Error: %s"
+msgstr ""
+
+#: client.c:3269
+#, c-format
+msgid "Error: %s. Server closed connection"
+msgstr ""
+
+#: client.c:3327
+#, c-format
+msgid "Error: Cannot open file `%s'"
+msgstr ""
+
+#. does not return
+#: client.c:3336
+msgid "Info: Server version is too low to send current messages"
+msgstr ""
+
+#: client.c:3367
+#, c-format
+msgid "Streamer state: %s"
+msgstr ""
+
+#: client.c:3415
+msgid "Error: Cannot determine streamer state on server"
+msgstr ""
+
+#: client.c:3433
+msgid ""
+"Warning: No new or reusable cartridge found, keeping old writing position."
+msgstr ""
+
+#: client.c:3445
+msgid "Current tape access position\n"
+msgstr ""
+
+#: client.c:3446 client.c:3472
+#, c-format
+msgid ""
+"Cartridge: %d\n"
+"File:      %d\n"
+msgstr ""
+
+#: client.c:3451
+msgid "Error: Cannot determine current tape access position"
+msgstr ""
+
+#: client.c:3471
+msgid "Next tape writing position\n"
+msgstr ""
+
+#: client.c:3477
+msgid "Error: Cannot determine next tape writing position"
+msgstr ""
+
+#: client.c:3486
+#, c-format
+msgid "Number of cartridges: %d\n"
+msgstr ""
+
+#: client.c:3490
+msgid "Error: Cannot determine number of cartridges"
+msgstr ""
+
+#: client.c:3494
+#, c-format
+msgid "Current cartridge set: %d\n"
+msgstr ""
+
+#: client.c:3498
+msgid "Error: Cannot determine current cartridge set"
+msgstr ""
+
+#: client.c:3523
+msgid "Error: Evaluating server message failed"
+msgstr ""
+
+#: client.c:3574 client.c:3602
+msgid "Too many errors on server. Exiting"
+msgstr ""
+
+#: client.c:3676
+#, c-format
+msgid "%s not found in archive"
+msgstr ""
+
+#: client.c:3794
+#, c-format
+msgid "Error: poll failed in main: %s"
+msgstr ""
+
+#: client.c:3843
+msgid "The following errors occurred"
+msgstr ""
+
+#: client.c:4291 client.c:4341
+#, c-format
+msgid "Error: Cannot resolve TCP service `%s'.\n"
+msgstr ""
+
+#: client.c:4380
+msgid "Error: Attempt to copy tape to itself"
+msgstr ""
+
+#: client.c:4422
+msgid "Error: Cannot create second client process"
+msgstr ""
+
+#: client.c:4432 client.c:4832
+#, c-format
+msgid "Error: %s. Can't set cartridge %d on source server"
+msgstr ""
+
+#: client.c:4442
+#, c-format
+msgid "Error: %s. Can't set tape file %d on source server"
+msgstr ""
+
+#: client.c:4451
+#, c-format
+msgid "Starting to copy from cartridge %d to %d\n"
+msgstr ""
+
+#: client.c:4472
+#, c-format
+msgid "Copying tape file number %d\n"
+msgstr ""
+
+#: client.c:4488
+#, c-format
+msgid "Error: %s, cannot send buffer to slave"
+msgstr ""
+
+#: client.c:4521
+#, c-format
+msgid "Error: %s, slave client failed"
+msgstr ""
+
+#: client.c:4524
+#, c-format
+msgid "Copied %d tape files.\n"
+msgstr ""
+
+#: client.c:4565
+msgid "Error: Cannot connect to target server"
+msgstr ""
+
+#: client.c:4579
+#, c-format
+msgid "Error: %s. Target server closed connection"
+msgstr ""
+
+#: client.c:4598
+#, c-format
+msgid "Error: %s. Can't set cartridge %d on target server"
+msgstr ""
+
+#: client.c:4605
+#, c-format
+msgid "Error: %s. Can't erase tape on target server"
+msgstr ""
+
+#: client.c:4612
+#, c-format
+msgid "Error: %s. Can't set tape file on target server"
+msgstr ""
+
+#: client.c:4622
+msgid "Error: Not enough bytes passed, possible parent process error"
+msgstr ""
+
+#: client.c:4631
+msgid "Error: Could not open target tape for writing"
+msgstr ""
+
+#: client.c:4641
+msgid "Error: Could not send data to target backup server"
+msgstr ""
+
+#: client.c:4652
+msgid "Error: Target tape could not be closed properly"
+msgstr ""
+
+#: client.c:4748
+#, c-format
+msgid "Writing tape file %d to target tape\n"
+msgstr ""
+
+#: client.c:4818
+#, c-format
+msgid "Error: 1 MB of free space in %s is for sure too few"
+msgstr ""
+
+#: client.c:4850
+#, c-format
+msgid "Going to copy cartridge %d to %d\n"
+msgstr ""
+
+#: client.c:4866
+#, c-format
+msgid "Copying tape file %d to disk\n"
+msgstr ""
+
+#: client.c:4880 client.c:4906
+#, c-format
+msgid "Error: Cannot save entire tape file. Too few space in %s, aborting"
+msgstr ""
+
+#: client.c:4973
+#, c-format
+msgid "Copied %d tape files\n"
+msgstr ""
+
+#: crptauth.c:104 crptauth.c:166 crptauth.c:341 crptauth.c:388 crptauth.c:453
+msgid "Error: DES encryption not available.\n"
+msgstr ""
+
+#: crptauth.c:227
+msgid "Key in file is too short"
+msgstr ""
+
+#: crptauth.c:228
+msgid "No filename supplied"
+msgstr ""
+
+#: crptauth.c:229 full_backup.c:1810
+msgid "File not readable"
+msgstr ""
+
+#: crptauth.c:230
+msgid "Cannot get file information"
+msgstr ""
+
+#: crptauth.c:233
+msgid "File is group/world readable"
+msgstr ""
+
+#: crptauth.c:600 crptauth.c:619
+msgid "Error: not yet implemented.\n"
+msgstr ""
+
+#. The following hurts me, but there is no way out
+#: full_backup.c:63
+msgid "[ \t]*[Bb][Aa][Cc][Kk][Uu][Pp]"
+msgstr ""
+
+#: full_backup.c:64
+msgid "[ \t]*[Cc][Aa][Rr][Tt][Rr][Ii][Dd][Gg][Ee]"
+msgstr ""
+
+#: full_backup.c:65
+msgid "[ \t]*[Ff][Ii][Ll][Ee]"
+msgstr ""
+
+#: full_backup.c:66
+msgid "[ \t]*[Ss][Ee][Rr][Vv][Ee][Rr]"
+msgstr ""
+
+#: full_backup.c:67
+msgid "[ \t]*[Pp][Oo][Rr][Tt]"
+msgstr ""
+
+#: full_backup.c:68
+msgid ""
+"[Nn][Uu][Mm]\\([Bb][Ee][Rr]\\)?[ \t]*[Oo][Ff][ \t]*[Cc][Aa][Rr][Tt]\\([Rr]"
+"[Ii][Dd][Gg][Ee]\\)?[Ss]"
+msgstr ""
+
+#: full_backup.c:589
+msgid "<filename-logfile_not_yet_created>"
+msgstr ""
+
+#: full_backup.c:590
+msgid "<filename-logfile_not_yet_determined>"
+msgstr ""
+
+#: full_backup.c:711
+#, c-format
+msgid "Cannot run command `%s'.\n"
+msgstr ""
+
+#: full_backup.c:753
+#, c-format
+msgid ""
+"Usage: %s [ -nltvmi ] [ -<past-backup-no> ] [ -C <root-directory> ] \\\n"
+"               [ -h <backuphosts> ] [ -P <backup-ports> ] \\\n"
+"               [ -A \"<after-date> [ %% <after-backup-date> ]\" ] \\\n"
+"               [ -B \"<before-date> [ %% <before-backup-date> ]\" ] \\\n"
+"               [ -k <encryption-key-file> ] [ -T <tapes> ] \\\n"
+"               [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"               [ -Z <built-in-compress-level> ] [ -F <format> ] \\\n"
+"               [ { -N <num-indexfiles> | -O <indexfile-age-days> } ] \\\n"
+"               [ -M <server-message-config> ] [ -c <configuration-file> ]\\\n"
+"               [ -p ] <path-pattern> [ [ -p ] <path-patterns> [ ... ] ]\n"
+msgstr ""
+
+#: full_backup.c:766
+#, c-format
+msgid ""
+"Usage: %s [ -nltvmi ] [ -<past-backup-no> ] [ -C <root-directory> ] \\\n"
+"               [ -h <backuphosts> ] [ -P <backup-ports> ] \\\n"
+"               [ -c <configuration-file> ] [ -W <identity> ] \\\n"
+"               [ -I <indexfile-part> ] [ -V <var-directory> ] \\\n"
+"               [ -A \"<after-date> [ %% <after-backup-date> ]\" ] \\\n"
+"               [ -B \"<before-date> [ %% <before-backup-date> ]\" ] \\\n"
+"               [ -k <encryption-key-file> ] [ -T <tapes> ] \\\n"
+"               [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"               [ -Z <built-in-compress-level> ] [ -F <format> ] \\\n"
+"               [ -N <num-indexfiles> | -O <indexfile-age-days> ] \\\n"
+"               [ -M <server-message-config> ] \\\n"
+"               [ -p ] <path-pattern> [ [ -p ] <path-patterns> [ ... ] ]\n"
+"       %s -a [ -nlvm ] [ -<past-backup-no> ] [ -C <root-directory> ] \\\n"
+"               [ -h <backuphosts> ] [ -P <backup-ports> ] \\\n"
+"               [ -c <configuration-file> ] [ -W <identity> ] \\\n"
+"               [ -I <indexfile-part> ] [ -V <var-directory> ] \\\n"
+"               [ -k <encryption-key-file> ] \\\n"
+"               [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"               [ -Z <built-in-compress-level> ] [ -F <format> ] \\\n"
+"               [ -M <server-message-config> ]\n"
+"       %s -{ef} [ -evm ] [ -C <root-directory> ] [ -h <backuphosts> ] \\\n"
+"               [ -P <backup-ports> ] [ -V <var-directory> ] \\\n"
+"               [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"               [ -Z <built-in-compress-level> ] \\\n"
+"               [ -k <encryption-key-file> ] [ -W <identity> ] \\\n"
+"               [ -M <server-message-config> ] \\\n"
+"               [ -c <configuration-file> ] < <startup-info-file>\n"
+"       %s -E [ -Enlvm ] [ -C <root-directory> ] [ -h <backuphosts> ] \\\n"
+"               [ -P <backup-ports> ] [ -V <var-directory> ] \\\n"
+"               [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"               [ -Z <built-in-compress-level> ] \\\n"
+"               [ -k <encryption-key-file> ] [ -W <identity> ] \\\n"
+"               [ -M <server-message-config> ] \\\n"
+"               [ -c <configuration-file> ] \\\n"
+"               [ <cartridge-number> | <cartridge-range> ] ... ]\n"
+msgstr ""
+
+#: full_backup.c:806
+msgid "Usage"
+msgstr ""
+
+#: full_backup.c:809
+#, c-format
+msgid ""
+"Usage: %s [ -v ] [ -c <configuration-file> ] \\\n"
+"               [ -h <backuphosts> ] [ -P <backup-ports> ] \\\n"
+"               [ -I <indexfile-part> ] [ -V <var-directory> ] \\\n"
+"               [ -k <encryption-key-file> ] [ -W <identity> ] \\\n"
+"               [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"               [ -Z <built-in-compress-level> ] \\\n"
+msgstr ""
+
+#: full_backup.c:820
+#, c-format
+msgid ""
+"Usage: %s [ -lav ] [ -c <configuration-file> ] \\\n"
+"              [ -<past-run-no>[.<past-backup-no>] ] \\\n"
+"              [ -h <backuphosts> ] [ -P <backup-ports> ] \\\n"
+"              [ -C <root-directory> ] [ -S <cartridge-set> ] \\\n"
+"              [ -I <indexfile-part> ] [ -V <var-directory> ] \\\n"
+"              [ -k <encryption-key-file> ] [ -W <identity> ] \\\n"
+"              [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"              [ -Z <built-in-compress-level> ] \\\n"
+"              [ -M <server-message-config> ]\n"
+msgstr ""
+
+#: full_backup.c:834
+#, c-format
+msgid ""
+"Usage: %s [ -v ] [ -c <configuration-file> ] \\\n"
+"                   [ -l <logfile> ] [ -T <tmpdir> ] \\\n"
+"                   [ -M <server-message-config> ] \\\n"
+"                   [ -h <source-server> ] [ -P <source-serverport> ] \\\n"
+"                   [ -C <source-cartridge> ] [ -F <tape-filenumber> ] \\\n"
+"                   [ -k <source-encryption-key-file> ] \\\n"
+"                   [ -D [ -h <target-server> ] [ -P <target-serverport> ] "
+"\\\n"
+"                     [ -C <target-cartridge> ] [ -k <target-encryption-key-"
+"file> ] ]\n"
+msgstr ""
+
+#: full_backup.c:847
+#, c-format
+msgid ""
+"Usage: %s [ -daGy%s ] [ {+-}LBx ] [ <files> <directories> ... ] \\\n"
+"                   [ -C <root-directory> ] [ -F \"<files-to-skip>\" ] \\\n"
+"                   [ -D \"<directories-to-skip>\" ] \\\n"
+"                   [ -c <configuration-file> ] [ -W <identity> ] \\\n"
+"                   [ -h <backuphosts> ] [ -P <backup-ports> ] \\\n"
+"                   [ -I <indexfile-part> ] [ -Q <backup-level> ] \\\n"
+"                   [ { -N <num-indexes-to-store> ] | \\\n"
+"                     -O <max-age-of-indexes-to-store-in-days> } ] \\\n"
+"                   [ -z <process-cmd> <unprocess-cmd> ] \\\n"
+"                   [ -Z <built-in-compress-level> ] \\\n"
+"                   [ -s \"<dont-process-patterns>\" ] \\\n"
+"                   [ -X <exclude-list-file> ] [ -l <logfile> ] \\\n"
+"                   [ -i <startup-info-program> ] \\\n"
+"                   [ -b <init-program> ] [ -e <exit-program> ] \\\n"
+"                   [ -k <encryption-key-file> ] \\\n"
+"                   [ -f <filesystem-types> ] \\\n"
+"                   [ -V <var-directory> ] [ -S <cartridge-sets> ] \\\n"
+"                   [ -M <server-message-config> ]\n"
+msgstr ""
+
+#: full_backup.c:900
+msgid "Forced interruption, program will terminate as soon as possible.\n"
+msgstr ""
+
+#: full_backup.c:910
+msgid ""
+"Repeated interruption, please stand by during cleanup.\n"
+"To force termination press Ctrl-C 3 times within 2 seconds or Ctrl-\\ once.\n"
+msgstr ""
+
+#: full_backup.c:917
+msgid "Repeated interruption, please stand by during cleanup.\n"
+msgstr ""
+
+#: full_backup.c:946
+msgid "Interrupted. Cleanup in progress, please stand by.\n"
+msgstr ""
+
+#: full_backup.c:950
+msgid "Connection to client process lost, exiting.\n"
+msgstr ""
+
+#: full_backup.c:988
+#, c-format
+msgid "Full backup part %d interrupted.\n"
+msgstr ""
+
+#: full_backup.c:990
+msgid "Full backup interrupted.\n"
+msgstr ""
+
+#: full_backup.c:994
+msgid "Incremental backup interrupted.\n"
+msgstr ""
+
+#: full_backup.c:1013
+#, c-format
+msgid "Full backup part %d failed.\n"
+msgstr ""
+
+#: full_backup.c:1015
+msgid "Full backup failed.\n"
+msgstr ""
+
+#: full_backup.c:1018
+msgid "Incremental backup failed.\n"
+msgstr ""
+
+#: full_backup.c:1045 label_tape.c:519 server.c:1800
+#, c-format
+msgid "Error: Cannot remove lock file entry `%s', that is not a file.\n"
+msgstr ""
+
+#: full_backup.c:1055 label_tape.c:529 server.c:1810
+#, c-format
+msgid "Warning: Lock file `%s' exists, but can't open it.\n"
+msgstr ""
+
+#: full_backup.c:1071 server.c:1818
+#, c-format
+msgid "Error: Cannot create lock file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:1194
+#, c-format
+msgid "Error: Could not open progress file `%s' for writing.\n"
+msgstr ""
+
+#: full_backup.c:1302
+msgid "Error: Could not send filename to afclient process.\n"
+msgstr ""
+
+#: full_backup.c:1555
+msgid ""
+"Warning: Obtaining the server's informational messages might not work.\n"
+msgstr ""
+
+#: full_backup.c:1557
+msgid "Warning: Obtaining the server's informational messages fails.\n"
+msgstr ""
+
+#: full_backup.c:1616
+#, c-format
+msgid "Error: Cannot find program file of `%s'.\n"
+msgstr ""
+
+#: full_backup.c:1629 label_tape.c:1211
+#, c-format
+msgid "Error: Command name %s not recognized.\n"
+msgstr ""
+
+#: full_backup.c:1635
+#, c-format
+msgid "Error: Cannot stat %s.\n"
+msgstr ""
+
+#: full_backup.c:1645
+#, c-format
+msgid "Error: %s is installed SUID or SGID. Please check installation.\n"
+msgstr ""
+
+#: full_backup.c:1653
+msgid ""
+"Warning: When run as normal user, the environment variable BACKUP_HOME is "
+"ignored.\n"
+msgstr ""
+
+#: full_backup.c:1665
+#, c-format
+msgid "Error: Cannot follow path `%s'.\n"
+msgstr ""
+
+#: full_backup.c:1672
+msgid "Strange error: cannot separate binary directory.\n"
+msgstr ""
+
+#: full_backup.c:1678
+msgid "Strange error: cannot separate client directory.\n"
+msgstr ""
+
+#: full_backup.c:1749
+msgid "Warning: Cannot determine hostname.\n"
+msgstr ""
+
+#: full_backup.c:1800
+msgid "Error: Cannot seteuid root, sorry.\n"
+msgstr ""
+
+#: full_backup.c:1809
+#, c-format
+msgid "Error: Cannot read parameter file `%s'. %s.\n"
+msgstr ""
+
+#: full_backup.c:1817
+#, c-format
+msgid "Error: Cannot read parameter file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:1825
+msgid "Warning: No configuration file found, using defaults.\n"
+msgstr ""
+
+#: full_backup.c:1838
+msgid ""
+"Error: Configuration file must be owned by root when running as normal "
+"user.\n"
+msgstr ""
+
+#: full_backup.c:1847 full_backup.c:2426 full_backup.c:2469
+msgid "Error: Cannot read parameter file.\n"
+msgstr ""
+
+#: full_backup.c:1858
+msgid ""
+"Warning: Built-in compression requested, but not compiled in. Ignoring "
+"request for built-in compression.\n"
+msgstr ""
+
+#: full_backup.c:1923 full_backup.c:1983 full_backup.c:5083 full_backup.c:8052
+#: full_backup.c:8074
+#, c-format
+msgid "Error: Cannot resolve TCP service name `%s'.\n"
+msgstr ""
+
+#: full_backup.c:1966
+#, c-format
+msgid "Warning: unknown character %c in server message configuration.\n"
+msgstr ""
+
+#: full_backup.c:2019
+msgid ""
+"Warning: Both DaysToStoreIndexes and NumIndexesToStore configured. Ignoring "
+"the shorter duration.\n"
+msgstr ""
+
+#: full_backup.c:2033 full_backup.c:8160
+#, c-format
+msgid "Error: Cannot execute `%s'.\n"
+msgstr ""
+
+#: full_backup.c:2138
+#, c-format
+msgid "Warning concerning encryption key file `%s': %s.\n"
+msgstr ""
+
+#: full_backup.c:2141
+#, c-format
+msgid "Error concerning encryption key file `%s': %s.\n"
+msgstr ""
+
+#: full_backup.c:2147 mserver.c:469 server.c:1038
+#, c-format
+msgid "Warning: Ignoring file `%s', using compiled-in key.\n"
+msgstr ""
+
+#: full_backup.c:2197
+msgid "Error: An application seems to hold a lock on this functionality.\n"
+msgstr ""
+
+#: full_backup.c:2200
+#, c-format
+msgid "      The process ID is %s.\n"
+msgstr ""
+
+#: full_backup.c:2203
+msgid "      Cannot determine process-ID.\n"
+msgstr ""
+
+#: full_backup.c:2207
+msgid "Cannot ask user via TTY for confirmation to override. Exiting.\n"
+msgstr ""
+
+#: full_backup.c:2211
+msgid "Please check if this process is an obstacle to continue.\n"
+msgstr ""
+
+#: full_backup.c:2212
+msgid "Do you want to continue anyway (unwanted effects may occur) ? (y/N) "
+msgstr ""
+
+#: full_backup.c:2214 full_backup.c:2226 label_tape.c:1553
+msgid ""
+"\n"
+"Timeout on input, exiting.\n"
+msgstr ""
+
+#: full_backup.c:2224
+msgid ""
+"Do you want to steal the lock (otherwise continue without lock) ? (y/N) "
+msgstr ""
+
+#: full_backup.c:2239
+#, c-format
+msgid "Warning: Cannot remove lockfile `%s'.\n"
+msgstr ""
+
+#: full_backup.c:2246
+msgid "Warning: Cannot set lock. Continue anyway ? (y/N) "
+msgstr ""
+
+#: full_backup.c:2248 label_tape.c:1549
+msgid ""
+"\n"
+"Cannot read confirmation from TTY. Exiting.\n"
+msgstr ""
+
+#: full_backup.c:2252 label_tape.c:1675
+msgid "Timeout on input, exiting.\n"
+msgstr ""
+
+#: full_backup.c:2275 full_backup.c:5203 full_backup.c:5832 full_backup.c:6709
+#: unpack.c:5017
+#, c-format
+msgid "Error: Cannot read file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:2287
+#, c-format
+msgid "Warning: Cannot read file `%s', switching to full backup.\n"
+msgstr ""
+
+#: full_backup.c:2392 full_backup.c:5616
+#, c-format
+msgid "Error: Cannot change to directory `%s'.\n"
+msgstr ""
+
+#: full_backup.c:2660
+#, c-format
+msgid "Starting full backup part %d.\n"
+msgstr ""
+
+#: full_backup.c:2662
+#, c-format
+msgid "Starting %sfull backup.\n"
+msgstr ""
+
+#: full_backup.c:2663 full_backup.c:2668
+msgid "customized "
+msgstr ""
+
+#: full_backup.c:2667
+#, c-format
+msgid "Starting %sincremental backup.\n"
+msgstr ""
+
+#: full_backup.c:2704
+#, c-format
+msgid "Before program returned exit status %d. Stopping here.\n"
+msgstr ""
+
+#: full_backup.c:2716
+#, c-format
+msgid "Error: Cannot rename file `%s'.\n"
+msgstr ""
+
+#. If the file does not exist, try, if we
+#. can create it
+#. If not, the directory is not writable
+#: full_backup.c:2723 full_backup.c:2732 full_backup.c:7993 unpack.c:2692
+#: unpack.c:2793 unpack.c:2814 albiapps.c:119
+#, c-format
+msgid "Error: Cannot create file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:2855
+msgid "Error: No server can be contacted, fatal: exiting.\n"
+msgstr ""
+
+#: full_backup.c:2965
+#, c-format
+msgid "Error: Could not remove deleted cartridges from file %s.\n"
+msgstr ""
+
+#. print message
+#: full_backup.c:2970
+#, c-format
+msgid ""
+"Info: The following tapes have been erased on the server with ID %s: %s. The "
+"indexes will be updated.\n"
+msgstr ""
+
+#: full_backup.c:2997 full_backup.c:3555 full_backup.c:3561
+#, c-format
+msgid "Warning: Cannot read filename logfile `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3003
+#, c-format
+msgid "Error: Cannot write filename logfile `%s'. Logging to stderr.\n"
+msgstr ""
+
+#: full_backup.c:3026
+msgid "Error: Cannot start backup client side subprocess.\n"
+msgstr ""
+
+#: full_backup.c:3111
+msgid "Error: Cannot create pipe to subprocess.\n"
+msgstr ""
+
+#: full_backup.c:3141
+msgid ""
+"Warning: Old index file was not newline terminated. Possible inconsistency.\n"
+msgstr ""
+
+#: full_backup.c:3148
+#, c-format
+msgid "Warning: Errors occurred reading `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3154 full_backup.c:3202
+msgid "Error: Backup client side subprocess unexpectedly died.\n"
+msgstr ""
+
+#: full_backup.c:3198
+msgid ""
+"Error: Backup client side did not receive necessary starting information "
+"from server. Output was:\n"
+msgstr ""
+
+#: full_backup.c:3242
+#, c-format
+msgid ""
+"Error: Could not determine writing position from client process output. "
+"afclient output %swas:\n"
+msgstr ""
+
+#: full_backup.c:3243
+msgid "(key strings not found) "
+msgstr ""
+
+#. save the file
+#: full_backup.c:3297
+#, c-format
+msgid "Error: Cannot write file `%s' to save the backup start positions.\n"
+msgstr ""
+
+#: full_backup.c:3303
+#, c-format
+msgid "Warning: Cannot make copy of file `%s', saving original.\n"
+msgstr ""
+
+#: full_backup.c:3388
+#, c-format
+msgid "Warning: Format error in level timestamps file. Ignoring Level %ld.\n"
+msgstr ""
+
+#: full_backup.c:3455
+#, c-format
+msgid "Info: New entry, making full backup of `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3476
+#, c-format
+msgid "Warning: Entry `%s' did not resolve any filename.\n"
+msgstr ""
+
+#: full_backup.c:3586
+#, c-format
+msgid "Warning: Cannot find out number of lines written to `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3636
+msgid "Error: An error occurred during backup.\n"
+msgstr ""
+
+#: full_backup.c:3637
+#, c-format
+msgid "The logfile `%s' should tell more details.\n"
+msgstr ""
+
+#: full_backup.c:3661
+#, c-format
+msgid "Error: Could not update index ages file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3669 full_backup.c:3683 unpack.c:3131 unpack.c:3150
+#, c-format
+msgid "Error: Cannot write to file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3673
+#, c-format
+msgid "Full backup part %d finished.\n"
+msgstr ""
+
+#: full_backup.c:3676
+#, c-format
+msgid "Full backup %sfinished.\n"
+msgstr ""
+
+#: full_backup.c:3677 full_backup.c:3738
+msgid "(customized) "
+msgstr ""
+
+#: full_backup.c:3737
+#, c-format
+msgid "Incremental backup %sfinished.\n"
+msgstr ""
+
+#: full_backup.c:3747
+#, c-format
+msgid "Error: Cannot write backup level timestamp file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3770
+#, c-format
+msgid "Warning: Cannot save entries to file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:3897
+#, c-format
+msgid "Error: Could not write file `%s' with the crucial tape numbers.\n"
+msgstr ""
+
+#: full_backup.c:3928
+msgid "Error: Evaluating report output to obtain crucial tapes failed.\n"
+msgstr ""
+
+#: full_backup.c:3958
+#, c-format
+msgid ""
+"Error: program informing the server about the crucial tapes returned status "
+"%d.\n"
+msgstr ""
+
+#: full_backup.c:3963
+#, c-format
+msgid "Error: Cannot rename `%s' to `%s' to save the crucial tapes.\n"
+msgstr ""
+
+#: full_backup.c:3975
+#, c-format
+msgid ""
+"Warning: Minor errors occurred during backup. See the logfile `%s' for more "
+"details.\n"
+msgstr ""
+
+#: full_backup.c:4015
+msgid "Error: No filename logfile found.\n"
+msgstr ""
+
+#: full_backup.c:4165
+msgid "Streamer state:"
+msgstr ""
+
+#: full_backup.c:4522 full_backup.c:7861
+msgid "Error: Cannot open filename logfile.\n"
+msgstr ""
+
+#: full_backup.c:4590
+#, c-format
+msgid "Warning: Command to unprocess index exited with status %d.\n"
+msgstr ""
+
+#: full_backup.c:4597
+#, c-format
+msgid "Warning: Command to process index exited with status %d.\n"
+msgstr ""
+
+#: full_backup.c:4970
+msgid "Error: Flag -Q not allowed with full_backup.\n"
+msgstr ""
+
+#: full_backup.c:5148
+msgid "Warning: Uncompressing index returned bad exit status.\n"
+msgstr ""
+
+#: full_backup.c:5238
+#, c-format
+msgid "Warning: Some errors occurred uncompressing `%s'.\n"
+msgstr ""
+
+#: full_backup.c:5243
+#, c-format
+msgid "Error: Did not find start mark of previous backup in `%s'.\n"
+msgstr ""
+
+#: full_backup.c:5324
+msgid ""
+"Warning: The option -F is only allowed in combination with -l, ignored.\n"
+msgstr ""
+
+#: full_backup.c:5328
+msgid "Error: The options -I, -W and -V may only be used by the superuser.\n"
+msgstr ""
+
+#: full_backup.c:5335
+#, c-format
+msgid "Error: Cannot resolve path of configuration file `%s'\n"
+msgstr ""
+
+#: full_backup.c:5348
+msgid ""
+"Error: When run as normal user, a given configuration file must reside in "
+"the same directory like the default one, otherwise such usage is considered "
+"insecure.\n"
+msgstr ""
+
+#: full_backup.c:5389 full_backup.c:5405 full_backup.c:5425 full_backup.c:5440
+#, c-format
+msgid "Error: Cannot read date and/or time from `%s'.\n"
+msgstr ""
+
+#: full_backup.c:5396
+#, c-format
+msgid "Listing files not older than: %s\n"
+msgstr ""
+
+#: full_backup.c:5398
+#, c-format
+msgid "Looking for files not older than: %s\n"
+msgstr ""
+
+#: full_backup.c:5399
+#, c-format
+msgid "Restoring files not older than: %s\n"
+msgstr ""
+
+#: full_backup.c:5411
+#, c-format
+msgid "Listing files written to backup not earlier than: %s\n"
+msgstr ""
+
+#: full_backup.c:5413
+#, c-format
+msgid "Looking for files written to backup earlier than: %s\n"
+msgstr ""
+
+#: full_backup.c:5414
+#, c-format
+msgid "Restoring files written to backup earlier than: %s\n"
+msgstr ""
+
+#: full_backup.c:5431
+#, c-format
+msgid "Listing files not newer than: %s\n"
+msgstr ""
+
+#: full_backup.c:5433
+#, c-format
+msgid "Looking for files not newer than: %s\n"
+msgstr ""
+
+#: full_backup.c:5434
+#, c-format
+msgid "Restoring files not newer than: %s\n"
+msgstr ""
+
+#: full_backup.c:5446
+#, c-format
+msgid "Listing files written to backup not later than: %s\n"
+msgstr ""
+
+#: full_backup.c:5448
+#, c-format
+msgid "Looking for files written to backup not later than: %s\n"
+msgstr ""
+
+#: full_backup.c:5449
+#, c-format
+msgid "Restoring files written to backup not later than: %s\n"
+msgstr ""
+
+#: full_backup.c:5503
+msgid ""
+"Warning: Both DaysToScanIndexes and NumIndexesToScan configured. Ignoring "
+"the shorter duration.\n"
+msgstr ""
+
+#: full_backup.c:5568
+#, c-format
+msgid "Error: `%s' is not a directory.\n"
+msgstr ""
+
+#: full_backup.c:5573
+#, c-format
+msgid "Error: Cannot read directory `%s'. No execute permission.\n"
+msgstr ""
+
+#: full_backup.c:5578
+#, c-format
+msgid "Error: The directory `%s' is not owned by you.\n"
+msgstr ""
+
+#: full_backup.c:5603
+#, c-format
+msgid "Error: Cannot make directory `%s'.\n"
+msgstr ""
+
+#: full_backup.c:5607
+#, c-format
+msgid "Warning: Cannot change owner/group of `%s'. Restore might fail.\n"
+msgstr ""
+
+#: full_backup.c:5730
+#, c-format
+msgid "Serious warning: Cannot read filename logfile `%s'.\n"
+msgstr ""
+
+#: full_backup.c:5853 full_backup.c:6237 full_backup.c:6832
+#, c-format
+msgid "Warning: Uncompressing `%s' returned bad exit status.\n"
+msgstr ""
+
+#: full_backup.c:5991 full_backup.c:6050
+#, c-format
+msgid ""
+"Warning: For server %s, port %d (found in index) no server ID is known in "
+"file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:6103 full_backup.c:6164
+#, c-format
+msgid ""
+"Found %d matches on %d servers, %d tapes, %d files up to now.\n"
+" This is not the last pack, please be patient.\n"
+msgstr ""
+
+#: full_backup.c:6114 full_backup.c:6175 full_backup.c:6293
+#, c-format
+msgid "Detected %d duplicate entries, only the newest ones are restored.\n"
+msgstr ""
+
+#: full_backup.c:6117 full_backup.c:6178
+#, c-format
+msgid ""
+"Successfully restored %d filesystem entries, %d totally from %d servers, %d "
+"tapes and %d files, continuing.\n"
+msgstr ""
+
+#: full_backup.c:6123 full_backup.c:6184
+#, c-format
+msgid ""
+"Errors occurred during restore of the previous %d files. See above for "
+"details.\n"
+msgstr ""
+
+#: full_backup.c:6251
+#, c-format
+msgid "Found %d matches on %d servers, %d tapes, %d files.\n"
+msgstr ""
+
+#: full_backup.c:6255 full_backup.c:6264
+msgid "Server"
+msgstr ""
+
+#: full_backup.c:6261 full_backup.c:6265
+msgid "Port"
+msgstr ""
+
+#: full_backup.c:6266 full_backup.c:6267
+msgid "Required Tapes"
+msgstr ""
+
+#: full_backup.c:6281
+msgid "No matches found.\n"
+msgstr ""
+
+#: full_backup.c:6296
+#, c-format
+msgid ""
+"Successfully restored %d filesystem entries from %d servers, %d tapes and %d "
+"files.\n"
+msgstr ""
+
+#: full_backup.c:6301
+#, c-format
+msgid ""
+"Errors occurred during restore of the previous %d matches. See previous "
+"output for details.\n"
+msgstr ""
+
+#: full_backup.c:6319 full_backup.c:6628 full_backup.c:6804
+msgid "Errors occurred during restore. See previous output for details.\n"
+msgstr ""
+
+#: full_backup.c:6557
+#, c-format
+msgid ""
+"Error: no fileentry given to write_to_server:\n"
+"> %s\n"
+msgstr ""
+
+#: full_backup.c:6587 full_backup.c:6755
+msgid "Error: Cannot start client subprocess.\n"
+msgstr ""
+
+#: full_backup.c:6606
+#, c-format
+msgid "Restoring files from server %s, port %d, cartridge %d, file %d\n"
+msgstr ""
+
+#: full_backup.c:6610
+#, c-format
+msgid "Restoring files from server %s, port %d, cartridge %d, files %d - %d\n"
+msgstr ""
+
+#: full_backup.c:6634
+#, c-format
+msgid "Done with server %s, port %d, cartridge %d, file %d\n"
+msgstr ""
+
+#: full_backup.c:6638
+#, c-format
+msgid "Done with server %s, port %d, cartridge %d, files %d - %d\n"
+msgstr ""
+
+#: full_backup.c:6762
+msgid "Error: Cannot read from restore subprocess.\n"
+msgstr ""
+
+#: full_backup.c:6767
+#, c-format
+msgid "Going to restore from server %s, port %d, cartridge %d, file %d\n"
+msgstr ""
+
+#: full_backup.c:7180
+msgid "Error: Emergency restore may only be performed by root.\n"
+msgstr ""
+
+#. x-y ?
+#. no, x
+#: full_backup.c:7194
+#, c-format
+msgid "Warning: Cannot classify option `%s', ignored.\n"
+msgstr ""
+
+#: full_backup.c:7264
+msgid "Error: Cannot determine current tape writing position.\n"
+msgstr ""
+
+#: full_backup.c:7271
+#, c-format
+msgid "Warning: Too many previous cartridges specified, reset to %d.\n"
+msgstr ""
+
+#: full_backup.c:7342
+#, c-format
+msgid "Warning: Cannot get cartridge position from server %s, port %d\n"
+msgstr ""
+
+#: full_backup.c:7483
+#, c-format
+msgid "Error: Cannot scan cartridge %d.\n"
+msgstr ""
+
+#: full_backup.c:7526
+msgid "Error: Cannot read enough bytes from tapefile.\n"
+msgstr ""
+
+#: full_backup.c:7569
+#, c-format
+msgid "Found minimum restore info for client %s, backup date: %s"
+msgstr ""
+
+#: full_backup.c:7601
+#, c-format
+msgid "Warning: There seems to be no data on tape %d.\n"
+msgstr ""
+
+#: full_backup.c:7605
+#, c-format
+msgid "Scanned %d files on tape %d.\n"
+msgstr ""
+
+#: full_backup.c:7626 full_backup.c:7677
+#, c-format
+msgid ""
+"Error: No minimum restore info found for client with ID `%s', exiting.\n"
+msgstr ""
+
+#: full_backup.c:7631
+#, c-format
+msgid ""
+"\n"
+"%s minimum restore info of %s%s\n"
+msgstr ""
+
+#: full_backup.c:7632
+msgid "Recommend"
+msgstr ""
+
+#: full_backup.c:7632
+msgid "Using"
+msgstr ""
+
+#: full_backup.c:7658
+#, c-format
+msgid "Skipping minimum restore info for client `%s': %s\n"
+msgstr ""
+
+#: full_backup.c:7668
+#, c-format
+msgid "Found minimum restore info for client `%s': %s\n"
+msgstr ""
+
+#: full_backup.c:7682
+msgid "Done reading input.\n"
+msgstr ""
+
+#: full_backup.c:7706
+#, c-format
+msgid ""
+"Format error in the following input line:\n"
+"%s\n"
+msgstr ""
+
+#: full_backup.c:7713
+#, c-format
+msgid ""
+"Going to recover backup list file `%s' from server %s, port %d, cartridge "
+"%d, file %d\n"
+msgstr ""
+
+#: full_backup.c:7720
+#, c-format
+msgid "Error: Could not rename file '%s`, will try to overwrite. error: %s.\n"
+msgstr ""
+
+#: full_backup.c:7724
+#, c-format
+msgid "Warning: Existing file `%s' is renamed to `%s'.\n"
+msgstr ""
+
+#: full_backup.c:7741
+#, c-format
+msgid "Error: Extracting the backup list returned bad status %d.\n"
+msgstr ""
+
+#: full_backup.c:7746
+#, c-format
+msgid "Error: Recovering backup list file `%s' failed.\n"
+msgstr ""
+
+#: full_backup.c:7772
+#, c-format
+msgid "Error: No backup specifier lines found in `%s'.\n"
+msgstr ""
+
+#: full_backup.c:7840
+#, c-format
+msgid "Filename logfile for backup number %d"
+msgstr ""
+
+#: full_backup.c:7844 full_backup.c:7848
+#, c-format
+msgid "Error: cannot create directory for `%s'.\n"
+msgstr ""
+
+#: full_backup.c:7873
+#, c-format
+msgid ""
+"Going to restore files from server %s, port %d, cartridge %d, file %d.\n"
+msgstr ""
+
+#: full_backup.c:7884
+#, c-format
+msgid ""
+"Going to restore filenames from server %s, port %d, cartridge %d, file %d.\n"
+msgstr ""
+
+#: full_backup.c:7897
+msgid "Error: Cannot restore files.\n"
+msgstr ""
+
+#: full_backup.c:7916
+msgid "Warning: Writing to filename logfile failed.\n"
+msgstr ""
+
+#: full_backup.c:7918
+msgid "Further warnings suppressed.\n"
+msgstr ""
+
+#: full_backup.c:7930
+msgid ""
+"Warning: Something went wrong during restore. See previous output for "
+"details.\n"
+msgstr ""
+
+#: full_backup.c:7941
+#, c-format
+msgid "Warning: Processing `%s' returned bad status.\n"
+msgstr ""
+
+#: full_backup.c:7947
+#, c-format
+msgid "File to contain index unprocess command for backup number %d"
+msgstr ""
+
+#: full_backup.c:7963
+#, c-format
+msgid "Index file for backup number %d"
+msgstr ""
+
+#: full_backup.c:7970 full_backup.c:7975
+#, c-format
+msgid "Error: Cannot rename file `%s' to `%s'.\n"
+msgstr ""
+
+#: full_backup.c:8006
+#, c-format
+msgid "Warning: Cannot write file `%s'.\n"
+msgstr ""
+
+#: full_backup.c:8011
+#, c-format
+msgid ""
+"Warning: No configuration file has been read and no VarDirectory specified. "
+"The necessary files for this directory are put into the directory `%s'. "
+"Relocate them appropriately.\n"
+msgstr ""
+
+#: goptions.c:287
+#, c-format
+msgid "Warning: one-letter flag %s ambigous, ignored.\n"
+msgstr ""
+
+#: goptions.c:293 goptions.c:310
+#, c-format
+msgid "Warning: Ambigous argument: %s. Second occurrence ignored.\n"
+msgstr ""
+
+#: goptions.c:361 goptions.c:446 goptions.c:477
+#, c-format
+msgid "Warning: option `%s' should not be used with a '+'.\n"
+msgstr ""
+
+#: goptions.c:391
+#, c-format
+msgid "Error: option `%s' has not enough arguments.\n"
+msgstr ""
+
+#. critical: the argument is necessary
+#: goptions.c:428
+#, c-format
+msgid "Warning: cannot convert `%s' into requested type.\n"
+msgstr ""
+
+#: goptions.c:485
+msgid "Internal error: option classified as flag, but not in list.\n"
+msgstr ""
+
+#: goptions.c:522
+#, c-format
+msgid "Warning: cannot convert `%s' into the requested type.\n"
+msgstr ""
+
+#: goptions.c:537
+#, c-format
+msgid "Error: not enough absolute arguments (must be%s %ld).\n"
+msgstr ""
+
+#: goptions.c:538
+msgid " at least"
+msgstr ""
+
+#. if any are found: print them out as error msg
+#: goptions.c:555
+#, c-format
+msgid "Error: Invalid argument `%s'.\n"
+msgstr ""
+
+#: goptions.c:558
+#, c-format
+msgid "Error: %ld invalid arguments:"
+msgstr ""
+
+#: label_tape.c:267
+msgid "drive"
+msgstr ""
+
+#: label_tape.c:267
+msgid "slot"
+msgstr ""
+
+#: label_tape.c:267
+msgid "loadport"
+msgstr ""
+
+#: label_tape.c:399 server.c:6990 genutils.c:132 albiapps.c:48
+msgid "Error: Cannot allocate memory.\n"
+msgstr ""
+
+#: label_tape.c:539 label_tape.c:551 label_tape.c:683 mserver.c:463
+#: server.c:1032
+msgid "Warning"
+msgstr ""
+
+#: label_tape.c:539 label_tape.c:551 label_tape.c:675 label_tape.c:2325
+#: mserver.c:463 server.c:927 server.c:1032
+msgid "Error"
+msgstr ""
+
+#: label_tape.c:540
+msgid "Cannot create lock file"
+msgstr ""
+
+#: label_tape.c:552
+msgid "Cannot lock file"
+msgstr ""
+
+#: label_tape.c:668
+#, c-format
+msgid "Error: Cannot set lock on file `%s'.\n"
+msgstr ""
+
+#: label_tape.c:676 label_tape.c:684 label_tape.c:2326
+msgid "An application using the device seems to be running"
+msgstr ""
+
+#: label_tape.c:677
+msgid "(The application's lock may be overridden using the flag -F)\n"
+msgstr ""
+
+#: label_tape.c:695
+msgid ""
+"Error: Cannot set lock on lockfile. Device seems to be already in use by the "
+"afbackup service.\n"
+msgstr ""
+
+#: label_tape.c:727
+#, c-format
+msgid "Warning: Unrecognized line in file `%s': %s ...\n"
+msgstr ""
+
+#: label_tape.c:760 server.c:3556
+#, c-format
+msgid "Error: Cannot rewrite file `%s' to save the precious tapes"
+msgstr ""
+
+#: label_tape.c:802 label_tape.c:3618
+#, c-format
+msgid "Error: Cannot rewrite file `%s' to save the read-only tapes\n"
+msgstr ""
+
+#: label_tape.c:832 server.c:3582
+#, c-format
+msgid "Error: Cannot rewrite file `%s' to save the cartridge order"
+msgstr ""
+
+#: label_tape.c:922 server.c:3202
+msgid "Error: Rewriting the tapepos-file failed.\n"
+msgstr ""
+
+#: label_tape.c:1037
+#, c-format
+msgid "Error: Cannot find an appropriate directory for lockfile `%s'.\n"
+msgstr ""
+
+#: label_tape.c:1051
+#, c-format
+msgid "usage: %s <label-number> [ -rfF ] \\\n"
+msgstr ""
+
+#: label_tape.c:1052 label_tape.c:1060
+msgid "                  [ -c <configfile> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1053
+msgid "                  [ -S <sec-label-number> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1054 label_tape.c:1061
+msgid "                  [ -d <devicename> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1055 label_tape.c:1062 label_tape.c:1078
+msgid "                  [ -b <blocksize> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1056 label_tape.c:1063
+msgid "                  [ -s <set-file-cmd> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1057
+msgid "                  [ -C <num-cartridges> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1058
+msgid "                  [ -n <comment> ]\n"
+msgstr ""
+
+#: label_tape.c:1068
+#, c-format
+msgid "usage: %s [ -ilmtefFrN ] \\\n"
+msgstr ""
+
+#: label_tape.c:1069
+msgid "                  [ -P [ <location> ] ] \\\n"
+msgstr ""
+
+#: label_tape.c:1070
+msgid "                  [ -s <serverconfigfile> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1071
+msgid "                  [ -c <changerconfigfile> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1072
+msgid "                  [ -d <changerdevice> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1073
+msgid "                  [ -C <cartridges> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1074
+msgid "                  [ -S [ <slots> ] ] \\\n"
+msgstr ""
+
+#: label_tape.c:1075
+msgid "                  [ -D [ <drives> ] ] \\\n"
+msgstr ""
+
+#: label_tape.c:1076
+msgid "                  [ -L [ <loadports> ] ] \\\n"
+msgstr ""
+
+#: label_tape.c:1077
+msgid "                  [ -a [ <cartridge-attribute-specs> ] ] \\\n"
+msgstr ""
+
+#: label_tape.c:1079
+msgid "                  [ -n <comment> ] \\\n"
+msgstr ""
+
+#: label_tape.c:1080
+msgid "                  [ <cartridge-descriptions> ... ]\n"
+msgstr ""
+
+#: label_tape.c:1085
+#, c-format
+msgid "usage: %s { <cartridge-number> | \\\n"
+msgstr ""
+
+#: label_tape.c:1086
+msgid "               -i <cartridge-number> <tapefile-number> } \\\n"
+msgstr ""
+
+#: label_tape.c:1087
+msgid "               [ -S <cartridge-set> ]\n"
+msgstr ""
+
+#: label_tape.c:1198
+#, c-format
+msgid "Error: Cannot find program file of `%s'"
+msgstr ""
+
+#: label_tape.c:1231
+#, c-format
+msgid "Warning: Cannot find program file of `%s'"
+msgstr ""
+
+#: label_tape.c:1355
+msgid ""
+"Warning: Cannot determine server side configuration file, using defaults.\n"
+msgstr ""
+
+#: label_tape.c:1362
+#, c-format
+msgid "Error: Cannot read configuration file `%s'.\n"
+msgstr ""
+
+#: label_tape.c:1399
+msgid "Warning: Comment longer than 256 characters, truncated.\n"
+msgstr ""
+
+#: label_tape.c:1450
+#, c-format
+msgid "Installation error, var directory `%s' does not exit\n"
+msgstr ""
+
+#: label_tape.c:1458
+#, c-format
+msgid "Installation error, cannot access device `%s'\n"
+msgstr ""
+
+#: label_tape.c:1465
+#, c-format
+msgid ""
+"Warning: Owner of device `%s' is different from owner of the var directory `"
+"%s'. Preferring device owner. Please check ownerships of files in `%s' "
+"later.\n"
+msgstr ""
+
+#: label_tape.c:1519
+#, c-format
+msgid "Error: Illegal cartridge label (must be in the range 1 - %d).\n"
+msgstr ""
+
+#: label_tape.c:1527
+msgid "Warning: Illegal secondary label (must be >= 1), ignored.\n"
+msgstr ""
+
+#: label_tape.c:1543
+msgid "You are about to write a label at the beginning of the tape.\n"
+msgstr ""
+
+#: label_tape.c:1544
+msgid "All data on this tape will be lost and it will become very\n"
+msgstr ""
+
+#: label_tape.c:1545
+msgid "expensive to get anything back, possibly nothing at all.\n"
+msgstr ""
+
+#: label_tape.c:1546
+msgid ""
+"\n"
+"Do you want to continue ? [y/n] "
+msgstr ""
+
+#: label_tape.c:1570 label_tape.c:1611 label_tape.c:1739 server.c:4999
+msgid "Warning: Cannot rewind tape.\n"
+msgstr ""
+
+#: label_tape.c:1575
+#, c-format
+msgid "Error: Cannot stat tape device %s\n"
+msgstr ""
+
+#: label_tape.c:1602
+#, c-format
+msgid "Error: Cannot read from tape device `%s'.\n"
+msgstr ""
+
+#: label_tape.c:1618
+msgid "<Cannot read label>\n"
+msgstr ""
+
+#: label_tape.c:1633
+#, c-format
+msgid "Cartridge %d is among the read-only tapes\n"
+msgstr ""
+
+#: label_tape.c:1651
+#, c-format
+msgid "Cartridge %d is needed by the following clients for restore:\n"
+msgstr ""
+
+#: label_tape.c:1667
+#, c-format
+msgid ""
+"Do you want to delete cartridge %d \n"
+"from the cartridge handling database ?\n"
+msgstr ""
+
+#: label_tape.c:1671
+msgid "Cannot read confirmation from TTY. Exiting.\n"
+msgstr ""
+
+#: label_tape.c:1687
+#, c-format
+msgid "Cartridge %d is %s in cartridge management.\n"
+msgstr ""
+
+#: label_tape.c:1688
+msgid "reinitialized"
+msgstr ""
+
+#: label_tape.c:1688
+msgid "deleted"
+msgstr ""
+
+#: label_tape.c:1700
+#, c-format
+msgid "Error: Cannot open tape device `%s'.\n"
+msgstr ""
+
+#: label_tape.c:1713
+msgid "Error: The write to tape failed.\n"
+msgstr ""
+
+#: label_tape.c:1722
+#, c-format
+msgid "Error: Cannot write file %s to save the number of bytes on tape.\n"
+msgstr ""
+
+#: label_tape.c:1768 server.c:1615 server.c:1735
+#, c-format
+msgid "The device %s on host %s is not ready for use.\n"
+msgstr ""
+
+#: label_tape.c:1770 label_tape.c:1814
+msgid "You are requested to check the changer for possible\n"
+msgstr ""
+
+#: label_tape.c:1771 label_tape.c:1815 server.c:1618 server.c:1738
+#: server.c:2021
+msgid ""
+"errors and to correct them.\n"
+"\n"
+msgstr ""
+
+#: label_tape.c:1772 label_tape.c:1816 server.c:1619 server.c:1739
+#: server.c:2022
+msgid "Best regards from your backup service.\n"
+msgstr ""
+
+#: label_tape.c:1778 server.c:1625 server.c:1744
+#, c-format
+msgid "Error: Unable to ask user %s to check device availability.\n"
+msgstr ""
+
+#: label_tape.c:1785
+msgid "Warning: Changer command timed out.\n"
+msgstr ""
+
+#: label_tape.c:1802 label_tape.c:1819
+msgid "Error: Cannot send mail to report operate cartridge error.\n"
+msgstr ""
+
+#: label_tape.c:1805 label_tape.c:1844 label_tape.c:2139
+msgid "Hello,"
+msgstr ""
+
+#: label_tape.c:1810
+#, c-format
+msgid ""
+"The command to operate the cartridge in changer %s\n"
+"failed with status %d.\n"
+msgstr ""
+
+#: label_tape.c:1840 label_tape.c:1857
+msgid "Error: Cannot send mail to report problem.\n"
+msgstr ""
+
+#: label_tape.c:1851
+msgid "Regards from your backup system"
+msgstr ""
+
+#: label_tape.c:1994
+#, c-format
+msgid "Error: Writing the new location to file `%s' failed.\n"
+msgstr ""
+
+#: label_tape.c:2022 label_tape.c:2807 label_tape.c:3302
+msgid "unknown"
+msgstr ""
+
+#: label_tape.c:2135
+msgid "Error: Cannot send mail to request manual cartridge operation.\n"
+msgstr ""
+
+#: label_tape.c:2143
+#, c-format
+msgid "The cartridge %d must be moved manually from location\n"
+msgstr ""
+
+#: label_tape.c:2155
+#, c-format
+msgid " %s %d in changer `%s'\n"
+msgstr ""
+
+#: label_tape.c:2161
+msgid "to the location\n"
+msgstr ""
+
+#: label_tape.c:2170 label_tape.c:2176 label_tape.c:2181 label_tape.c:2192
+#: label_tape.c:2198
+#, c-format
+msgid " %s %d\n"
+msgstr ""
+
+#: label_tape.c:2183
+#, c-format
+msgid ""
+"If this is not possible, please remove a cartridge from a slot,\n"
+"if there is no free one, and put cartridge %d into a free slot.\n"
+"Then tell the backup system, in what slot the cartridge is, using\n"
+"cart_ctl with options -P, -C and -S.\n"
+msgstr ""
+
+#: label_tape.c:2203
+msgid "Please perform the requested operation and when done:\n"
+msgstr ""
+
+#: label_tape.c:2205
+msgid "Press the Return key.\n"
+msgstr ""
+
+#: label_tape.c:2219 server.c:1478 server.c:5129
+#, c-format
+msgid "Error: Cannot create flag file `%s' to wait for cartridge ready"
+msgstr ""
+
+#: label_tape.c:2225
+#, c-format
+msgid ""
+"Run the command:\n"
+"\n"
+" changerready\n"
+"\n"
+" on host %s\n"
+msgstr ""
+
+#: label_tape.c:2228
+msgid "Error: Cannot send mail to ask operator to move a cartridge manually.\n"
+msgstr ""
+
+#: label_tape.c:2236
+#, c-format
+msgid ""
+"Error: Cannot determine location of cartridge %d after requesting manual "
+"interaction.\n"
+msgstr ""
+
+#: label_tape.c:2274
+#, c-format
+msgid ""
+"Error: No command configured to perform the requested cartridge move from %s "
+"to %s.\n"
+msgstr ""
+
+#: label_tape.c:2439
+#, c-format
+msgid "WARNING: Cannot start command `%s' to read the tape labels\n"
+msgstr ""
+
+#: label_tape.c:2744
+msgid "Error: No free slot found to unload drive.\n"
+msgstr ""
+
+#: label_tape.c:2783
+#, c-format
+msgid "Error: Target location %s %d is not empty.\n"
+msgstr ""
+
+#: label_tape.c:2793
+#, c-format
+msgid "Error: Moving cartridge %d to location `%s' failed with status %d\n"
+msgstr ""
+
+#: label_tape.c:2796
+#, c-format
+msgid "Error: Moving cartridge %d to %s %d in %s failed with status %d\n"
+msgstr ""
+
+#. This happens, when some bad guy modifies
+#. the database manually during our move
+#: label_tape.c:2806
+#, c-format
+msgid "Warning: The location of the cartridge %d is set to %s.\n"
+msgstr ""
+
+#: label_tape.c:2866
+#, c-format
+msgid "Error: Changer `%s' not configured in `%s'.\n"
+msgstr ""
+
+#: label_tape.c:2885
+msgid "Error: No changer configuration file configured.\n"
+msgstr ""
+
+#: label_tape.c:2892 label_tape.c:2925
+#, c-format
+msgid "Error: Cannot read changer configuration file `%s'.\n"
+msgstr ""
+
+#: label_tape.c:2933
+#, c-format
+msgid "Error: No media changer is configured in `%s'.\n"
+msgstr ""
+
+#: label_tape.c:2940
+#, c-format
+msgid "Error: The media changer device `%s' does not exist.\n"
+msgstr ""
+
+#: label_tape.c:2946
+#, c-format
+msgid "Error: No command configured in `%s' to determine the free loadports.\n"
+msgstr ""
+
+#: label_tape.c:2957
+#, c-format
+msgid "Error: No command configured in `%s' to determine the free slots.\n"
+msgstr ""
+
+#: label_tape.c:2983
+msgid "Error: The argument to specify the drives could not be evaluated.\n"
+msgstr ""
+
+#: label_tape.c:3002 label_tape.c:3116
+msgid "Error: Not enough free slots found.\n"
+msgstr ""
+
+#: label_tape.c:3021
+msgid "Error: Not enough free loadports found.\n"
+msgstr ""
+
+#: label_tape.c:3050
+msgid ""
+"Error: At least one of the following flags must be supplied: iIlmPtaeN\n"
+msgstr ""
+
+#: label_tape.c:3054
+msgid ""
+"Error: If cartridges names are to be set, cartridges must be given with "
+"option -C\n"
+msgstr ""
+
+#: label_tape.c:3058
+#, c-format
+msgid "Error: The flags -%s and -%s do not make sense together.\n"
+msgstr ""
+
+#: label_tape.c:3063 label_tape.c:3085
+#, c-format
+msgid "Error: The flags -%s and -%s are not allowed together.\n"
+msgstr ""
+
+#: label_tape.c:3069
+msgid "Error: Additional arguments are allowed only in combination with -N.\n"
+msgstr ""
+
+#: label_tape.c:3075
+msgid "Error: -a requires an argument.\n"
+msgstr ""
+
+#: label_tape.c:3123
+msgid "Error: Changer does not have any loadport.\n"
+msgstr ""
+
+#: label_tape.c:3129
+msgid ""
+"Error: Targets to move the cartridges to must be given using one of the "
+"flags: DLSP\n"
+msgstr ""
+
+#: label_tape.c:3135
+msgid "Error: The cartridges must be specified using the flag -C\n"
+msgstr ""
+
+#: label_tape.c:3140 label_tape.c:3195
+#, c-format
+msgid ""
+"Error: Number of given slots (%d) is unequal to the number of given "
+"cartridges (%d).\n"
+msgstr ""
+
+#: label_tape.c:3147
+#, c-format
+msgid ""
+"Error: Number of given drives (%d) is unequal to the number of given "
+"cartridges (%d).\n"
+msgstr ""
+
+#: label_tape.c:3152
+#, c-format
+msgid ""
+"Error: Number of given loadports (%d) is unequal to the number of given "
+"cartridges (%d).\n"
+msgstr ""
+
+#: label_tape.c:3160
+msgid ""
+"Error: The slots or cartridges must be given using the -S or -C option.\n"
+msgstr ""
+
+#: label_tape.c:3170
+#, c-format
+msgid "Error: Cartridge %d is not in any media changer slot.\n"
+msgstr ""
+
+#: label_tape.c:3185
+#, c-format
+msgid "Error: Cannot determine cartridge in slot %d.\n"
+msgstr ""
+
+#: label_tape.c:3202
+msgid "Error: The flags -C and -L are not allowed with -i.\n"
+msgstr ""
+
+#: label_tape.c:3212
+msgid "Error: The flag -L is not allowed with -t.\n"
+msgstr ""
+
+#: label_tape.c:3219
+#, c-format
+msgid "Error: Changer has only %d slots.\n"
+msgstr ""
+
+#: label_tape.c:3227
+#, c-format
+msgid "Error: Changer has only %d loadports.\n"
+msgstr ""
+
+#: label_tape.c:3264
+msgid "Please enter a line to describe the new location for the cartridges:\n"
+msgstr ""
+
+#: label_tape.c:3301
+#, c-format
+msgid "Warning: The location of the cartridges %s is set to %s.\n"
+msgstr ""
+
+#: label_tape.c:3314 label_tape.c:3392
+msgid "Error: Could not set locations correctly.\n"
+msgstr ""
+
+#: label_tape.c:3328
+#, c-format
+msgid "Error: Moving cartridge %d failed.\n"
+msgstr ""
+
+#: label_tape.c:3358
+#, c-format
+msgid "Warning: The following slots are empty: %s\n"
+msgstr ""
+
+#: label_tape.c:3408
+#, c-format
+msgid "Error: Cannot unload drive %d to a free slot.\n"
+msgstr ""
+
+#: label_tape.c:3416
+#, c-format
+msgid ""
+"Error: Cannot move cartridge from slot %d to drive %d in %s, skipping this "
+"slot.\n"
+msgstr ""
+
+#: label_tape.c:3453 label_tape.c:3490
+#, c-format
+msgid "Info: Cannot read label of tape in slot %d.\n"
+msgstr ""
+
+#: label_tape.c:3456
+#, c-format
+msgid "Info: Labeling tape in slot %d failed.\n"
+msgstr ""
+
+#: label_tape.c:3499
+#, c-format
+msgid "Error: Cannot unload drive %d to slot %d in %s.\n"
+msgstr ""
+
+#: label_tape.c:3509
+#, c-format
+msgid "Info: Location of the cartridges %s is set to unknown.\n"
+msgstr ""
+
+#: label_tape.c:3538 label_tape.c:3563 label_tape.c:3656
+#, c-format
+msgid "Error: Syntax error in `%s' at position %d.\n"
+msgstr ""
+
+#: label_tape.c:3551
+#, c-format
+msgid "Error: Unknown specifier `%c' in `%s' at position %d.\n"
+msgstr ""
+
+#: label_tape.c:3588
+msgid "Error: Cannot write the tape full counter to file\n"
+msgstr ""
+
+#: label_tape.c:3639
+#, c-format
+msgid "Error: Cannot rewrite file `%s' to save the precious tapes\n"
+msgstr ""
+
+#: label_tape.c:3667
+#, c-format
+msgid "Warning: Could not read any label in changer `%s'\n"
+msgstr ""
+
+#: label_tape.c:3685
+msgid "Error: Could not write labels to file.\n"
+msgstr ""
+
+#: label_tape.c:3698
+msgid "Error: Could not write names to file.\n"
+msgstr ""
+
+#: label_tape.c:3711
+#, c-format
+msgid "Warning: Cannot read file `%s' containing the cartridge locations.\n"
+msgstr ""
+
+#: label_tape.c:3716
+#, c-format
+msgid ""
+"Warning: Cannot read file `%s' containing usage related cartridge "
+"information.\n"
+msgstr ""
+
+#: label_tape.c:3721
+#, c-format
+msgid ""
+"Warning: Cannot read file `%s' containing the cartridge full counters.\n"
+msgstr ""
+
+#: label_tape.c:3726
+#, c-format
+msgid ""
+"Warning: Cannot read file `%s' containing the cartridge names and "
+"descriptions.\n"
+msgstr ""
+
+#: label_tape.c:3731
+#, c-format
+msgid "Warning: Cannot read file `%s' containing the readonly cartridges.\n"
+msgstr ""
+
+#: label_tape.c:3736
+#, c-format
+msgid ""
+"Warning: Cannot read file `%s' containing the cartridges protected from "
+"overwrite by client request.\n"
+msgstr ""
+
+#: label_tape.c:3742 label_tape.c:3767 label_tape.c:3812 label_tape.c:3929
+#: label_tape.c:4022
+msgid "Cartridge"
+msgstr ""
+
+#: label_tape.c:3742 label_tape.c:3924
+msgid "Location"
+msgstr ""
+
+#: label_tape.c:3765
+msgid "Slots in "
+msgstr ""
+
+#: label_tape.c:3810
+msgid "Loadports in "
+msgstr ""
+
+#: label_tape.c:3893
+msgid "<none>"
+msgstr ""
+
+#: label_tape.c:3902
+msgid "<unlabeled>"
+msgstr ""
+
+#: label_tape.c:3926 label_tape.c:3930
+msgid "Label"
+msgstr ""
+
+#: label_tape.c:3941 label_tape.c:4056 label_tape.c:4059 label_tape.c:4062
+msgid "?"
+msgstr ""
+
+#: label_tape.c:4023
+msgid "Used"
+msgstr ""
+
+#: label_tape.c:4024
+msgid "Full"
+msgstr ""
+
+#: label_tape.c:4025
+msgid "Read-only"
+msgstr ""
+
+#: label_tape.c:4026
+msgid "Overwrite"
+msgstr ""
+
+#: label_tape.c:4027
+msgid "Times Full"
+msgstr ""
+
+#: label_tape.c:4028
+msgid "Last Writing Time"
+msgstr ""
+
+#: label_tape.c:4053 label_tape.c:4065 label_tape.c:4068 genutils.c:142
+msgid "Yes"
+msgstr ""
+
+#: label_tape.c:4053 label_tape.c:4065 label_tape.c:4068
+msgid "No"
+msgstr ""
+
+#: label_tape.c:4124
+msgid "Cartridge Reservations"
+msgstr ""
+
+#: label_tape.c:4183 label_tape.c:4192
+#, c-format
+msgid "Error: Cannot write file %s to save the tape position.\n"
+msgstr ""
+
+#: mserver.c:327 server.c:7685
+msgid "Error: Connection to client lost. Exiting.\n"
+msgstr ""
+
+#: mserver.c:357 server.c:7746
+msgid "Error: Client disconnected. Exiting.\n"
+msgstr ""
+
+#: mserver.c:367
+#, c-format
+msgid ""
+"Usage: %s [ -db ] [ <configuration-file> ] [ -p <service/port> ] [ -L "
+"<locale> ]\n"
+msgstr ""
+
+#: mserver.c:436
+#, c-format
+msgid "Warning: Client %s tried to access cartridge %s%d, denied.\n"
+msgstr ""
+
+#: mserver.c:437
+msgid "set "
+msgstr ""
+
+#: mserver.c:453 server.c:1024
+#, c-format
+msgid "Error: No authentication key file configured for %s.\n"
+msgstr ""
+
+#: mserver.c:462 server.c:1031
+#, c-format
+msgid "%s on encryption key file `%s': %s.\n"
+msgstr ""
+
+#: mserver.c:701
+msgid ""
+"Error: Demultiplexing stream falling out of sync. Current bytes in buffer:\n"
+msgstr ""
+
+#: mserver.c:1031
+msgid "Error: Cannot create pipes to subprocess.\n"
+msgstr ""
+
+#: mserver.c:1037 albiapps.c:1162
+msgid "Error: Cannot start subprocess.\n"
+msgstr ""
+
+#: mserver.c:1050
+#, c-format
+msgid "Error: Cannot start program `%s'.\n"
+msgstr ""
+
+#: mserver.c:1072
+msgid "Error: Cannot logon to server ?!?!?\n"
+msgstr ""
+
+#: mserver.c:1923
+msgid "Internal Error: Protocol not properly initialized.\n"
+msgstr ""
+
+#: mserver.c:2078
+msgid ""
+"Warning: Not started by the inetd and not with option -d for daemonize. "
+"Assuming daemon startup is desired.\n"
+msgstr ""
+
+#: mserver.c:2098
+#, c-format
+msgid ""
+"Warning: Cannot resolve service name `%s' to port number, using default port "
+"%d.\n"
+msgstr ""
+
+#: mserver.c:2103
+#, c-format
+msgid ""
+"Warning: Cannot resolve service name `%s' to port number, using default "
+"service `%s'.\n"
+msgstr ""
+
+#: mserver.c:2113 mserver.c:2124
+#, c-format
+msgid "Error: Could not find program file of `%s'\n"
+msgstr ""
+
+#: mserver.c:2162 server.c:4084
+#, c-format
+msgid "Warning: Error reading configuration file `%s'.\n"
+msgstr ""
+
+#: mserver.c:2163 server.c:4085
+msgid "<none found>"
+msgstr ""
+
+#: mserver.c:2247
+msgid "Warning: cannot fork, continuing to run in foreground.\n"
+msgstr ""
+
+#: mserver.c:2265
+#, c-format
+msgid "Error: Cannot lock PID file `%s', probably `%s' is already running.\n"
+msgstr ""
+
+#: mserver.c:2278
+#, c-format
+msgid "Warning: Cannot write PID file `%s' correctly.\n"
+msgstr ""
+
+#: mserver.c:2310
+#, c-format
+msgid "Error: Could not separate path of `%s'\n"
+msgstr ""
+
+#: mserver.c:2361
+msgid "Warning: Service unexpectedly terminated.\n"
+msgstr ""
+
+#: mserver.c:2363
+msgid "Warning: Address already in use. Exiting.\n"
+msgstr ""
+
+#: mserver.c:2372
+#, c-format
+msgid "Warning: Cannot send command %d (%c) to slave server.\n"
+msgstr ""
+
+#: mserver.c:2379
+#, c-format
+msgid ""
+"Warning: Did not get success response for command %d (%c) from slave "
+"server.\n"
+msgstr ""
+
+#: pack.c:320
+#, c-format
+msgid "Error: Cannot run command `%s' to read output.\n"
+msgstr ""
+
+#: pack.c:433 pack.c:1502
+#, c-format
+msgid "Error: cannot open file `%s'.\n"
+msgstr ""
+
+#: pack.c:475
+#, c-format
+msgid ""
+"Error: File `%s' changed size while reading, trailing bytes not saved.\n"
+msgstr ""
+
+#: pack.c:494
+#, c-format
+msgid "Error: Unexpected fault reading `%s'.\n"
+msgstr ""
+
+#: pack.c:764
+msgid "Warning: CRC32 checksumming not available (requires zlib).\n"
+msgstr ""
+
+#: pack.c:815
+#, c-format
+msgid "Error: cannot lstat `%s'.\n"
+msgstr ""
+
+#: pack.c:875 unpack.c:4241
+#, c-format
+msgid "Error: cannot read symlink `%s'.\n"
+msgstr ""
+
+#: pack.c:923
+#, c-format
+msgid "Error: cannot stat `%s'.\n"
+msgstr ""
+
+#: pack.c:961
+#, c-format
+msgid "Error: cannot read directory `%s'.\n"
+msgstr ""
+
+#: pack.c:1292
+#, c-format
+msgid "Error: Fault during read of compressed file `%s'.\n"
+msgstr ""
+
+#: pack.c:1316
+#, c-format
+msgid "Error: Compression program returned bad status %d for `%s'.\n"
+msgstr ""
+
+#: pack.c:1385
+#, c-format
+msgid "Error: `%s' is an illegal type of file.\n"
+msgstr ""
+
+#: pack.c:1559
+#, c-format
+msgid "Error: Unexpected error reading contents of `%s'.\n"
+msgstr ""
+
+#: pack.c:1618
+msgid "General error"
+msgstr ""
+
+#: pack.c:1619
+msgid "Error writing packed data stream"
+msgstr ""
+
+#: pack.c:1620
+msgid "Error reading data while packing"
+msgstr ""
+
+#: pack.c:1621
+msgid "Error reading symbolic link while packing"
+msgstr ""
+
+#: pack.c:1622
+msgid "Error compressing data while packing"
+msgstr ""
+
+#: pack.c:1623
+msgid "Unknown filesystem entry type found while packing"
+msgstr ""
+
+#: pack.c:1624
+msgid "Size of file changed while packing it"
+msgstr ""
+
+#: pack.c:1625
+msgid "Error reading command output while packing"
+msgstr ""
+
+#: pack.c:1626
+msgid "Error while packing ACLs"
+msgstr ""
+
+#: pack.c:1627
+msgid "Given filesystem entry not found while packing"
+msgstr ""
+
+#: pack.c:1634
+msgid "Required built-in uncompress not available"
+msgstr ""
+
+#: pack.c:1635
+msgid "Error uncompressing data during extract"
+msgstr ""
+
+#: pack.c:1636
+msgid "Error reading packed data stream during extract"
+msgstr ""
+
+#: pack.c:1637
+msgid "Format error in packed data stream"
+msgstr ""
+
+#: pack.c:1638
+msgid "Error creating base directory during extract"
+msgstr ""
+
+#: pack.c:1639
+msgid "Error setting filesystem entry properties"
+msgstr ""
+
+#: pack.c:1640
+msgid "Error creating filesystem entry during extract"
+msgstr ""
+
+#: pack.c:1641
+msgid "Error setting ACLs during extract"
+msgstr ""
+
+#: pack.c:1642
+msgid "Filesystem entry already exists, must not remove"
+msgstr ""
+
+#: pack.c:1643
+msgid "Error writing data to file during extract"
+msgstr ""
+
+#: pack.c:1644
+msgid "Error writing data to command input"
+msgstr ""
+
+#: pack.c:1645
+msgid "File to write contents to does not exist"
+msgstr ""
+
+#: pack.c:1646
+msgid "Wrong checksum reading packed data stream"
+msgstr ""
+
+#: pack.c:1647
+msgid "No writing permission"
+msgstr ""
+
+#: pack.c:1648
+msgid "ACL entry skipped because of unresolvable numerical ID"
+msgstr ""
+
+#: server.c:613
+msgid "Interrupted, going to exit.\n"
+msgstr ""
+
+#: server.c:617
+#, c-format
+msgid "Exiting with bad status %d, most recent system error: %s\n"
+msgstr ""
+
+#: server.c:937
+msgid "Internal error evaluating default tape device string"
+msgstr ""
+
+#: server.c:1014
+#, c-format
+msgid "Warning: program `%s' not found.\n"
+msgstr ""
+
+#: server.c:1054
+msgid ""
+"Warning: Both old parameter LastCartridges and new CartridgeSets supplied. "
+"Ignoring LastCartridges entry.\n"
+msgstr ""
+
+#: server.c:1109
+#, c-format
+msgid "Error: Cartridge sets %d and %d have common cartridges.\n"
+msgstr ""
+
+#: server.c:1186 server.c:1193
+msgid "Warning: Unrecognized parameter in streamer buffer configuration."
+msgstr ""
+
+#: server.c:1252
+#, c-format
+msgid ""
+"Warning: Maximum filesize must be at least one tape block. Reset to %d.\n"
+msgstr ""
+
+#: server.c:1274 server.c:1286
+msgid "Warning: (MaxBytesPerTape): Entry not recognized, ignored.\n"
+msgstr ""
+
+#: server.c:1296
+msgid ""
+"Warning: (MaxBytesPerTape): First cartridge number too low, starting with "
+"1.\n"
+msgstr ""
+
+#: server.c:1301
+#, c-format
+msgid ""
+"Warning: (MaxBytesPerTape): First cartridge number too high, stopping at "
+"%d.\n"
+msgstr ""
+
+#: server.c:1334
+msgid ""
+"Warning: No tape-state file found. Assuming initial startup with first "
+"cartridge in set.\n"
+msgstr ""
+
+#: server.c:1358
+#, c-format
+msgid "Error: Status file `%s' cannot be removed. Status report disabled.\n"
+msgstr ""
+
+#: server.c:1370
+#, c-format
+msgid "Error: Status file `%s' cannot be written. Status report disabled.\n"
+msgstr ""
+
+#: server.c:1395
+#, c-format
+msgid "Error: Command %d ('%c') failed (%s)\n"
+msgstr ""
+
+#: server.c:1404
+#, c-format
+msgid "%s, Protocol Error: %s\n"
+msgstr ""
+
+#: server.c:1412
+#, c-format
+msgid "Command Error: %s.\n"
+msgstr ""
+
+#: server.c:1424
+#, c-format
+msgid ""
+"Warning: Cartridge %d is not in any cartridge set. Assuming current set %d\n"
+msgstr ""
+
+#: server.c:1437
+#, c-format
+msgid ""
+"Error: Unable to determine, whether client has access. Most recent system "
+"error: %s\n"
+msgstr ""
+
+#: server.c:1456
+#, c-format
+msgid "Warning: Client %s tried to access cartridge set %d, denied.\n"
+msgstr ""
+
+#: server.c:1557
+#, c-format
+msgid ""
+"Warning: Could not replace %-mark in change cartridge command, leaving it "
+"unmodified.\n"
+msgstr ""
+
+#: server.c:1617 server.c:1737
+msgid "You are requested to check the device for possible\n"
+msgstr ""
+
+#: server.c:1633
+msgid "Warning: Device access timed out.\n"
+msgstr ""
+
+#: server.c:1751
+msgid "Warning: Device command timed out.\n"
+msgstr ""
+
+#: server.c:1856
+msgid ""
+"Warning: Cannot remove filesystem entry to check preferred service for "
+"client, that is not a regular file !!!\n"
+msgstr ""
+
+#: server.c:1867
+msgid "Warning: Cannot open file to check preferred service for client.\n"
+msgstr ""
+
+#: server.c:1999
+#, c-format
+msgid "Waiting for device %s to become available.\n"
+msgstr ""
+
+#: server.c:2019
+#, c-format
+msgid "The backup service on host %s is in use.\n"
+msgstr ""
+
+#: server.c:2020
+msgid "You are requested to check the service for possible\n"
+msgstr ""
+
+#: server.c:2026
+#, c-format
+msgid "Error: Unable to ask user %s to check service availability.\n"
+msgstr ""
+
+#: server.c:2033
+msgid "Warning: Service access timed out.\n"
+msgstr ""
+
+#: server.c:2051
+#, c-format
+msgid "Device %s available, idle.\n"
+msgstr ""
+
+#: server.c:2063
+#, c-format
+msgid "Device %s reopening for write.\n"
+msgstr ""
+
+#: server.c:2066
+msgid "Internal Error: tape not open for writing in reopen.\n"
+msgstr ""
+
+#: server.c:2114 server.c:2940 server.c:4992
+msgid "Error: Cannot change store file.\n"
+msgstr ""
+
+#: server.c:2133
+msgid "Error: Cannot open tape once again for writing.\n"
+msgstr ""
+
+#: server.c:2148 server.c:5717
+#, c-format
+msgid "Device %s opened for writing to cartridge %d, file %d.\n"
+msgstr ""
+
+#: server.c:2275
+#, c-format
+msgid "Current cartridge no. %d is already full\n"
+msgstr ""
+
+#: server.c:2303
+msgid "Error: Cannot reopen device for writing.\n"
+msgstr ""
+
+#: server.c:2334
+#, c-format
+msgid "Device %s is writing with %sB/s to cartridge %d, file %d.\n"
+msgstr ""
+
+#: server.c:2408 server.c:2427
+msgid "Error: Cannot get tape status after write failure.\n"
+msgstr ""
+
+#: server.c:2449
+#, c-format
+msgid "Error: Repeated faults writing to tape, now: %s.\n"
+msgstr ""
+
+#: server.c:2455
+#, c-format
+msgid "Warning: A media error occured (%d), trying to reposition and reopen.\n"
+msgstr ""
+
+#: server.c:2478
+#, c-format
+msgid "Error: Writing to tape: %s.\n"
+msgstr ""
+
+#. some other problems with the tape, assume EOM
+#: server.c:2523
+#, c-format
+msgid ""
+"Warning: An unexpected error (%d) occured, changing cartridge. Proceeding "
+"with fingers crossed.\n"
+msgstr ""
+
+#. reopen failed
+#: server.c:2528
+#, c-format
+msgid ""
+"Warning: Reopen failed (%d), changing cartridge. Proceeding with fingers "
+"crossed.\n"
+msgstr ""
+
+#: server.c:2563 server.c:6437
+msgid "Error: Cannot find a new cartridge for writing.\n"
+msgstr ""
+
+#. a clone tape is accepted here
+#. only after repeated tries
+#: server.c:2570
+#, c-format
+msgid "Error: Cannot change to cartridge %d for writing.\n"
+msgstr ""
+
+#: server.c:2598 server.c:2644
+#, c-format
+msgid "Error: Cannot move to file %d for writing.\n"
+msgstr ""
+
+#: server.c:2618
+#, c-format
+msgid ""
+"Internal Error: Wrong tape %d accepted in drive for %d, please report.\n"
+msgstr ""
+
+#: server.c:2621
+#, c-format
+msgid ""
+"Internal Error: Wrong file number %d set instead of %d, please report.\n"
+msgstr ""
+
+#: server.c:2632
+msgid "Warning: Cannot erase tape.\n"
+msgstr ""
+
+#. == newcart
+#: server.c:2655
+msgid "Internal Error: Wrong tape for writing in drive, please report.\n"
+msgstr ""
+
+#: server.c:2660
+msgid "Error: Cannot write label to tape.\n"
+msgstr ""
+
+#: server.c:2682
+#, c-format
+msgid "Error: Cannot change to file %d for writing.\n"
+msgstr ""
+
+#: server.c:2886
+#, c-format
+msgid "Device %s is reading with %sB/s from cartridge %d, file %d.\n"
+msgstr ""
+
+#: server.c:2897
+#, c-format
+msgid "Error: %s, only %d bytes read, trying to continue, tapefd = %d.\n"
+msgstr ""
+
+#: server.c:2980
+#, c-format
+msgid "Warning: A media error occurred (%d), trying to move to next file.\n"
+msgstr ""
+
+#: server.c:3058
+#, c-format
+msgid "Error: Cannot change to cartridge %d for reading.\n"
+msgstr ""
+
+#: server.c:3066
+#, c-format
+msgid "Error: Cannot change to file %d for reading.\n"
+msgstr ""
+
+#: server.c:3232
+#, c-format
+msgid "Saved tapepos: %ld.%ld (cartset %ld) writepos at %ld.%ld\n"
+msgstr ""
+
+#: server.c:3247
+#, c-format
+msgid "%s, Error: Cannot write file %s to save the tape state.\n"
+msgstr ""
+
+#: server.c:3276
+#, c-format
+msgid ""
+"Warning: tape-state file found, but no entry for device `%s'. Assuming "
+"current position as cartridge %d, file %d.\n"
+msgstr ""
+
+#: server.c:3283
+#, c-format
+msgid ""
+"Warning: Current position entry for device `%s' incomplete in tape-state "
+"file. Assuming current position as cartridge %d, file %d.\n"
+msgstr ""
+
+#: server.c:3320
+#, c-format
+msgid ""
+"Warning: Insert cartridge %d for set %d not in this set. Trying to "
+"reorganize.\n"
+msgstr ""
+
+#: server.c:3371
+#, c-format
+msgid ""
+"Warning: Could not find start cartridge for set %d. Starting with cartridge "
+"%d, file 1.\n"
+msgstr ""
+
+#: server.c:3419
+#, c-format
+msgid "%s, Error: Cannot read file %s to get the number of bytes on tape.\n"
+msgstr ""
+
+#: server.c:3439
+#, c-format
+msgid "%s, Error: Cannot write file %s to save the number of bytes on tape.\n"
+msgstr ""
+
+#: server.c:3452
+#, c-format
+msgid "Warning: Command to run when tape full returned status %d.\n"
+msgstr ""
+
+#: server.c:3455
+msgid "Error: Failed to run command to run when tape full.\n"
+msgstr ""
+
+#: server.c:3498
+msgid "Warning: Could not register tape usage increment.\n"
+msgstr ""
+
+#: server.c:3527
+#, c-format
+msgid "Warning: Unrecognized line in file `%s': %s ... , deleting\n"
+msgstr ""
+
+#: server.c:3646
+#, c-format
+msgid "Warning: Trailing garbage ignored in message `%s'.\n"
+msgstr ""
+
+#: server.c:3655
+#, c-format
+msgid "Error: Cannot write file `%s' to save the precious tapes"
+msgstr ""
+
+#: server.c:3876
+#, c-format
+msgid "Error unlinking file `%s': %s\n"
+msgstr ""
+
+#: server.c:3887
+#, c-format
+msgid "Warning: Removing client `%s' from `%s' failed.\n"
+msgstr ""
+
+#: server.c:3893
+#, c-format
+msgid "Got Message (unrecognized): %s\n"
+msgstr ""
+
+#: server.c:3940
+#, c-format
+msgid "Usage: %s [ -Sb ] [ <configuration-file> ] [ -L <locale> ]\n"
+msgstr ""
+
+#: server.c:3959
+msgid ""
+"Error: This program must be started by the inetd. See the documentation for "
+"details.\n"
+msgstr ""
+
+#: server.c:3973
+msgid ""
+"Error: Long int is wider than 4 Bytes. Inform author about machine type.\n"
+msgstr ""
+
+#: server.c:4021
+#, c-format
+msgid "Warning: Could not find program file of `%s'\n"
+msgstr ""
+
+#: server.c:4090
+#, c-format
+msgid "Warning: Setting TCP/IP throughput failed with %d.\n"
+msgstr ""
+
+#: server.c:4094
+#, c-format
+msgid "Warning: Setting Keepalive failed with %d\n"
+msgstr ""
+
+#: server.c:4100
+#, c-format
+msgid "Warning: setsockopt (SO_LINGER): %d"
+msgstr ""
+
+#: server.c:4108
+#, c-format
+msgid ""
+"Warning: Could not replace %%p in init command, leaving it unmodified.\n"
+msgstr ""
+
+#: server.c:4117
+#, c-format
+msgid "Warning: Executing init command %s returned exit status %d.\n"
+msgstr ""
+
+#: server.c:4131
+#, c-format
+msgid "Error: Authentication failed for host %s. Exiting.\n"
+msgstr ""
+
+#: server.c:4157
+msgid "skipping possibly destructive commands while in trouble"
+msgstr ""
+
+#: server.c:4168
+msgid "writing to tape failed."
+msgstr ""
+
+#: server.c:4177
+msgid "reading from tape failed."
+msgstr ""
+
+#: server.c:4183
+msgid "sending number of valid transferred bytes failed."
+msgstr ""
+
+#: server.c:4189
+msgid "setting number of valid bytes to transfer failed."
+msgstr ""
+
+#: server.c:4195 server.c:4488
+msgid "getting the tape position failed."
+msgstr ""
+
+#: server.c:4201 server.c:4494
+msgid "getting the tape write position failed."
+msgstr ""
+
+#: server.c:4207
+msgid "getting the tape read position failed."
+msgstr ""
+
+#: server.c:4218
+msgid "requesting new cartridge for writing"
+msgstr ""
+
+#: server.c:4224
+msgid "determining the number of cartridges failed."
+msgstr ""
+
+#: server.c:4230
+msgid "checking for service ability failed."
+msgstr ""
+
+#: server.c:4236
+msgid "getting the current cartridge set failed."
+msgstr ""
+
+#: server.c:4242
+msgid "getting the tape blocksize set failed."
+msgstr ""
+
+#: server.c:4248
+msgid "getting the written tapes failed."
+msgstr ""
+
+#: server.c:4254
+msgid "getting the client's tapes failed."
+msgstr ""
+
+#: server.c:4261 server.c:4274 server.c:4286 server.c:4298 server.c:4442
+#: server.c:4465 server.c:4476
+#, c-format
+msgid "no argument to command %d"
+msgstr ""
+
+#: server.c:4267 server.c:4470
+msgid "cannot set cartridge"
+msgstr ""
+
+#: server.c:4280 server.c:4482
+msgid "cannot set file"
+msgstr ""
+
+#: server.c:4292
+msgid "cannot skip over files"
+msgstr ""
+
+#: server.c:4304
+msgid "cannot set cartridge set"
+msgstr ""
+
+#: server.c:4310 server.c:4322 server.c:4334 server.c:4346
+msgid "not allowed during device access"
+msgstr ""
+
+#: server.c:4358 server.c:4370
+msgid "cannot open device for writing"
+msgstr ""
+
+#: server.c:4364 server.c:4376
+msgid "cannot open device for reading"
+msgstr ""
+
+#: server.c:4382 server.c:4388
+msgid "cannot close device"
+msgstr ""
+
+#: server.c:4394
+msgid "cannot erase tape"
+msgstr ""
+
+#: server.c:4404 server.c:4500
+msgid "running a backup as client failed."
+msgstr ""
+
+#: server.c:4410
+msgid "getting client identity failed."
+msgstr ""
+
+#: server.c:4419
+msgid "getting user identity failed."
+msgstr ""
+
+#: server.c:4428
+msgid "sending server identity failed."
+msgstr ""
+
+#: server.c:4435
+msgid "evaluating client message failed."
+msgstr ""
+
+#: server.c:4448
+msgid "cannot change communication buffer size"
+msgstr ""
+
+#: server.c:4458
+msgid "cannot check access restrictions"
+msgstr ""
+
+#: server.c:4506
+msgid "proofing authenticaton failed."
+msgstr ""
+
+#: server.c:4517
+#, c-format
+msgid "unknown command: %d"
+msgstr ""
+
+#: server.c:4543
+#, c-format
+msgid "Device %s is labeling cartridge %d.\n"
+msgstr ""
+
+#: server.c:4555
+msgid "<labeled automatically>"
+msgstr ""
+
+#: server.c:4628 server.c:4745 server.c:6402 server.c:6591 server.c:6681
+#: server.c:7012
+#, c-format
+msgid "Device %s is idle.\n"
+msgstr ""
+
+#. rewindtape might do nothing
+#: server.c:4655 server.c:4668
+#, c-format
+msgid "Device %s is reading the cartridge label.\n"
+msgstr ""
+
+#: server.c:4742
+#, c-format
+msgid "Found cartridge number %d (secondary %d)\n"
+msgstr ""
+
+#: server.c:4923 server.c:4943
+#, c-format
+msgid "Device %s is closing.\n"
+msgstr ""
+
+#: server.c:4959
+msgid "Error: File numbers for writing inconsistent.\n"
+msgstr ""
+
+#: server.c:5011
+#, c-format
+msgid "Device %s is closed, idle.\n"
+msgstr ""
+
+#: server.c:5092
+#, c-format
+msgid "Error: Cannot write file `%s' to store the cartridge order.\n"
+msgstr ""
+
+#: server.c:5123 server.c:5183
+msgid ""
+"Error: Cannot start program to notify administrator: No more writable tapes"
+msgstr ""
+
+#: server.c:5135
+msgid ""
+"Hello,\n"
+"\n"
+"There are no more free tapes available.\n"
+msgstr ""
+
+#: server.c:5136
+msgid "All tapes are either crucial for a client to restore\n"
+msgstr ""
+
+#: server.c:5137
+msgid "all needed data, or is set read-only.\n"
+msgstr ""
+
+#: server.c:5140
+msgid ""
+"\n"
+"These are the tapes written during the current session:\n"
+"\n"
+msgstr ""
+
+#: server.c:5145
+msgid ""
+"\n"
+"These are the read-only tapes:\n"
+"\n"
+msgstr ""
+
+#: server.c:5150
+msgid ""
+"\n"
+"These are the clients and the tapes they need:\n"
+"\n"
+msgstr ""
+
+#: server.c:5151
+msgid "Client identifier"
+msgstr ""
+
+#: server.c:5151
+msgid "Needed cartridges"
+msgstr ""
+
+#: server.c:5160
+msgid ""
+"\n"
+"Please do one of the following:\n"
+"\n"
+msgstr ""
+
+#: server.c:5161
+msgid "- Increase the number of cartridges, label the new\n"
+msgstr ""
+
+#: server.c:5162
+msgid "  ones using the command label_tape and modify the\n"
+msgstr ""
+
+#: server.c:5163
+msgid "  server configuration file appropriately\n"
+msgstr ""
+
+#: server.c:5164
+msgid "- Set one of the tapes from read-only state to writable\n"
+msgstr ""
+
+#: server.c:5165
+msgid "  (use the afclient command with option -M like this:\n"
+msgstr ""
+
+#: server.c:5166
+msgid "  afclient -h backuphost [ -p service ] -M \"TapesReadWrite: XXX\"\n"
+msgstr ""
+
+#: server.c:5167
+#, c-format
+msgid "  or edit the file `%s')\n"
+msgstr ""
+
+#: server.c:5168
+msgid "- Select one of the tapes crucial for the client and\n"
+msgstr ""
+
+#: server.c:5169
+msgid "  allow to reuse it (use the afclient command like this\n"
+msgstr ""
+
+#: server.c:5170
+msgid "  afclient -h backuphost [ -p service ] -M \"ReuseTapes: XXX\"\n"
+msgstr ""
+
+#: server.c:5171
+#, c-format
+msgid "  or edit the file `%s'\n"
+msgstr ""
+
+#: server.c:5172
+msgid ""
+"\n"
+"Please use the single stream server (port) for\n"
+msgstr ""
+
+#: server.c:5173
+msgid "sending messages to the server with option -M\n"
+msgstr ""
+
+#: server.c:5174
+#, c-format
+msgid ""
+"\n"
+"After all, log on to the server %s\n"
+msgstr ""
+
+#: server.c:5175 server.c:6294
+msgid ""
+"and enter the command:\n"
+"\n"
+" cartready\n"
+msgstr ""
+
+#: server.c:5176 server.c:6160 server.c:6296
+msgid ""
+"\n"
+"or on any client use the afbackup command like this:\n"
+msgstr ""
+
+#: server.c:5177 server.c:6161 server.c:6297
+#, c-format
+msgid "afbackup -h %s [ -p <port-number> ] -M CartridgeReady\n"
+msgstr ""
+
+#: server.c:5180 server.c:6163 server.c:6208 server.c:6223 server.c:6301
+msgid ""
+"\n"
+"Best regards from your backup service.\n"
+msgstr ""
+
+#: server.c:5213
+msgid "Error: Cannot determine cartridges in changer.\n"
+msgstr ""
+
+#: server.c:5329
+#, c-format
+msgid ""
+"Warning: There is only remaining space on current cartridge %d. Continuing "
+"with it\n"
+msgstr ""
+
+#: server.c:5507
+#, c-format
+msgid "Info: Using cartridge %d instead of the desired %d.\n"
+msgstr ""
+
+#: server.c:5622 server.c:5685
+#, c-format
+msgid "Opening device %s for writing.\n"
+msgstr ""
+
+#: server.c:5745 server.c:5783
+#, c-format
+msgid "Opening device %s for reading.\n"
+msgstr ""
+
+#: server.c:5764 server.c:5917 server.c:6262 server.c:6343 server.c:6509
+#, c-format
+msgid "Warning: Found expected cartridge number %d as secondary label.\n"
+msgstr ""
+
+#: server.c:5769 server.c:6267 server.c:6515
+#, c-format
+msgid "Warning: Expected cartridge %d in drive, but have %d.\n"
+msgstr ""
+
+#: server.c:5830
+#, c-format
+msgid "Device %s opened for reading from cartridge %d, file %d.\n"
+msgstr ""
+
+#: server.c:5892 server.c:6037
+#, c-format
+msgid "Warning: Expected cartridge %d in drive, have %d instead\n"
+msgstr ""
+
+#: server.c:5895
+#, c-format
+msgid " (secondary: %d)"
+msgstr ""
+
+#: server.c:5923
+msgid "no valid cartridge number"
+msgstr ""
+
+#: server.c:5928 server.c:6496 server.c:6621
+msgid "device is in use"
+msgstr ""
+
+#: server.c:5936
+#, c-format
+msgid "Device %s is loading cartridge %d.\n"
+msgstr ""
+
+#: server.c:5951
+#, c-format
+msgid ""
+"Warning: Number of slots not specified for device `%s' in sequential mode: "
+"Unsupported operation mode. If tape labels cannot be read, interaction of an "
+"operator (who might wonder, why the device is juggling so much) is "
+"required.\n"
+msgstr ""
+
+#: server.c:5956 server.c:6249 server.c:6335
+msgid "Error: Cannot wind tape back to file 1.\n"
+msgstr ""
+
+#: server.c:5993
+#, c-format
+msgid "Warning: Setting the cartridge number %d failed.\n"
+msgstr ""
+
+#: server.c:6012 server.c:6327
+msgid "Error: Cannot run command to change to the next cartridge.\n"
+msgstr ""
+
+#: server.c:6051
+#, c-format
+msgid "Error: Cannot create file `%s' to indicate waiting for tape change.\n"
+msgstr ""
+
+#: server.c:6062
+msgid "Warning: Cannot run command to unload the cartridge.\n"
+msgstr ""
+
+#: server.c:6066 server.c:6166
+#, c-format
+msgid "Error: Unable to ask user %s to change the cartridge.\n"
+msgstr ""
+
+#: server.c:6071
+msgid ""
+"Hello,\n"
+"\n"
+"You are requested to change the cartridge "
+msgstr ""
+
+#: server.c:6072
+msgid ""
+"in your\n"
+" backup tape streamer.\n"
+"\n"
+msgstr ""
+
+#: server.c:6075
+msgid "Your previous try failed. According to the data\n"
+msgstr ""
+
+#: server.c:6076
+#, c-format
+msgid "on tape you inserted cartridge number %d.\n"
+msgstr ""
+
+#: server.c:6080
+msgid "You inserted a tape without a label and the server\n"
+msgstr ""
+
+#: server.c:6081
+msgid "Is configured to reject unlabeled tapes.\n"
+msgstr ""
+
+#: server.c:6084
+#, c-format
+msgid "Please insert cartridge number %d\n"
+msgstr ""
+
+#: server.c:6122
+msgid "for overwriting/recycling\n"
+msgstr ""
+
+#: server.c:6125
+msgid "for writing to append to\n"
+msgstr ""
+
+#: server.c:6128
+msgid "for writing as new unused media\n"
+msgstr ""
+
+#: server.c:6138
+#, c-format
+msgid ""
+"\n"
+"Alternate cartridges of cartridge set %d are:\n"
+msgstr ""
+
+#: server.c:6140
+#, c-format
+msgid "  Completely unused tapes:         %s\n"
+msgstr ""
+
+#: server.c:6142
+#, c-format
+msgid "  Tapes with remaining space:      %s\n"
+msgstr ""
+
+#: server.c:6144
+#, c-format
+msgid ""
+"  Tapes, that may be overwritten:  %s\n"
+"\n"
+msgstr ""
+
+#: server.c:6146
+#, c-format
+msgid ""
+"  Hint: Readonly Tapes:            %s\n"
+"\n"
+msgstr ""
+
+#: server.c:6156
+msgid "for reading\n"
+msgstr ""
+
+#: server.c:6158
+msgid ""
+"Then enter the command:\n"
+"\n"
+" cartready\n"
+msgstr ""
+
+#: server.c:6159 server.c:6295
+#, c-format
+msgid ""
+"\n"
+"on host %s,\n"
+msgstr ""
+
+#: server.c:6204
+msgid ""
+"Hello, your backup system again,\n"
+"\n"
+msgstr ""
+
+#: server.c:6205
+msgid "It has been automatically detected, that\n"
+msgstr ""
+
+#: server.c:6206
+msgid "another tape is in the drive. No further\n"
+msgstr ""
+
+#: server.c:6207
+msgid "action is required.\n"
+msgstr ""
+
+#: server.c:6213
+#, c-format
+msgid "Error: Cannot remove file %s.\n"
+msgstr ""
+
+#: server.c:6217
+#, c-format
+msgid "I cannot remove the file %s.\n"
+msgstr ""
+
+#: server.c:6218
+msgid "Please do it by hand and check owner and\n"
+msgstr ""
+
+#: server.c:6219
+msgid "permissions of the program cartready. It MUST\n"
+msgstr ""
+
+#: server.c:6220
+msgid "be setuid and owned by the user, under whose\n"
+msgstr ""
+
+#: server.c:6221
+msgid "ID the backup-daemon is running.\n"
+msgstr ""
+
+#: server.c:6222
+msgid "(look it up in: /etc/inetd.conf)\n"
+msgstr ""
+
+#: server.c:6274
+#, c-format
+msgid ""
+"Error: Could not set cartridge no %d, requesting operator interaction.\n"
+msgstr ""
+
+#: server.c:6279 server.c:6303
+#, c-format
+msgid "Error: Unable to ask user %s to correct set cartridge error.\n"
+msgstr ""
+
+#: server.c:6285
+#, c-format
+msgid ""
+"Hello,\n"
+"\n"
+"The command to put cartridge number %d into the\n"
+msgstr ""
+
+#: server.c:6287
+#, c-format
+msgid "drive failed%s.\n"
+msgstr ""
+
+#: server.c:6288
+msgid " once again"
+msgstr ""
+
+#: server.c:6290
+msgid "The inserted tape is not labeled and the server\n"
+msgstr ""
+
+#: server.c:6291
+msgid "is configured to reject unlabeled tapes.\n"
+msgstr ""
+
+#: server.c:6293
+msgid "Please try to correct the error\n"
+msgstr ""
+
+#: server.c:6299
+msgid ""
+"\n"
+"To abort further retries, kill the server processes\n"
+msgstr ""
+
+#: server.c:6300
+msgid "with -9.\n"
+msgstr ""
+
+#: server.c:6371
+#, c-format
+msgid "Error: Did not find cartridge no %d\n"
+msgstr ""
+
+#: server.c:6376
+msgid ""
+"Warning: Found correct cartridge, but administrator should do a check.\n"
+msgstr ""
+
+#: server.c:6425
+msgid "Error: New cartridge requested while tape busy.\n"
+msgstr ""
+
+#: server.c:6491 server.c:6616
+msgid "no valid file number"
+msgstr ""
+
+#: server.c:6532
+#, c-format
+msgid "Device %s is moving to %s file number %d.\n"
+msgstr ""
+
+#: server.c:6534
+msgid "absolute"
+msgstr ""
+
+#: server.c:6534
+msgid "logical"
+msgstr ""
+
+#: server.c:6572
+#, c-format
+msgid "Warning: Setting the file number %d failed.\n"
+msgstr ""
+
+#: server.c:6628
+#, c-format
+msgid "Device %s is skipping over %d files.\n"
+msgstr ""
+
+#: server.c:6666
+msgid "command to skip over files failed"
+msgstr ""
+
+#: server.c:6784
+msgid "device is not open for reading"
+msgstr ""
+
+#: server.c:6830
+#, c-format
+msgid "Warning: Incomplete block read from tape (%d bytes).\n"
+msgstr ""
+
+#: server.c:6888
+msgid "device is not open for writing"
+msgstr ""
+
+#: server.c:6976
+#, c-format
+msgid "Device %s is erasing cartridge %d\n"
+msgstr ""
+
+#: server.c:7008
+msgid "Error: Command to erase tape returned a bad status.\n"
+msgstr ""
+
+#: server.c:7415
+#, c-format
+msgid "Warning: Could not replace %p in exit command, leaving it unmodified.\n"
+msgstr ""
+
+#: server.c:7424
+#, c-format
+msgid "Warning: Executing exit command returned %d.\n"
+msgstr ""
+
+#: server.c:7563
+msgid "Error: Could not start subprocess "
+msgstr ""
+
+#: server.c:7629
+msgid "Server side error: Cannot get lock on message file.\n"
+msgstr ""
+
+#: server.c:7640
+msgid "Server side error: Cannot read message file.\n"
+msgstr ""
+
+#: server.c:7690
+msgid "Got signal TERM. Exiting.\n"
+msgstr ""
+
+#: server.c:7696
+msgid "Got signal INTR. Exiting.\n"
+msgstr ""
+
+#: server.c:7702
+msgid "Got signal HUP. Exiting.\n"
+msgstr ""
+
+#: server.c:7713
+msgid "Exiting on fatal error, no further cleanup will occur.\n"
+msgstr ""
+
+#: server.c:7719
+msgid "Error: Segmentation fault. Exiting.\n"
+msgstr ""
+
+#: server.c:7723
+msgid "Error: Bus error. Exiting.\n"
+msgstr ""
+
+#: server.c:7783
+msgid ""
+"Internal Error: Tape not open, but unflushed data exists in ring buffer.\n"
+msgstr ""
+
+#: server.c:7804
+msgid "Error: Writing buffer to tape failed in select routine.\n"
+msgstr ""
+
+#: server.c:7805
+#, c-format
+msgid "       Return code is %d, written: %d.\n"
+msgstr ""
+
+#: server.c:7844
+msgid "Error: Reading buffer from tape failed in interrupt routine.\n"
+msgstr ""
+
+#: server.c:7845
+#, c-format
+msgid "       Return code is %d, read: %d.\n"
+msgstr ""
+
+#: server.c:7964 server.c:8322
+#, c-format
+msgid "Device %s is waiting for space in the read buffer.\n"
+msgstr ""
+
+#: server.c:8040 server.c:8292
+#, c-format
+msgid "Device %s is waiting for the write buffer to be filled.\n"
+msgstr ""
+
+#: server.c:8070
+msgid "Error: cannot get maximum available memory\n"
+msgstr ""
+
+#: server.c:8084 server.c:8185
+msgid "Warning: Low on memory. No tape buffer created.\n"
+msgstr ""
+
+#: server.c:8116
+#, c-format
+msgid ""
+"Warning: Buffer file `%s' exists, has wrong permissions or is not writable "
+"and cannot be removed. Not using buffer file.\n"
+msgstr ""
+
+#: server.c:8127
+#, c-format
+msgid ""
+"Warning: Filesystem entry '%s' exists, is not a file and cannot be unlinked. "
+"Not using buffer file.\n"
+msgstr ""
+
+#: server.c:8140
+#, c-format
+msgid "Warning: Cannot set file '%s' to size %lf. Not using buffer file.\n"
+msgstr ""
+
+#: server.c:8150
+#, c-format
+msgid "Warning: Cannot map file '%s'. Not using buffer file.\n"
+msgstr ""
+
+#: server.c:8159
+#, c-format
+msgid "Warning: Cannot set sequential advice for map file '%s'.\n"
+msgstr ""
+
+#: server.c:8229
+msgid ""
+"Error: Internal inconsistency. Thread did not process all tape operations. "
+"Please report, if there were no previous errors causing this.\n"
+msgstr ""
+
+#: server.c:8336
+msgid "Error: Tape closed, tape operating thread terminates.\n"
+msgstr ""
+
+#: server.c:8451
+msgid ""
+"Error: Internal inconsistency. Buffer pointer incorrect for changing tape "
+"blocksize. Data might be harmed. Please report.\n"
+msgstr ""
+
+#: server.c:8475
+msgid ""
+"Error: Internal error: streamer buffer exists, but tape not open for read or "
+"write. Please report.\n"
+msgstr ""
+
+#: server.c:8705
+msgid ""
+"Error: Internal inconsistency. Cannot read block after return from "
+"change_tapeblocksize. Please report.\n"
+msgstr ""
+
+#: typeutil.c:49
+#, c-format
+msgid "%lg <integer representation not possible>"
+msgstr ""
+
+#: unpack.c:376
+msgid "Error: format error in input, trying to skip to the next file ...\n"
+msgstr ""
+
+#: unpack.c:485
+#, c-format
+msgid "Error: No write permission for `%s'.\n"
+msgstr ""
+
+#: unpack.c:724
+#, c-format
+msgid "%s  (%slink to "
+msgstr ""
+
+#: unpack.c:726
+msgid "symbolic "
+msgstr ""
+
+#: unpack.c:825 unpack.c:1155
+#, c-format
+msgid "  (to be uncompressed by %s)\n"
+msgstr ""
+
+#: unpack.c:844 unpack.c:1171 unpack.c:2777 unpack.c:3165 unpack.c:4444
+#: unpack.c:5063
+#, c-format
+msgid "Error: Built-in (un)compression not available for file `%s'.\n"
+msgstr ""
+
+#: unpack.c:862 unpack.c:871 unpack.c:1189 unpack.c:1198
+#, c-format
+msgid "Error: Cannot check file `%s' for integrity.\n"
+msgstr ""
+
+#: unpack.c:921 unpack.c:1246 unpack.c:2852 unpack.c:3228
+#, c-format
+msgid "Error: Cannot uncompress `%s'.\n"
+msgstr ""
+
+#: unpack.c:1055 unpack.c:1297
+msgid "Integrity check: This compressed file seems to be corrupted.\n"
+msgstr ""
+
+#: unpack.c:1079 unpack.c:1321 unpack.c:1497
+msgid "Integrity check: Wrong CRC32 checksum.\n"
+msgstr ""
+
+#: unpack.c:1530 unpack.c:3561 unpack.c:5827
+msgid "Error: unexpected end of file.\n"
+msgstr ""
+
+#: unpack.c:1620
+#, c-format
+msgid ""
+"Warning: removing symlink `%s' pointing to unaccessible destination `%s'.\n"
+msgstr ""
+
+#: unpack.c:1621
+msgid "<symlink-unreadable>"
+msgstr ""
+
+#: unpack.c:1636
+#, c-format
+msgid "Error: cannot create directory `%s'.\n"
+msgstr ""
+
+#: unpack.c:1645
+#, c-format
+msgid "Error: cannot chown of directory `%s'.\n"
+msgstr ""
+
+#: unpack.c:1674
+#, c-format
+msgid "Warning: cannot chown %s\n"
+msgstr ""
+
+#: unpack.c:1682
+#, c-format
+msgid "Warning: cannot set modificaton time on %s.\n"
+msgstr ""
+
+#: unpack.c:1688
+#, c-format
+msgid "Warning: cannot set permissions on %s.\n"
+msgstr ""
+
+#: unpack.c:1727
+#, c-format
+msgid "Warning: Skipping ACL entry for `%s', IDs cannot be resolved to names:"
+msgstr ""
+
+#: unpack.c:1731 unpack.c:3973 unpack.c:4045 unpack.c:4118 unpack.c:4296
+#: unpack.c:4406
+msgid "User-ID"
+msgstr ""
+
+#: unpack.c:1731 unpack.c:3975 unpack.c:4047 unpack.c:4120 unpack.c:4298
+#: unpack.c:4408
+msgid "Group-ID"
+msgstr ""
+
+#: unpack.c:1741
+#, c-format
+msgid "Warning: cannot set Solaris2 ACLs on %s.\n"
+msgstr ""
+
+#: unpack.c:1759
+#, c-format
+msgid "Warning: cannot set NFS4 ACLs on %s.\n"
+msgstr ""
+
+#: unpack.c:1773
+#, c-format
+msgid "Warning: cannot set HPUX10 ACLs on %s.\n"
+msgstr ""
+
+#: unpack.c:1799
+#, c-format
+msgid "Warning: cannot set POSIX ACLs on %s.\n"
+msgstr ""
+
+#: unpack.c:1805
+#, c-format
+msgid "Warning: Unkknown ACL type %d.\n"
+msgstr ""
+
+#: unpack.c:2218
+#, c-format
+msgid "%s not found in archive.\n"
+msgstr ""
+
+#: unpack.c:2302 unpack.c:2358 unpack.c:2432 unpack.c:2538 unpack.c:2665
+#, c-format
+msgid "Error: cannot create directory `%s'\n"
+msgstr ""
+
+#: unpack.c:2375
+#, c-format
+msgid "Error: cannot create %s `%s'\n"
+msgstr ""
+
+#: unpack.c:2440
+#, c-format
+msgid "Error: cannot create device `%s'\n"
+msgstr ""
+
+#: unpack.c:2544
+#, c-format
+msgid "Error: cannot create link `%s' to `%s'.\n"
+msgstr ""
+
+#: unpack.c:2561
+#, c-format
+msgid "Error: cannot create symlink `%s' to `%s'.\n"
+msgstr ""
+
+#: unpack.c:2570
+#, c-format
+msgid "Warning: cannot lchown %s\n"
+msgstr ""
+
+#: unpack.c:2679
+#, c-format
+msgid "Error: must not delete existing `%s'.\n"
+msgstr ""
+
+#: unpack.c:2722 unpack.c:2741 unpack.c:2897 unpack.c:3268
+#, c-format
+msgid "Error: writing to `%s' failed.\n"
+msgstr ""
+
+#: unpack.c:2804
+#, c-format
+msgid "Error: Cannot create pipe for uncompressing `%s'.\n"
+msgstr ""
+
+#: unpack.c:2960 unpack.c:2988
+#, c-format
+msgid "Error: Writing to `%s' failed.\n"
+msgstr ""
+
+#: unpack.c:3019
+#, c-format
+msgid "Warning: Uncompress program returned bad status for file `%s'.\n"
+msgstr ""
+
+#: unpack.c:3059 unpack.c:3340 unpack.c:3522
+#, c-format
+msgid "Error: Wrong checksum unpacking file `%s'.\n"
+msgstr ""
+
+#: unpack.c:3182
+#, c-format
+msgid "Error: cannot uncompress contents of file `%s'.\n"
+msgstr ""
+
+#: unpack.c:3193
+#, c-format
+msgid "Error: Cannot uncompress to file `%s'.\n"
+msgstr ""
+
+#: unpack.c:3306
+#, c-format
+msgid "Error: uncompressing to `%s' failed.\n"
+msgstr ""
+
+#: unpack.c:3400
+#, c-format
+msgid "Error: unpacking `%s' is only allowed for root.\n"
+msgstr ""
+
+#: unpack.c:3424
+#, c-format
+msgid "Error: Cannot start program to unpack `%s'\n"
+msgstr ""
+
+#: unpack.c:3467
+#, c-format
+msgid "Error: Writing to unpack `%s` failed.\n"
+msgstr ""
+
+#: unpack.c:3493
+#, c-format
+msgid "Error: Command to unpack `%s' returned bad status %d.\n"
+msgstr ""
+
+#: unpack.c:3581 unpack.c:3617 unpack.c:3651 unpack.c:3685 unpack.c:3721
+msgid "<Error: No memory>\n"
+msgstr ""
+
+#: unpack.c:3611
+#, c-format
+msgid "%s%s is 0%lo, should be 0%lo.\n"
+msgstr ""
+
+#: unpack.c:3612
+#, c-format
+msgid "%s%s is %lu, should be %lu.\n"
+msgstr ""
+
+#: unpack.c:3646
+#, c-format
+msgid "%s%s is %ld, should be %ld.\n"
+msgstr ""
+
+#: unpack.c:3680 unpack.c:3715
+#, c-format
+msgid "%s%s is %s, should be %s.\n"
+msgstr ""
+
+#: unpack.c:3963 unpack.c:4035 unpack.c:4107 unpack.c:4223
+#, c-format
+msgid "Cannot stat `%s'.\n"
+msgstr ""
+
+#: unpack.c:3977 unpack.c:4049 unpack.c:4122 unpack.c:4302 unpack.c:4410
+msgid "Mode"
+msgstr ""
+
+#: unpack.c:3980 unpack.c:4052 unpack.c:4125 unpack.c:4305 unpack.c:4413
+msgid "Modification-Time"
+msgstr ""
+
+#: unpack.c:4128
+msgid "Major number"
+msgstr ""
+
+#: unpack.c:4284 unpack.c:4291
+msgid "File pointed to"
+msgstr ""
+
+#: unpack.c:4490 unpack.c:5104
+#, c-format
+msgid "Error: Cannot start uncompression of `%s'.\n"
+msgstr ""
+
+#: unpack.c:4645
+#, c-format
+msgid "Error: Unprocess program unexpectedly died while processing `%s'.\n"
+msgstr ""
+
+#: unpack.c:4691 unpack.c:5274
+msgid ""
+"Strange: inflate() in the zlib complains: can't go on, though input data "
+"available.\n"
+msgstr ""
+
+#: unpack.c:4852 unpack.c:5406
+msgid " Error: Uncompressing the stored file failed.\n"
+msgstr ""
+
+#: unpack.c:4861 unpack.c:5415
+msgid " Error: built-in uncompress of the stored file failed.\n"
+msgstr ""
+
+#: unpack.c:4915 unpack.c:5448
+#, c-format
+msgid "Error: Wrong checksum verifying file `%s'.\n"
+msgstr ""
+
+#: unpack.c:5663
+#, c-format
+msgid "Error: Cannot start program to pack `%s'\n"
+msgstr ""
+
+#: unpack.c:5751
+#, c-format
+msgid "Error: Command to pack `%s' returned bad status %d.\n"
+msgstr ""
+
+#. FIXME: verbosestr is garbage here
+#: unpack.c:5782
+#, c-format
+msgid "Error: Wrong checksum verifying stream `%s'.\n"
+msgstr ""
+
+#: genutils.c:143
+msgid "true"
+msgstr ""
+
+#: genutils.c:144
+msgid "ok"
+msgstr ""
+
+#: albiapps.c:89
+#, c-format
+msgid ""
+"Usage: %s [ -HU ] [ -p [ <PID> ] ] [ -m <message> ] [ -t <timeout-ms> ] \\\n"
+msgstr ""
+
+#: albiapps.c:91
+msgid "                   <lockfilename>\n"
+msgstr ""
+
+#: albiapps.c:148
+msgid "Error: Cannot fork.\n"
+msgstr ""
+
+#: albiapps.c:197
+#, c-format
+msgid "Error: Cannot write message to file `%s'.\n"
+msgstr ""
+
+#: albiapps.c:306
+#, c-format
+msgid "Usage: %s [ -b blocksize ] [ -a <num blocks to average over> ] \\\n"
+msgstr ""
+
+#: albiapps.c:308
+msgid "               { [ -r <blocks per second> ] | \\\n"
+msgstr ""
+
+#: albiapps.c:309
+msgid "                 [ -R <percentage of initial throughput ] \\\n"
+msgstr ""
+
+#: albiapps.c:310
+msgid "                 [ -m <first blocks for measurement> ] }\n"
+msgstr ""
+
+#: albiapps.c:448
+#, c-format
+msgid ""
+"Usage: %s [ -p <prompt> ] [ -c <choice-chars> ] \\\n"
+"              [ -d <default-choice> ] [ -t <timeout> ]\n"
+msgstr ""
+
+#: albiapps.c:465
+msgid "Please choose one of (%c) [%d after %t sec]: "
+msgstr ""
+
+#: albiapps.c:481
+msgid "Error: Default choice not in choice list.\n"
+msgstr ""
+
+#: albiapps.c:600
+#, c-format
+msgid "Usage: %s [ -ri ] <db-name> [ <db-key> ]\n"
+msgstr ""
+
+#: albiapps.c:687
+#, c-format
+msgid "Error: %s is not a valid numerical UID\n"
+msgstr ""
+
+#: albiapps.c:726
+#, c-format
+msgid "Error: %s is not a valid numerical GID\n"
+msgstr ""
+
+#: albiapps.c:763
+#, c-format
+msgid "Error: %s does not start with a valid numerical port number\n"
+msgstr ""
+
+#: albiapps.c:806
+#, c-format
+msgid "Error: %s does not start with a valid numerical protocol number\n"
+msgstr ""
+
+#: albiapps.c:832
+#, c-format
+msgid "Unknown database: %s\n"
+msgstr ""
+
+#: albiapps.c:844
+#, c-format
+msgid ""
+"Usage: %s <set> {+|-|in} <set_to_add_or_remove>\n"
+"      %s # <set>\n"
+msgstr ""
+
+#: albiapps.c:872
+msgid "Error: Cannot read argument 1 or 3 as set of numbers.\n"
+msgstr ""
+
+#: albiapps.c:887
+#, c-format
+msgid "Error: Merging sets failed: %s.\n"
+msgstr ""
+
+#: albiapps.c:896
+#, c-format
+msgid "Error: Removing numbers from sets failed: %s.\n"
+msgstr ""
+
+#: albiapps.c:1053
+#, c-format
+msgid ""
+"Usage: %s [ -e ] <username>[:<groupname>[:<sec-groupname>[:...]]] <command> "
+"[ <args>... ]\n"
+msgstr ""
+
+#: albiapps.c:1076
+msgid "Error: Only root can run this program.\n"
+msgstr ""
+
+#: albiapps.c:1094 albiapps.c:1098
+#, c-format
+msgid "Error: Cannot execute `%s'\n"
+msgstr ""
+
+#: albiapps.c:1150
+msgid "Error: no memory\n"
+msgstr ""
+
+#: albiapps.c:1220
+msgid "Cannot execute subprogram\n"
+msgstr ""
+
+#: albiapps.c:1327 albiapps.c:1371
+msgid "Error: No more memory\n"
+msgstr ""
+
+#: albiapps.c:1443
+msgid "FILESYSTEM"
+msgstr ""
+
+#: albiapps.c:1443
+msgid "DEVICE"
+msgstr ""
+
+#: albiapps.c:1443
+msgid "TYPE"
+msgstr ""
+
+#: albiapps.c:1443
+msgid "SIZE"
+msgstr ""
+
+#: albiapps.c:1443
+msgid "FREE"
+msgstr ""
+
+#: albiapps.c:1444
+msgid "AVAIL"
+msgstr ""
+
+#: albiapps.c:1444
+msgid "USED"
+msgstr ""
+
+#: albiapps.c:1444
+msgid "CAPACITY"
+msgstr ""
+
+#: albiapps.c:1444
+msgid "BLOCKSIZE"
+msgstr ""
+
+#: albiapps.c:1453
+#, c-format
+msgid ""
+"Usage: %s [ -afUusbmdtch ] [ -F <formatstring> ] [ {+|-}T <types> ] "
+"[ <directories>... ]\n"
+msgstr ""
+
+#: albiapps.c:1528 albiapps.c:1554
+msgid "Error: Cannot determine mounts.\n"
+msgstr ""
+
+#: albiapps.c:1545
+#, c-format
+msgid "Error: Cannot stat directory `%s'.\n"
+msgstr ""
+
+#: albiapps.c:1560
+#, c-format
+msgid "Error: Cannot determine mountpoint for %s\n"
+msgstr ""
+
+#: albiapps.c:1707
+msgid "Usage: Arguments to parse and convert to the time must be given.\n"
+msgstr ""
+
+#: albiapps.c:1717
+msgid "ERROR: Cannot determine the time from the given arguments.\n"
+msgstr ""
+
+#: albiapps.c:1732
+#, c-format
+msgid "Usage: %s <secs-since-epoch>\n"
+msgstr ""
+
+#: albiapps.c:1752
+#, c-format
+msgid "Usage: %s [ <base64string> [ <base64string>... ] ]\n"
+msgstr ""
+
+#: albiapps.c:1760 albiapps.c:1776
+#, c-format
+msgid "Error: error decoding base64 string `%s'\n"
+msgstr ""
+
+#: albiapps.c:1798
+#, c-format
+msgid "Usage: %s [ -n <charsperline> ] [ <data> [ <data>... ] ]\n"
+msgstr ""
+
+#: albiapps.c:1808 albiapps.c:1841
+#, c-format
+msgid "Error: error encoding string `%s'\n"
+msgstr ""
+
+#: albiutils.c:18
+#, c-format
+msgid "Error: Unrecognized command: `%s'\n"
+msgstr ""
+
+#: ../xcc.in:34
+#, sh-format
+msgid ": "
+msgstr ""
+
+#: ../xcc.in:65
+#, sh-format
+msgid "Error: Cannot read configuration file. Exiting."
+msgstr ""
+
+#: ../xcc.in:71
+#, sh-format
+msgid "client-config-description-label-width"
+msgstr ""
+
+#: ../xcc.in:80
+#, sh-format
+msgid "\nThe backup server hosts"
+msgstr ""
+
+#: ../xcc.in:81
+#, sh-format
+msgid "\nThe backup server port-numbers"
+msgstr ""
+
+#: ../xcc.in:82
+#, sh-format
+msgid "\nThe cartridge sets to use"
+msgstr ""
+
+#: ../xcc.in:83
+#, sh-format
+msgid "\nServer messages output configuration"
+msgstr ""
+
+#: ../xcc.in:84
+#, sh-format
+msgid "\nThe programs to process the files, that are saved, and the counterpart\nto do the reverse processing, if desired. In most cases compression\nand uncompression"
+msgstr ""
+
+#: ../xcc.in:86
+#, sh-format
+msgid "\nLevel of built-in compression, if supported."
+msgstr ""
+
+#: ../xcc.in:87
+#, sh-format
+msgid "\nThe part of the file, where the saved filenames\nare stored (current number appended)"
+msgstr ""
+
+#: ../xcc.in:88
+#, sh-format
+msgid "\nThe programs to process the file indexes and the counterpart to do\nthe reverse processing, if desired. In most cases compression\nand uncompression"
+msgstr ""
+
+#: ../xcc.in:90
+#, sh-format
+msgid "\nWhether to process the saved files"
+msgstr ""
+
+#: ../xcc.in:91
+#, sh-format
+msgid "\nWhether to process the index files"
+msgstr ""
+
+#: ../xcc.in:92
+#, sh-format
+msgid "\nPatterns for names of files, no preprocessing\nis performed on"
+msgstr ""
+
+#: ../xcc.in:93
+#, sh-format
+msgid "\nThe number of such files, that are maintained.\nMore (older ones) are removed."
+msgstr ""
+
+#: ../xcc.in:94
+#, sh-format
+msgid "Alternatively the maximum age of index files to be kept in days.\nOlder ones are removed"
+msgstr ""
+
+#: ../xcc.in:95
+#, sh-format
+msgid "\nThe maximum number of previous index files, that are scanned for restore"
+msgstr ""
+
+#: ../xcc.in:96
+#, sh-format
+msgid "\nAlternatively the maximum age of index files in days to be scanned for\nrestore"
+msgstr ""
+
+#: ../xcc.in:97
+#, sh-format
+msgid "\nFor restore: Check, whether the user has sufficient permissions\nto restore files to the same place, from where they were saved"
+msgstr ""
+
+#: ../xcc.in:98
+#, sh-format
+msgid "\nThe file where to log events"
+msgstr ""
+
+#: ../xcc.in:99
+#, sh-format
+msgid "\nThe directory for varying files"
+msgstr ""
+
+#: ../xcc.in:100
+#, sh-format
+msgid "\nThe identifier for the client (needed, if several afbackup\ninstallations reside on one host)"
+msgstr ""
+
+#: ../xcc.in:101
+#, sh-format
+msgid "\nLocking file to prevent several client program starts"
+msgstr ""
+
+#: ../xcc.in:102
+#, sh-format
+msgid "\nThe file with the authentication encryption key"
+msgstr ""
+
+#: ../xcc.in:103
+#, sh-format
+msgid "\nThe program to save startup information"
+msgstr ""
+
+#: ../xcc.in:104
+#, sh-format
+msgid "\nThe program to be run before attempting a backup. If this program\nreturns an exit status unequal to 0, no backup is performed."
+msgstr ""
+
+#: ../xcc.in:105
+#, sh-format
+msgid "\nThe program to be executed when everything requested is done.\n%l is replaced by the filename-logfile, %r by the file with\nthe report statistics, %e by the overall exit status,\n%i with the minimum restore information"
+msgstr ""
+
+#: ../xcc.in:106
+#, sh-format
+msgid "\nThe directory, where to run the backup"
+msgstr ""
+
+#: ../xcc.in:107
+#, sh-format
+msgid "\nNames of files to be skipped during the backup\n(wildcards are allowed)"
+msgstr ""
+
+#: ../xcc.in:108
+#, sh-format
+msgid "\nNames of directories to be skipped during the backup\n(wildcards are allowed)"
+msgstr ""
+
+#: ../xcc.in:109
+#, sh-format
+msgid "\nName of a file containing a (pattern-) list of files\nand directories to be skipped during the backup"
+msgstr ""
+
+#: ../xcc.in:110
+#, sh-format
+msgid "\nFilesystem types to save, skip (-) or prune (/)"
+msgstr ""
+
+#: ../xcc.in:111
+#, sh-format
+msgid "\nWhether to write CRC32 checksums to the backup or not"
+msgstr ""
+
+#: ../xcc.in:112
+#, sh-format
+msgid "\nWhether to use the ctime in addition to mtime during incremental backup"
+msgstr ""
+
+#: ../xcc.in:113
+#, sh-format
+msgid "\nWhether to report the backup progress in the progress file"
+msgstr ""
+
+#: ../xcc.in:114
+#, sh-format
+msgid "\nThe number of parts of the full backup (if this takes a long time)"
+msgstr ""
+
+#: ../xcc.in:115
+#, sh-format
+msgid "\nThe subdirectories of the RootDirectory to backup\n(wildcards are allowed)"
+msgstr ""
+
+#: ../xcc.in:116
+#, sh-format
+msgid "\nThe subdirectories of the RootDirectory to backup, part #num#\n(wildcards are allowed)"
+msgstr ""
+
+#: ../xcc.in:204
+#, sh-format
+msgid "Backup server hostnames:"
+msgstr ""
+
+#: ../xcc.in:205
+#, sh-format
+msgid "Backup server port-numbers:"
+msgstr ""
+
+#: ../xcc.in:206
+#, sh-format
+msgid "Cartridge-sets to use:"
+msgstr ""
+
+#: ../xcc.in:207
+#, sh-format
+msgid "Server message output configuration:"
+msgstr ""
+
+#: ../xcc.in:208
+#, sh-format
+msgid "File processing program:"
+msgstr ""
+
+#: ../xcc.in:209
+#, sh-format
+msgid "File unprocessing program:"
+msgstr ""
+
+#: ../xcc.in:210
+#, sh-format
+msgid "Built-in Compression Level:"
+msgstr ""
+
+#: ../xcc.in:211
+#, sh-format
+msgid "Index file part:"
+msgstr ""
+
+#: ../xcc.in:212
+#, sh-format
+msgid "Index processing program:"
+msgstr ""
+
+#: ../xcc.in:213
+#, sh-format
+msgid "Index unprocessing program:"
+msgstr ""
+
+#: ../xcc.in:214
+#, sh-format
+msgid "Process saved files:"
+msgstr ""
+
+#: ../xcc.in:215
+#, sh-format
+msgid "Process index files:"
+msgstr ""
+
+#: ../xcc.in:216
+#, sh-format
+msgid "Files not to be processed:"
+msgstr ""
+
+#: ../xcc.in:217
+#, sh-format
+msgid "Number of saved index files:"
+msgstr ""
+
+#: ../xcc.in:218
+#, sh-format
+msgid "Time to keep index files in days:"
+msgstr ""
+
+#: ../xcc.in:219
+#, sh-format
+msgid "Number of scanned index files:"
+msgstr ""
+
+#: ../xcc.in:220
+#, sh-format
+msgid "Scan index files of previous days:"
+msgstr ""
+
+#: ../xcc.in:221
+#, sh-format
+msgid "Test access rights during restore:"
+msgstr ""
+
+#: ../xcc.in:222
+#, sh-format
+msgid "Event/error-logging file:"
+msgstr ""
+
+#: ../xcc.in:223
+#, sh-format
+msgid "Var-Directory:"
+msgstr ""
+
+#: ../xcc.in:224
+#, sh-format
+msgid "Client-Identifier:"
+msgstr ""
+
+#: ../xcc.in:225
+#, sh-format
+msgid "Lock-file:"
+msgstr ""
+
+#: ../xcc.in:226
+#, sh-format
+msgid "Encryption-Key-File:"
+msgstr ""
+
+#: ../xcc.in:227
+#, sh-format
+msgid "Startup info logging program:"
+msgstr ""
+
+#: ../xcc.in:228
+#, sh-format
+msgid "Program to run before backup:"
+msgstr ""
+
+#: ../xcc.in:229
+#, sh-format
+msgid "Program to run at exit:"
+msgstr ""
+
+#: ../xcc.in:230
+#, sh-format
+msgid "Working directory:"
+msgstr ""
+
+#: ../xcc.in:231
+#, sh-format
+msgid "Names of files to skip:"
+msgstr ""
+
+#: ../xcc.in:232
+#, sh-format
+msgid "Names of directories to skip:"
+msgstr ""
+
+#: ../xcc.in:233
+#, sh-format
+msgid "File with names to skip:"
+msgstr ""
+
+#: ../xcc.in:234
+#, sh-format
+msgid "Filesystem types to save/skip:"
+msgstr ""
+
+#: ../xcc.in:235
+#, sh-format
+msgid "Write CRC32 checksums:"
+msgstr ""
+
+#: ../xcc.in:236
+#, sh-format
+msgid "Evaluate also the ctime:"
+msgstr ""
+
+#: ../xcc.in:237
+#, sh-format
+msgid "Report Progress to file:"
+msgstr ""
+
+#: ../xcc.in:238
+#, sh-format
+msgid "Number of full backup parts:"
+msgstr ""
+
+#: ../xcc.in:239
+#, sh-format
+msgid "Directories to backup:"
+msgstr ""
+
+#: ../xcc.in:240
+#, sh-format
+msgid "Directories to backup, part #num#:"
+msgstr ""
+
+#: ../xcc.in:242
+#, sh-format
+msgid "These are the hostnames of the machines where a server side of the backup service resides. Some kind of streamer device must be connected to these machines. The files and directories, that should be saved, are packed, eventually processed somehow, and then sent to the named machines, who writes them to the connected device. The named machines are tested for service availability. If a server is busy, the next one is tried. BackupPorts can be configured in the same order as the host entries supplied here. The servers in this list may be separated by whitespace and/or commas. If the backup server is the same host as the client, the use of the name localhost is recommended."
+msgstr ""
+
+#: ../xcc.in:243
+#, sh-format
+msgid "These are the port numbers on the backup server machines, where the backup server processes listen. The default is 2988 or the number found in the file /etc/services (or in NIS if it is configured). Several ports can be supplied, positionally according to the backup server hosts supplied in the BackupHosts parameter. The numbers can be separated by whitespace and/or commas. If fewer numbers are supplied than backup servers, the default port 2988 applies for the rest. If more port numbers are given, the superfluous ones are ignored."
+msgstr ""
+
+#: ../xcc.in:244
+#, sh-format
+msgid "The cartridge sets on the server side to use for backups. They must be legal numbers between 1 and the number of cartridge sets configured on the appropriate server side. Several sets can be supplied, positionally according to the backup server hosts supplied in the BackupHosts parameter. The numbers can be separated by whitespace and/or commas. If fewer numbers are supplied than backup servers, the default set # 1 applies for the rest. If more cartridge set numbers are given, the superfluous ones are ignored."
+msgstr ""
+
+#: ../xcc.in:245
+#, sh-format
+msgid "By default the server sends messages about current problems or required actions to a maintainer or, if determinable and configured, to the user on the client side. They cannot be seen as output on the client side. When this parameter is set, these messages are also output on the client side. The first word must consist of the letters b, v, r and c i.e. messages are output during backup, verify, restore, and/or copy-tape, depending on what letters appear. The next fields must name the respective single stream server ports or service names according to the configured ports in (2), i.e. wherever a multi stream port appears in the configuration in (2), here the respective single stream service must be named. If not given the values default to the ones configured in (2). If this parameter is not properly configured, the messages might not be seen on the client side for technical reasons."
+msgstr ""
+
+#: ../xcc.in:246
+#, sh-format
+msgid "If you want your files to be processed during save (e.g. compressed), you can supply the name of the program that should perform the desired processing here. If you do so, you MUST also supply the appropriate unprocess- program. Note that this program may be specified with options but no shell-like constructions such as pipes, variables or wildcards. This program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:247
+#, sh-format
+msgid "The counterpart to the processing program. You must either supply both process- and unprocess-program or neither of them. Like the process program, the unprocess-program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:248
+#, sh-format
+msgid "A number, that specifies the level of built-in compression, if present, otherwise no built-in compression will be performed. If a process program is also specified, the order of processing is: First the data is piped through the external program and then built-in compression is done. Uncompressing works the other way round."
+msgstr ""
+
+#: ../xcc.in:249
+#, sh-format
+msgid "The name of the file where the names of the saved files are stored. The current number is appended to this filename. The number is incremented each time a full backup starts. For pattern replacements see LoggingFile (19)."
+msgstr ""
+
+#: ../xcc.in:250
+#, sh-format
+msgid "The program to preprocess the index file, in most cases some kind of compression. If this parameter is not set, it defaults to the setting of the ProcessCmd (5). If you set it, you MUST also supply the appropriate unprocess- program. Note that this program may be specified with options but no shell-like constructions such as pipes, variables or wildcards. This program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:251
+#, sh-format
+msgid "The counterpart to the index processing program. If not given, it defaults to the setting of the UnprocessCmd (6). You must either supply both process- and unprocess-program or neither of them. Like the index process program, the unprocess-program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:252
+#, sh-format
+msgid "This flag specifies, whether the files, that are saved, should be processed by the configured program."
+msgstr ""
+
+#: ../xcc.in:253
+#, sh-format
+msgid "This flag specifies, whether the filename logging files (i.e. the index files) should be processed by the configured program."
+msgstr ""
+
+#: ../xcc.in:254
+#, sh-format
+msgid "These patterns or filenames specify files, that no processing is attempted on. Normally this is done for all files. This might be unefficient, e.g. compressing files, that are already compressed, so their compression can be suppressed with this parameter. The value of this parameter must be a list separated by whitespace. Double quotes may enclose list elements."
+msgstr ""
+
+#: ../xcc.in:255
+#, sh-format
+msgid "This number determines how many log files of previous full backups are saved. These files may serve for the restore of older files than those present in the current backup. Of course there must be sufficient space to hold all the backups. It doesn't help to save all the saved filenames but not to have them available on tape."
+msgstr ""
+
+#: ../xcc.in:256
+#, sh-format
+msgid "Instead of the number of index files to be kept (previous parameter), their maximum age can be configured in days (floating point number allowed). Older index files will be automatically removed. If this parameter is configured and the previous one at the same time, the longer duration will be applied to avoid accidental removal of indexes on configuration errors."
+msgstr ""
+
+#: ../xcc.in:257
+#, sh-format
+msgid "This is the maximum number of index files, that will be scanned during restore. This can be helpful, if it takes too much time to scan through all index files, what is done, if restrictions are given, such as before time, after time or certain tapes. This parameter can be overridden by option -N of afrestore."
+msgstr ""
+
+#: ../xcc.in:258
+#, sh-format
+msgid "Instead of configuring the maximum number of index files to be scanned (previous parameter), their maximum age in days can be configured (floating point number allowed). This parameter can be overridden by option -O of afrestore."
+msgstr ""
+
+#: ../xcc.in:259
+#, sh-format
+msgid "When this flag is set, during restore started by a normal user (not the superuser) it is checked, whether the user has sufficient access permissions in the directory, where the files are recovered. When relocating using option -C this is default behaviour. With this flag set it will be enforced also when not relocating. This has pros and cons. It might be desirable, that users can also restore their own files in directories owned by root (e.g. at-job files or the CDE calendar stuff). On the other side this might be considered a security problem."
+msgstr ""
+
+#: ../xcc.in:260
+#, sh-format
+msgid "The name of a file error messages or other notable events are written to. A dash - stands for no logging. The pattern %V will be replaced with the full path to the var-directory, %B with the bin directory, %L with the lib directory, %C with the configuration directory and %I with the logging directory (usually == %V)"
+msgstr ""
+
+#: ../xcc.in:261
+#, sh-format
+msgid "The directory, where varying files should be put in. These files must not be deleted. The information they contain is necessary for restore."
+msgstr ""
+
+#: ../xcc.in:262
+#, sh-format
+msgid "The identifier for the client. Default: The official hostname. This entry is required, it several afbackup clients reside on one host. In this case the multi stream server must be able to distinguish the clients to distribute the pieces of backup data on tape correctly. Otherwise the data would be mixed up and be unusable by the reading client."
+msgstr ""
+
+#: ../xcc.in:263
+#, sh-format
+msgid "To prevent client programs from being started several times a lock file is created and this is it's name. For pattern replacements see LoggingFile (19)."
+msgstr ""
+
+#: ../xcc.in:264
+#, sh-format
+msgid "The file containing the encryption key for authenticating the backup client to the server. This file must contain at least 5 characters and must not have read permission for group or world. For pattern replacements see LoggingFile (19)."
+msgstr ""
+
+#: ../xcc.in:265
+#, sh-format
+msgid "This is the (shell-) command to run to save the startup information of an incremental or full backup, sometimes called bootstrap information. This program should read the standard input and do something reasonable with it, e.g. append it to some file. The produced information can be used to recover from a hard crash, when the files are lost, that are containing the names of the saved files. Therefore this information should not be saved locally on the client host, but e.g. on an NFS-mounted filesystem, a floppy disc or in a mail-file (then this command should be sth. like: mail someuser). For pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:266
+#, sh-format
+msgid "A (shell-) command to be run before a backup is attempted. If this program returns an exit status unequal to 0, no backup is performed. This parameter makes only sense when backup is started remotely, cause in that case no shell-command can be supplied. If backup is started locally, there is no problem to run whatever is necessery before the backup explicitly. For pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:267
+#, sh-format
+msgid "This parameter may specify a (shell-) command to run at exit time of a full or incremental backup. The following patterns are replaced as explained:\n %l  by the name of the file containing the filelists\n %r  by the name of the file containing statistics (this\n     file is automatically removed after execution of this\n     program)\n %e  by the overall exit status\n %i  with the minimum restore information.\nFor more pattern replacements see LoggingFile (19)"
+msgstr ""
+
+#: ../xcc.in:268
+#, sh-format
+msgid "This is the directory, the backup client changes to before packing the files and directories. Their names should be supplied relative to this directory, e.g. ./home ."
+msgstr ""
+
+#: ../xcc.in:269
+#, sh-format
+msgid "These are the names of files, that should not be saved. Wildcards in the usual manner are allowed (shell-style or glob-style, furthermore path-patterns in the style of GNU's find program with option -path. Note, that wildcards also match directory separators i.e. slashes, e.g. a*d matches ab/cd). E.g. it does not usually make much sense to back up object files, as they can be easily reproduced from existing program sources."
+msgstr ""
+
+#: ../xcc.in:270
+#, sh-format
+msgid "These are the names of directories, that should not be saved. Wildcards in the usual manner are allowed (shell-style or glob-style, furthermore path-patterns in the style of GNU's find program with option -path. Note, that wildcards also match directory separators i.e. slashes, e.g. a*d matches ab/cd). E.g. it does not usually make much sense to back up the lost+found directory or such only containing object files, as they can be easily reproduced from existing program sources."
+msgstr ""
+
+#: ../xcc.in:271
+#, sh-format
+msgid "A file with the name supplied here can be present in any directory. It should contain a list of file-/directory-names (or glob-style patterns), that should be skipped during backup. Each entry must be in an own line. The given names/patterns are valid only in the same directory, where the file resides. Thus each directory can have it's individual exclusion list."
+msgstr ""
+
+#: ../xcc.in:272
+#, sh-format
+msgid "A list of filesystem types, separated by whitespace and/or commas. The type names can be prefixed with a plus, what is identical with no prefix, with a dash - or a slash / . No prefix or a plus means, that only files in filesystems of the given type are saved, no others. A dash (e.g. -autofs ) means, files in a filesystem of the named type are not saved, nonetheless such filesystems are traversed to search for filesystems of other types probably mounted underneath. The slash means, that such filesystems are not even entered or traversed"
+msgstr ""
+
+#: ../xcc.in:273
+#, sh-format
+msgid "This flag specifies, whether CRC32 checksums are written to the backup or not. Checksumming costs performance but might be desired to achieve additional safety, that the recovered files are intact"
+msgstr ""
+
+#: ../xcc.in:274
+#, sh-format
+msgid "When this flag is set, not only a filesystem entry's modification time (mtime) is evaluated when selecting objects to store during incremental or a level X backup, but also the inode change time (ctime). In this mode a filesystem entry's access time (atime) is not restored to the value it had before saving it, because that would again change the ctime, thus each incremental backup would result in a full backup"
+msgstr ""
+
+#: ../xcc.in:275
+#, sh-format
+msgid "Write the current progress to the file progress located in the directory with the varying files (see: VarDirectory). The first number in this file is the sum of file sizes currently written to backup plus an estimate for the packer overhead. The second number is the total sum of file sizes to be written to backup plus estimated overhead, determined in advance before doing the real backup. The third number is the percentage of backup volume written up to now. All the numbers do NOT include the volume of any command output to be written to backup, because it would be necessary to run the command(s) twice then, what is normally not desired. Using this option requires the backup client to run over all configured directories to be saved to determine the backup volume in advance before doing the real backup, what might be considered a waste of time and/or fileserver load"
+msgstr ""
+
+#: ../xcc.in:276
+#, sh-format
+msgid "If you have to backup a large amount of files and the full backup can't be done during one run (e.g. over a weekend), you can divide the full backup into pieces. This number determines, how many pieces you need. If this number is not equal to 1, you have to supply which files and directories you want to save in which piece. You do so by setting the additional parameters appearing when you set this parameter greater than 1."
+msgstr ""
+
+#: ../xcc.in:276
+#, sh-format
+msgid "Press Return having typed the number."
+msgstr ""
+
+#: ../xcc.in:277
+#, sh-format
+msgid "These are the names of files and diretories, that should be saved. Wildcards in the usual manner are allowed (shell- style or glob-style). They should be supplied relative to the working directory, the client changes to when starting. Descending into directories can be limited to the current filesystem by preceding the filename with the four characters .//. or the option -m (and a space). The prefix .//. is stripped off the name before saving. Supplying a filename preceded with the four characters /../ (what makes no sense normally) or the option -r (and a space) forces the file contents to be saved regardless of the file type. This way raw partitions or similar things can be saved. The prefix /../ is stripped off the name before saving. These file contents are by default never processed for safety reasons. If you want to force processing nonetheless, use //../ as prefix or precede the name with the option -R (and a space). To save the output of a command, supply (in double quotes) a triple bar |||, followed by a space and the command. Another triple bar must follow, after that another command doing the opposite of the first one. This command gets the data written by the first one as input at restore time. A triple sharp ### and a comment may follow.\nA command can be supplied here, whose output is read and used as if it were written here literally. If this is desired, the entry must start with a bar |, followed by a mandatory space and the shell-command to execute. If the pattern %T appears in this command, it is replaced with a specifier for the type of backup: F, if it's a full backup; F<N>, if the full backup is split into several parts with <N> being the part number, e.g. F2; I, if it's an incremental backup; L<N> for a level <N> backup e.g. L5"
+msgstr ""
+
+#: ../xcc.in:278
+#, sh-format
+msgid "These are the names of files and diretories, that should be saved as part #num#. Wildcards in the usual manner are allowed (shell-style or glob-style). They should be supplied relative to the working directory the client changes to when starting. Descending into directories can be limited to the current filesystem by preceding the filename with the four characters .//. or the option -m (and a space). The prefix .//. is stripped off the name before saving. Supplying a filename preceded with the four characters /../ (what makes no sense normally) forces the file contents to be saved regardless of the file type. This way raw partitions or similar things can be saved. The prefix /../ is stripped off the name before saving. These file contents are by default never processed for safety reasons. If you want to force processing nonetheless, use //../ as prefix or precede the name with the option -R (and a space). To save the output of a command, supply (in double quotes) a triple bar |||, followed by a space and the command. Another triple bar must follow, after that another command doing the opposite of the first one. This command gets the data written by the first one as input at restore time. A triple sharp ### and a comment may follow.\nA command can be supplied here, whose output is read and used as if it were written here literally. If this is desired, the entry must start with a bar |, followed by a mandatory space and the shell-command to execute. If the pattern %T appears in this command, it is replaced with a specifier for the type of backup: F, if it's a full backup; F<N>, if the full backup is split into several parts with <N> being the part number, e.g. F2; I, if it's an incremental backup; L<N> for a level <N> backup e.g. L5"
+msgstr ""
+
+#: ../xcc.in:314
+#, sh-format
+msgid "Error: Cannot open file `%s'.\n"
+msgstr ""
+
+#: ../xcc.in:351
+#, sh-format
+msgid "Help"
+msgstr ""
+
+#: ../xcc.in:351
+#, sh-format
+msgid "Make all the modifications in the entry fields on the right side you need after clicking once into the desired field. To get help on a specific item press F1, F2 or Escape after clicking into the field."
+msgstr ""
+
+#: ../xcc.in:351
+#, sh-format
+msgid "Ok"
+msgstr ""
+
+#: ../xcc.in:370
+#, sh-format
+msgid "What now ?"
+msgstr ""
+
+#: ../xcc.in:485
+#, sh-format
+msgid "Save"
+msgstr ""
+
+#: ../xcc.in:486
+#, sh-format
+msgid "Exit"
+msgstr ""
+
+#: ../xcc.in:499
+#, sh-format
+msgid "Error: Cannot open file `%s' for writing."
+msgstr ""
+
+#: ../xsc.in:68
+#, sh-format
+msgid "server-config-description-label-width"
+msgstr ""
+
+#: ../xsc.in:77
+#, sh-format
+msgid "\nSERVER SPECIFICATION\n\nThe identifier for the server"
+msgstr ""
+
+#: ../xsc.in:78
+#, sh-format
+msgid "\nDEVICE SPECIFICATION\n\nThe device name (No-Rewind-Version !)"
+msgstr ""
+
+#: ../xsc.in:79
+#, sh-format
+msgid "\nThe blocksize of the device"
+msgstr ""
+
+#: ../xsc.in:80
+#, sh-format
+msgid "\nSpecification of the tape buffer (size, high-, lowmark, filename)"
+msgstr ""
+
+#: ../xsc.in:81
+#, sh-format
+msgid "\nFlag, whether the device is a robot / cartridge handling system (0 or 1)"
+msgstr ""
+
+#: ../xsc.in:82
+#, sh-format
+msgid "\nInsert your number of cartridges, whether you have a robot or not"
+msgstr ""
+
+#: ../xsc.in:83
+#, sh-format
+msgid "\nThe specifiers of different cartridge sets, if requested.\nDefault is 1 set with cartridges ranging from 1 up to the\nprevious parameter. Specifiers of cartridge sets must be\nseparated by whitespace and may contain digits, commas and\ndashes. Examples: 1-3 4,8-10 6,7"
+msgstr ""
+
+#: ../xsc.in:84
+#, sh-format
+msgid "\nThe maximum number of bytes per file on tape"
+msgstr ""
+
+#: ../xsc.in:85
+#, sh-format
+msgid "\nThe maximum number of bytes per tape"
+msgstr ""
+
+#: ../xsc.in:86
+#, sh-format
+msgid "\nAppend also to explicitly deselected cartridges"
+msgstr ""
+
+#: ../xsc.in:87
+#, sh-format
+msgid "\nWrite to any supplied cartridge, that has space"
+msgstr ""
+
+#: ../xsc.in:88
+#, sh-format
+msgid "\nRefuse to write to tapes, that do not have a valid label"
+msgstr ""
+
+#: ../xsc.in:89
+#, sh-format
+msgid "\nPrefer writable cartridges available in a changer"
+msgstr ""
+
+#: ../xsc.in:90
+#, sh-format
+msgid "\nTime to wait from the moment, a new cartridge has been inserted\nuntil a new action is attempted on the tape device"
+msgstr ""
+
+#: ../xsc.in:91
+#, sh-format
+msgid "\nTime to wait while the device is unavailable until a mail is\nsent to the user in charge"
+msgstr ""
+
+#: ../xsc.in:92
+#, sh-format
+msgid "\nTime to wait while the device is unavailable until abort"
+msgstr ""
+
+#: ../xsc.in:93
+#, sh-format
+msgid "\nThe interval in seconds for probing, if device is ready, when\ninserting another cartridge is requested. 0 for no probing."
+msgstr ""
+
+#: ../xsc.in:94
+#, sh-format
+msgid "\nConfiguration file for a media changer"
+msgstr ""
+
+#: ../xsc.in:95
+#, sh-format
+msgid "\n\nSHELL-COMMANDS FOR TAPE HANDLING\n\nIn these commands %d is replaced by the device name,\n%n by the number, if within the command the count starts with 1,\n%m by the number, if the count starts with 0.\n\nCommand to set the file # on tape"
+msgstr ""
+
+#: ../xsc.in:96
+#, sh-format
+msgid "\nCommand to skip to the next %n-th file on tape"
+msgstr ""
+
+#: ../xsc.in:97
+#, sh-format
+msgid "\nIf there is a command to set the cartridge directly, supply it here"
+msgstr ""
+
+#: ../xsc.in:98
+#, sh-format
+msgid "\nIf the cartridges can only by changed successively, insert the\ncommand to change them here. This is also the command, that unloads\nthe tape, if you have no cartridge handler."
+msgstr ""
+
+#: ../xsc.in:99
+#, sh-format
+msgid "\nIf the media must be prepared for access in some way,\nthe appropriate command can be supplied here."
+msgstr ""
+
+#: ../xsc.in:100
+#, sh-format
+msgid "\nThe command to erase the tape. This is necessary on some systems."
+msgstr ""
+
+#: ../xsc.in:101
+#, sh-format
+msgid "\nCommand, that is called, when a tape is full."
+msgstr ""
+
+#: ../xsc.in:102
+#, sh-format
+msgid "\n\nCONFIGURATION FOR NON-EXISTING CARTRIDGE HANDLING SYSTEM\n\nThe user to inform, if a cartridge should be changed manually"
+msgstr ""
+
+#: ../xsc.in:103
+#, sh-format
+msgid "\nThe mail-program to use.\n\nInsert %u for the position, where the username has to appear,\n%U for the remote user, %H for the remote client host."
+msgstr ""
+
+#: ../xsc.in:104
+#, sh-format
+msgid "\n\nFILES TO SAVE THE STATE AND LOGGINGS\n\nDirectory for changing and persistent files"
+msgstr ""
+
+#: ../xsc.in:105
+#, sh-format
+msgid "\nFilename to save the current tape position"
+msgstr ""
+
+#: ../xsc.in:106
+#, sh-format
+msgid "\nFilename for error loggings etc."
+msgstr ""
+
+#: ../xsc.in:107
+#, sh-format
+msgid "\nFilename to write the current server status to"
+msgstr ""
+
+#: ../xsc.in:108
+#, sh-format
+msgid "\nLocking file to prevent several server starts"
+msgstr ""
+
+#: ../xsc.in:109
+#, sh-format
+msgid "\nLockfile for accessing a media changer"
+msgstr ""
+
+#: ../xsc.in:111
+#, sh-format
+msgid "\n\nCONFIGURATION FOR REMOTE_EXECUTION\n\nDirectory, where remotely started programs must reside"
+msgstr ""
+
+#: ../xsc.in:112
+#, sh-format
+msgid "\n\nSERVER-STARTUP AND SHUTDOWN ACTIONS\n\nshell-command to perform, when the server starts"
+msgstr ""
+
+#: ../xsc.in:113
+#, sh-format
+msgid "\nshell-command to perform, when the server exits"
+msgstr ""
+
+#: ../xsc.in:191
+#, sh-format
+msgid "Server Identifier:"
+msgstr ""
+
+#: ../xsc.in:192
+#, sh-format
+msgid "Streamer device (no-rewind):"
+msgstr ""
+
+#: ../xsc.in:193
+#, sh-format
+msgid "Device Blocksize:"
+msgstr ""
+
+#: ../xsc.in:194
+#, sh-format
+msgid "Tape Buffer Specification:"
+msgstr ""
+
+#: ../xsc.in:195
+#, sh-format
+msgid "Cartridge handler:"
+msgstr ""
+
+#: ../xsc.in:196
+#, sh-format
+msgid "Number of cartridges:"
+msgstr ""
+
+#: ../xsc.in:197
+#, sh-format
+msgid "Cartridge Sets:"
+msgstr ""
+
+#: ../xsc.in:198
+#, sh-format
+msgid "Max. number of bytes per file:"
+msgstr ""
+
+#: ../xsc.in:199
+#, sh-format
+msgid "Max. number of bytes per tape:"
+msgstr ""
+
+#: ../xsc.in:200
+#, sh-format
+msgid "Full Append Mode:"
+msgstr ""
+
+#: ../xsc.in:201
+#, sh-format
+msgid "Variable Append Mode:"
+msgstr ""
+
+#: ../xsc.in:202
+#, sh-format
+msgid "Reject unlabeled tapes:"
+msgstr ""
+
+#: ../xsc.in:203
+#, sh-format
+msgid "Prefer Cartridges in Changer:"
+msgstr ""
+
+#: ../xsc.in:204
+#, sh-format
+msgid "Cartridge change gracetime:"
+msgstr ""
+
+#: ../xsc.in:205
+#, sh-format
+msgid "Device unav. send mail after:"
+msgstr ""
+
+#: ../xsc.in:206
+#, sh-format
+msgid "Device unavail. abort after:"
+msgstr ""
+
+#: ../xsc.in:207
+#, sh-format
+msgid "Device probing interval:"
+msgstr ""
+
+#: ../xsc.in:208
+#, sh-format
+msgid "Changer-Configuration-File:"
+msgstr ""
+
+#: ../xsc.in:209
+#, sh-format
+msgid "Set-file-command:"
+msgstr ""
+
+#: ../xsc.in:210
+#, sh-format
+msgid "Skip-files-command:"
+msgstr ""
+
+#: ../xsc.in:211
+#, sh-format
+msgid "Set-cartridge-command:"
+msgstr ""
+
+#: ../xsc.in:212
+#, sh-format
+msgid "Change-cartridge-command:"
+msgstr ""
+
+#: ../xsc.in:213
+#, sh-format
+msgid "Init-media-command:"
+msgstr ""
+
+#: ../xsc.in:214
+#, sh-format
+msgid "Erase-tape-command:"
+msgstr ""
+
+#: ../xsc.in:215
+#, sh-format
+msgid "Tape-full-command:"
+msgstr ""
+
+#: ../xsc.in:216
+#, sh-format
+msgid "User to inform:"
+msgstr ""
+
+#: ../xsc.in:217
+#, sh-format
+msgid "Mail program:"
+msgstr ""
+
+#: ../xsc.in:219
+#, sh-format
+msgid "Tape-position savefile:"
+msgstr ""
+
+#: ../xsc.in:220
+#, sh-format
+msgid "Logging-file:"
+msgstr ""
+
+#: ../xsc.in:221
+#, sh-format
+msgid "Status-file:"
+msgstr ""
+
+#: ../xsc.in:223
+#, sh-format
+msgid "Changer-Lockfile:"
+msgstr ""
+
+#: ../xsc.in:225
+#, sh-format
+msgid "Program directory:"
+msgstr ""
+
+#: ../xsc.in:226
+#, sh-format
+msgid "Init command:"
+msgstr ""
+
+#: ../xsc.in:227
+#, sh-format
+msgid "Exit command:"
+msgstr ""
+
+#: ../xsc.in:238
+#, sh-format
+msgid "The identifier for the server. Default: The official hostname, followed by a colon and the full path to the configuration file. The server identifier can be used to become independent of the server machine name. This might be helpful, if the backup server should move to another machine. Whitespace characters may be used in this identifier, but they are replaced with asterisks * before comparing, so they are not significant."
+msgstr ""
+
+#: ../xsc.in:239
+#, sh-format
+msgid "This is the device, the backup is written to. It can be any tape device with the capability to distinguish several files on the media. It is mandatory to supply the no-rewind device here. Otherwise this package won't work properly. This may also be the path of a directory. Then the backup is written to files in this directory. Suitable device names for some OS-es:\nAIX:          /dev/rmt0.1\nSolaris:      /dev/rmt/0bn\nIRIX:         /dev/rmt/tps0d4nr\nHP-UX:        /dev/rmt/0hn\nLinux:        /dev/nst0\nDigital UNIX: /dev/nrmt0h\nFreeBSD:      /dev/nsa0\nIf the drive has a media handler attached, a specifier for this may follow the device name. The format for this is =<drive-count>@<device>#<num-slots>^<num-loadbays>, for example =1@/dev/sg0#6^2 . Whitespace before and following the special characters = @ and # is allowed for readability. The example means: The drive is number 1 in the changer, /dev/sg0 is the changer device, that has 6 media slots and 2 loadbays. The parts =<drive-count> and ^<num-loadbays> are optional.\nIf the server is only used for remote start and no real backup device should be accessed, a dash - should be configured here as device, so a respective warning to the server log will be suppressed."
+msgstr ""
+
+#: ../xsc.in:240
+#, sh-format
+msgid "The blocksize of the tape device. This value specifies, how many bytes are written to tape or read from it in one system call. Usually this value is at least 512 or a multiple of it. It is not very important, whether the blocksize is set to 2048 or 1024. The main thing to keep in mind is that if there is a minimum, it should be respected (e.g. 1024 on AIX), otherwise media space is wasted."
+msgstr ""
+
+#: ../xsc.in:241
+#, sh-format
+msgid "Three numbers and a filename can be given here. The first number is the desired size of the tape buffer in bytes. The optional second number is the high-watermark while writing in percent (default: 67), the optional third number is the low watermark, also in percent (default: 0). As long as the buffer fill rate does not reach the high watermark, nothing is written, but when it is reached, writing does not stop until the buffer fill rate is equal or below the low watermark. This procedure hopefully reduces tape wear and increases average writing speed, because excessive tape stops/starts are avoided. If the optional filename is given, buffering is done in the given file, which is mapped into the server's address space for that purpose. In the filename, patterns are replaced like with Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:242
+#, sh-format
+msgid "This value must be 1 or 0, what means, that you either have a cartridge handling system (i.e. some kind of robot) (1) or not (0). If you don't have a robot, you may nonetheless maintain a set of cartridges, that you have to number manually. The backup server side will inform you via email or console output, whenever another cartridge has to be inserted into the drive and what number it requires it is."
+msgstr ""
+
+#: ../xsc.in:243
+#, sh-format
+msgid "This number specifies, how many cartridges you are maintaining. If you have a cartridge handling system (some kind of robot), this is usually the number of cartridges, your system is juggling."
+msgstr ""
+
+#: ../xsc.in:244
+#, sh-format
+msgid "Several cartridge sets can be used. Here they can be specified. The specifiers for the cartridge sets must be separated by whitespace. Each specifier may consist of digits, commas and dashes. Examples for cartridge set specifiers: 1-5 7-9,12 6,10,11 This example shows how to specify three cartridge sets. If this parameter is not given, there is only the default set number 1 containing all available cartridges. Not all cartridges need to be included in a set and sets must not overlap. See the man-page of afserver.conf how to configure client access restrictions for cartridge sets individually."
+msgstr ""
+
+#: ../xsc.in:245
+#, sh-format
+msgid "The stream of data, that represents your backup, is divided into pieces (files on tape). This is done to find the files faster during a restore. This value determines, how large the pieces on tape may be in bytes. Some good values for a few tape technologies:\n  DAT:              30000000\n  Exabyte:          50000000\n  DLT:             100000000"
+msgstr ""
+
+#: ../xsc.in:246
+#, sh-format
+msgid "With this entry the number of bytes written to a single tape can be limited. Serveral entries with a leading range specifier allow to handle certain tapes differently. The range specifier must end in a colon : and may contain lists of ranges and numbers. A given number without a leading range specifier will be valid for all tapes not explicitly described. Default is use of full tape capacity. Several entries must be separated by whitespace and may look like the following examples: 4000000000 1,3-5:3500000000 7,9-:5000000000"
+msgstr ""
+
+#: ../xsc.in:247
+#, sh-format
+msgid "Normally, when the insert (writing) position is forced to another tape with the cartis command or with the clientside option -G, the rest of the current tape remains unused. When this option is set to 1, it will nonetheless be used to write data on, if there is no free tape left."
+msgstr ""
+
+#: ../xsc.in:248
+#, sh-format
+msgid "In default mode, the place (tape and tapefile), where the next data will be written, is fix and can only manipulated using the command cartis or the clientside option -G. When the server wants to write with variable append mode enabled, any cartridge, that is in the drive, is belonging to the right cartridge set and is allowed to be written, will be accepted and appended to. Note, that this will also override the settings of cartis or option -G."
+msgstr ""
+
+#: ../xsc.in:249
+#, sh-format
+msgid "Default is to accept an unlabeled tape as the requested one and to label it automatically. If this behaviour is unwanted and only tapes with a recognized label should be permitted for writing, this parameter should be set."
+msgstr ""
+
+#: ../xsc.in:250
+#, sh-format
+msgid "When a tape gets full and another one must be chosen to continue writing, the server does not make a difference, whether a tape is available in a changer or not, if this flag is not set. This is the default. If this parameter is set, the next cartridge is chosen from those, that are available in the slots of a changer, if present and configured. If there is no tape found inside the changer, that is allowed to be overwritten, manual administrator interaction is nonetheless required."
+msgstr ""
+
+#: ../xsc.in:251
+#, sh-format
+msgid "This is the time in seconds, the program waits after another cartridge has been put into the drive. Normal devices need a certain time span to mount the tape to get it ready for use. Normally this value is not critical. If you estimate it too low, the ioctl-system-call will wait until the device becomes available. This time is sometimes longer than two minutes, so if you want to proceed quickly after a cartridge change, you may measure the maximum time, your system needs. Some tried values for a few tape technologies:\n  DAT:         30\n  Exabyte:     70\n  DLT:         70"
+msgstr ""
+
+#: ../xsc.in:252
+#, sh-format
+msgid "If the streaming device is not accessible (i.e. an open or a tape handling command fails) or another backup server process is still running, the server process re-tries his attempts regularly. If it fails longer than the time in minutes supplied here, an e-mail is sent to the configured user in charge (see: User To Inform). Supplying 0 means: never send mail."
+msgstr ""
+
+#: ../xsc.in:253
+#, sh-format
+msgid "If the streaming device is not accessible (i.e. an open or a tape handling command fails), the server process re-tries his attempts regularly. If it fails longer than the time in minutes supplied here, it exits silently leaving a warning in the log file. Supplying 0 means: try forever, never exit."
+msgstr ""
+
+#: ../xsc.in:254
+#, sh-format
+msgid "This is the interval in seconds, after that regularly the device is probed to be ready for reading. Thus after having ejected a cartridge it is automatically recognized, if a new cartridge has been inserted. For other media (e.g. exchangeable disks) this may not be suitable. Supply a 0 in these cases for no probing."
+msgstr ""
+
+#: ../xsc.in:255
+#, sh-format
+msgid "If a media changer is available and it should be used, this is the file to configure it. It must contain specifications of the commands, that are driving the media changer. %L will be replaced with the full path of the lib-directory of the server, %B with the bin-directory, %C with the configuration directory and %V with the var-directory. See the manual pages of cart_ctl, how to setup the media changer operation."
+msgstr ""
+
+#: ../xsc.in:256
+#, sh-format
+msgid "This is the (shell-) command to run to position the tape to a certain file. Usually this is something like a combination of: mt -f <device> rewind  and  mt -f <device> fsf <number>. If the command you are supplying here starts to count with 1 for the first file on tape, you should insert %n for the <number>. If it starts with 0, replace <number> with %m. If you don't want to type the devicename again here, you may write %d instead. For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:257
+#, sh-format
+msgid "This is the (shell-) command to run to skip over to a file later on tape. Usually this is something like\nmt -f <device> fsf <number>\nInsert %n, where the number of files to skip over must be supplied in the command, in the example instead of <number>, and %d, where the device should appear (here: <device>). For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:258
+#, sh-format
+msgid "This is the (shell-) command to run to put a certain cartridge into the device. If the command you are supplying here starts to count with 1 for the first cartridge, you should insert %n in the place, where the cartridge number must appear. If it starts with 0, replace it with %m. If you don't want to type the devicename again here, you may write %d instead. If you don't have a command to perform this task, don't supply anything here. In this case you must set your cartridge handling system to sequential mode (automatically putting the next cartridge in, when the current one is ejected). For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:259
+#, sh-format
+msgid "This is the (shell-) command to run to eject a cartridge currently placed inside the streamer device. This is normally something like  mt -f <device> rewoffl  (but better consult your man-pages). You have to supply this either if you have no cartridge handling system (robot) or if you have no command to set the cartridge directly by number. In the latter case this package tries to maintain the number of the current cartridge in a file and to (hopefully) keep it consistent with the reality. In this case the cartridge handling system must be configured to sequential mode (automatically putting the next cartridge in, when the current one is ejected). The pattern %c, if used in this command, will be replaced with number of the current cartridge, %n with the number of the next one, that is expected to be put into the streamer by a robot in sequential mode after eject. %b can be used instead of %c if counting of cartridges starts with 0 and not with 1. The same applies for %m, what means %n minus 1. %d is replaced with the device name. %N is replaced with the configured total number of cartridges. For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:260
+#, sh-format
+msgid "The (shell-) command, the server runs before accessing the storage media for the first time or after changing it. %d will be replaced with the device. This command can be used e.g. to automatically mount a removable disk after inserting. This command might be called several times on the same media, this has to kept in mind when configuring it. %n is replaced with the number of the cartridge, that is expected to in the drive, when the next media access operation will take place. %m is replaced with %n - 1 i.e. assuming that the cartridge numbering starts with zero, not one. Note, that the cartridge, that will really be in the drive is not necessarily known at the time, the Init-Media-Command is running. Thus the term \"expected\". For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:261
+#, sh-format
+msgid "The (shell-) command to run, if the tape must be erased. (actually not needed). For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:262
+#, sh-format
+msgid "The (shell-) command to run, when a tape is full. %d is replaced with the device name, %c with the number of the cartridge, that became full, %n with the number of cycles, the cartridge has become full until now and %C with the full path to the configuration file. For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:263
+#, sh-format
+msgid "If you don't have a cartridge handling system (robot), a human maintainer must put the appropriate cartridge into the tape device. If you supply a mail program, an e-mail is sent to the user given here, which informs him, that and which cartridge (by number) must be put into the tape device. If a timespan is configured, after that an automatic e-mail should be sent due to an unaccessible tape device, it is directed to this user."
+msgstr ""
+
+#: ../xsc.in:264
+#, sh-format
+msgid "The mail program used to send messages to a human maintainer. This is done, whenever another cartridge must be put into the tape device and it can't be done automatically (by a robot or whatever). If you don't want to type the username again here, you can instead write %u . The pattern %U will be replaced with the login name of a current user on the client side, %H with the name of the client host. If none could be figured out, the entire word containing %U or %H is deleted from the command. For more pattern replacements see Changer-Configuration-File (18). If you don't want mails to be sent, you may instead supply any other command, that reads the standard input and does something reasonable with it, e.g. redirects it to the console:  cat > /dev/console"
+msgstr ""
+
+#: ../xsc.in:265
+#, sh-format
+msgid "The directory, where varying files should be put in. These files should not be deleted. The information they contain is necessary for the server to work properly."
+msgstr ""
+
+#: ../xsc.in:266
+#, sh-format
+msgid "In this file some values are stored, e.g. the number of the cartridge currently placed inside the streamer device. For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:267
+#, sh-format
+msgid "Logging information concerning errors or other notable events is redirected to this file. If the first word of this entry is starting with @, then logging is directed to the syslog as well. If there are characters immediately following the @, this word is used as the syslog identifier, otherwise the identifier is afbackup. If writing to the syslog is configured, the rest of the entry is used as additional logging file, if present. For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:268
+#, sh-format
+msgid "The current status of the server is written to this file. If it starts with >>, then the file is created and status messages will be appended to it. Otherwise the file is removed before writing. For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:269
+#, sh-format
+msgid "To prevent the server program from being started several times a lock file is created and this is it's name. For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:270
+#, sh-format
+msgid "The name of a file, that a lock is set on, when a media changer is accessed. This is to prevent concurrent access, what might result in inconsistencies in the cartridge database. For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:271
+#, sh-format
+msgid "Entries specifying files, that contain encryption keys for authenticating backup clients to the server. Each entry consists of a filename, optionally followed by a colon : and a specifier for client selection. If an entry lacks a client selector, this one will apply for all clients, that are not matched by any other entry. The client selector is either a list of comma-separated hostnames, a filename starting with a slash / containing hostnames one per line, or a command starting with a bar, that is stripped off before starting the command. The command gets the current client name as input on stdin, aside from arguments containing patterns (see below). If the command returns an exit status of 0, the client name will match the entry. Entries are separated by whitespace. If an entry must contain whitespace, it must be enclosed by double quotes. If colons are needed within the filenames, they must be escaped using a backslash. Each key file must contain at least 5 characters and must not have read permission for group or world. The pattern %H is replaced with the client name resolved from the IP-address. %h is similar to %H, but everything from and including the first dot is stripped off. For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:272
+#, sh-format
+msgid "If you are using the remote start option for backing up clients, this is the directory, where programs must reside, that can be started remotely. No other programs can be started remotely (for security reasons). For pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:273
+#, sh-format
+msgid "Here you may supply a (shell-) command to be run, when the backup server side wakes up, i.e. the server process starts. A %p appearing in this command is replaced with the name of the client, that connected the backup service. For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xsc.in:274
+#, sh-format
+msgid "Here you may supply a (shell-) command to be run, when the backup server side goes to sleep, i.e. the server process ends. A %p appearing in this command is replaced with the name of the client, that connected the backup service. For more pattern replacements see Changer-Configuration-File (18)."
+msgstr ""
+
+#: ../xrs.in:84
+#, sh-format
+msgid "Error: Program %s not executable. Exiting."
+msgstr ""
+
+#: ../xrs.in:206
+#, sh-format
+msgid "Error: Cannot read current backup number file %s."
+msgstr ""
+
+#: ../xrs.in:241
+#, sh-format
+msgid "Nothing has been selected."
+msgstr ""
+
+#: ../xrs.in:276
+#, sh-format
+msgid "Details"
+msgstr ""
+
+#: ../xrs.in:311
+#, sh-format
+msgid "Found subentry"
+msgstr ""
+
+#: ../xrs.in:375
+#, sh-format
+msgid "Scanning index ..."
+msgstr ""
+
+#: ../xrs.in:383
+#, sh-format
+msgid "Done scanning index."
+msgstr ""
+
+#: ../xrs.in:412
+#, sh-format
+msgid "Path:"
+msgstr ""
+
+#: ../xrs.in:415
+#, sh-format
+msgid "Subentries:"
+msgstr ""
+
+#: ../xrs.in:421
+#, sh-format
+msgid "Select"
+msgstr ""
+
+#: ../xrs.in:422
+#, sh-format
+msgid "Show Details"
+msgstr ""
+
+#: ../xrs.in:424
+#, sh-format
+msgid "Delete"
+msgstr ""
+
+#: ../xrs.in:428
+#, sh-format
+msgid "Options ..."
+msgstr ""
+
+#: ../xrs.in:428
+#, sh-format
+msgid "Restore Options"
+msgstr ""
+
+#: ../xrs.in:430
+#, sh-format
+msgid "Start Restore"
+msgstr ""
+
+#: ../xrs.in:435
+#, sh-format
+msgid "Ready for operation."
+msgstr ""
+
+#: ../xrs.in:487
+#, sh-format
+msgid "AF's Restore Utility"
+msgstr ""
+
+#: ../xrs.in:500
+#, sh-format
+msgid "Relocate to directory:"
+msgstr ""
+
+#: ../xrs.in:502
+#, sh-format
+msgid "Browse"
+msgstr ""
+
+#: ../xrs.in:506
+#, sh-format
+msgid "Do not overwrite existing files"
+msgstr ""
+
+#: ../xrs.in:510
+#, sh-format
+msgid "Ignore case in filenames"
+msgstr ""
+
+#: ../xrs.in:513
+#, sh-format
+msgid "Modified after date:"
+msgstr ""
+
+#: ../xrs.in:517
+#, sh-format
+msgid "Modified before date:"
+msgstr ""
+
+#: ../xrs.in:521
+#, sh-format
+msgid "Backup after date:"
+msgstr ""
+
+#: ../xrs.in:525
+#, sh-format
+msgid "Backup before date:"
+msgstr ""
+
+#: ../xrs.in:529
+#, sh-format
+msgid "Use Tapes:"
+msgstr ""
+
+#: ../xrs.in:533
+#, sh-format
+msgid "Details Format:"
+msgstr ""
+
+#: ../xrs.in:537
+#, sh-format
+msgid "Clear Cache"
+msgstr ""
+
+#: ../xrs.in:540
+#, sh-format
+msgid "Done"
+msgstr ""
+
+#: ../xrs.in:590
+#, sh-format
+msgid "Help on: Restore program"
+msgstr ""
+
+#: ../xrs.in:590
+#, sh-format
+msgid "The `Subentries' list allows to browse through the index of saved files and directories. Clicking with the left mouse key selects an entry, so it can be copied to the lower list pressing the `Select' key. When entries are selected, details can be listed for them pressing the `Show Details' button. The format string from the Options dialog will be used. Clicking the right mouse button over an item in the `Subentries' list climbs down (or up in case of the item ..) the tree. The character / (slash) at the end of a `Subentries' item indicates, that navigation below this item is possible. Several items in the subentries can be selected.\nAt top level there are two entries: The slash / and a dot . The slash represents the absolute entries in the backup file index, the dot all relative entries (the recommended way). Clicking on items in the list below is useful for deselection pressing the `Delete' button.\nNavigation to a known subentry (i.e. a full path) is possible editing the top entry under `Path' and pressing the Return key. The path, that will prefix the recovered files and directories, can be adjusted changing the relocation directory in the `Options' dialog. A browser can be opened for this purpose.\nPressing `Start Restore' will start the recovery of the items in the lower list. A window displaying the messages of the restore program will pop up.\nSelecting a directory will restore everything below.\nThe Exit button terminates the program.\nA status display on the bottom of the window indicates the progress of index scans etc. Please be patient, scanning the index can be very time consuming, if it is big, and due to the terrible implementation of this program.\nContext sensitive help is available, when F1 is pressed over an item of the dialog, that has the input focus (can be changed using the TAB key)."
+msgstr ""
+
+#: ../xrs.in:594
+#, sh-format
+msgid "Help on: Directory index path"
+msgstr ""
+
+#: ../xrs.in:594
+#, sh-format
+msgid "Here a known directory path can be typed. This speeds up the search in the index, cause fewer entries must be processed and this leads faster to the path, you are interested in. When done entering the path, press the Return key."
+msgstr ""
+
+#: ../xrs.in:602
+#, sh-format
+msgid "Help on: Subentries"
+msgstr ""
+
+#: ../xrs.in:602
+#, sh-format
+msgid "This list displays the entries found in the current directory shown in the path entry. These are not the entries currently found in the filesystem, but those stored in the backup and thus present in the file index. One or more entries can be selected using the left mouse key and the Shift or Ctrl key in the usual manner. Pressing the `Select' button below moves them into the list below, that shows the entries selected for restore. Pressing the right mouse key over an item with a trailing slash / will navigate to this entry and show all the subentries i.e. files and subdirectories of this entry. Pressing the right mouse key over .. (which can't be selected for restore) will go up one step in the hierarchy. If you are using this program as normal user (and not as superuser), you will only see the entries, that you own."
+msgstr ""
+
+#: ../xrs.in:610
+#, sh-format
+msgid "Help on: Selected entries"
+msgstr ""
+
+#: ../xrs.in:610
+#, sh-format
+msgid "This list shows all items selected for restore. If a directory entry with a trailing slash / is selected, everything below this directory will be restored. Items can be moved into this list from the above one selecting them and pressing the `Select' button. Items can be deleted selecting them in this list and pressing the `Delete' button. Pressing `Start Restore' below will initiate the recovery of all selected entries."
+msgstr ""
+
+#: ../xrs.in:618
+#, sh-format
+msgid "Help on: Restore Options"
+msgstr ""
+
+#: ../xrs.in:618
+#, sh-format
+msgid "The relocation directory is the place, where recovered files and directories should be put. The `Modified after date' specifies a time, that the stored files should have as the earliest modification time stamp. Versions stored earlier are not recovered or browsed. For the `Modified before date' the inverse criterion applies. The settings 'Backup after date' and 'Backup before date' refer to the backup starting time. If given, browsing and restore applies for filesystem entries written in backups, that started after / before the given time, respectively. All four dates can be given. For each of them: if the time is not fully specified, 00:00 is assumed. If the year is not given, the current year is used. Day and month must both be present, only one of them is not sufficient, or both may be omitted. In the latter case the year is ignored. If no date is given, the latest version of a file is restored. The `Clear Cache' button clears the index scanning cache. When Before- or After- dates are changed, the index cache is quite likely invalid. Pressing this button enforces a rescan. The `Details Format' string will be used when listing file details. For applicable patterns see the section FORMAT STRING in the manual pages of afrestore."
+msgstr ""
+
+#: ../xrs.in:626
+#, sh-format
+msgid "Help on: Relocation directory"
+msgstr ""
+
+#: ../xrs.in:626
+#, sh-format
+msgid "This entry shows the directory, where all recovered files are relocated to. The stored path will be appended to the path shown here. The path can be selected using a file browser. To open the browser press the `Browse' button on the right. If this program is run as normal user and the relocation directory is not the one configured in the client side configuration file, the relocation directory must be owned by the user running this program."
+msgstr ""
+
+#: ../xrs.in:634
+#, sh-format
+msgid "Help on: Use Tapes"
+msgstr ""
+
+#: ../xrs.in:634
+#, sh-format
+msgid "If this entry is not empty and numbers of tapes are supplied using digits, commas and dashes (e.g. 3,6-8,1), only those are used for restore and only files saved on these tapes are displayed in the browse list"
+msgstr ""
+
+#: ../xrs.in:640
+#, sh-format
+msgid "Select Relocation Directory"
+msgstr ""
+
+#: ../xrs.in:640
+#, sh-format
+msgid "Set Directory"
+msgstr ""
+
+#: ../xrs.in:821
+#, sh-format
+msgid "The relocation directory `%s' does not exist."
+msgstr ""
+
+#: ../xrs.in:848
+#, sh-format
+msgid "Cannot create script file `%s'."
+msgstr ""
+
+#: ../xrs.in:911
+#, sh-format
+msgid "Unknown mode: %s, internal error. Please report."
+msgstr ""
+
+#: ../xrs.in:981
+#, sh-format
+msgid "\\n%n\\nOwner:         %O\\nLast Modified: %M\\nBackup Time:   %T\\n"
+msgstr ""
+
+#: ../xss.in:187
+#, sh-format
+msgid "Current server status:"
+msgstr ""
+
+#: ../xss.in:197
+#, sh-format
+msgid "Most recent lines in server's log:"
+msgstr ""
+
+#: ../xss.in:203
+#, sh-format
+msgid "Number of displayed log lines:"
+msgstr ""
+
+#: ../xss.in:216
+#, sh-format
+msgid "AF Backup server status"
+msgstr ""
+
+#: ../clientconfig.in:228
+#, sh-format
+msgid "No awk ? Is this really a lovely UNIX ?"
+msgstr ""
+
+#: ../clientconfig.in:229
+#, sh-format
+msgid "Sorry. I have to exit."
+msgstr ""
+
+#: ../clientconfig.in:262
+#, sh-format
+msgid "No configuration file found. Exiting."
+msgstr ""
+
+#: ../clientconfig.in:270
+#, sh-format
+msgid "Error: Cannot read configuration file"
+msgstr ""
+
+#: ../clientconfig.in:270
+#, sh-format
+msgid "Exiting."
+msgstr ""
+
+#: ../clientconfig.in:507
+#, sh-format
+msgid "Reading current settings"
+msgstr ""
+
+#: ../clientconfig.in:535
+#, sh-format
+msgid "done"
+msgstr ""
+
+#: ../clientconfig.in:581
+#, sh-format
+msgid "Please enter the number of the parameter you would like to modify. Then, if you want to clear the entry, hit the Space- and the Return-key. To get help enter: help, and the number of the parameter you need help on. To exit and write out the changes enter: ok. To exit without making any changes, enter: exit."
+msgstr ""
+
+#: ../clientconfig.in:587
+#, sh-format
+msgid "Your choice:"
+msgstr ""
+
+#: ../clientconfig.in:591
+#, sh-format
+msgid "Invalid choice. Please try again."
+msgstr ""
+
+#: ../clientconfig.in:622
+#, sh-format
+msgid "Please enter new value:"
+msgstr ""
+
+#: ../clientconfig.in:703
+#, sh-format
+msgid "Hit Return, when done."
+msgstr ""

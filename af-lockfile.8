@@ -1,0 +1,65 @@
+.TH AF-LOCKFILE 8 "2001 May 3" "Debian Project"
+.SH NAME
+af-lockfile \- set a lock on a file bound to a locking process
+.SH SYNOPSIS
+.B af-lockfile [ -U ] [ -p [ <PID> ] ] [ -m <message> ] [ -t <timeout-ms> ]
+<lockfile>
+.SH DESCRIPTION
+af-lockfile tries to create the lockfile passed as argument and set
+a lock to it. If the lock cannot be achieved within the given timeout
+interval in milliseconds, the program exits with an exit status unequal
+0 (zero) and prints 0 (zero) to stdout. The program retries to get the lock
+in random intervals between 100 and 300 milliseconds until timeout.
+When the lock can be set, the program spawns into the background
+(detached from the controlling terminal) and the foreground process
+prints out the process ID of the spawned background process, then
+exits with an exit status of 0.
+
+When the lock is got, the given message is written into the lockfile,
+if not an empty string.
+In the message, the pattern %p is replaced with the process ID of
+the background process holding the lock. %h is replaced with the full
+qualified hostname of the machine, the program is run on. The default
+message string is "%p %h". If the given message is an empty string,
+the locked file is left unchanged.
+
+When the background process dies, the lock will go away from the
+lockfile. If the background process can terminate in a controlled
+way (killed with signal TERM or INT), it will also remove the lockfile,
+if option -U is not given. If -U is supplied, the file will be left
+in place. It is important to understand, that the lock is held by the
+process (to be exact: by the file descriptor), not by the existence of
+the file itself. That is, if the file is already there, when the
+program starts, and is writable for the process, the lock
+can be obtained nonetheless. The background process can be told to
+watch another process (default: the parent process) and to release
+the lock and exit, when the watched process is gone. This polling
+is done in constant intervals of 200 milliseconds.
+
+If af-lockfile should set a lock on an existing file, that should
+not be removed after releasing the lock, use the options
+-U -m ''
+
+.SH EXAMPLE
+A very common example is preventing a script from being started several
+times. It should be kept in mind, that after creation of the lockfile
+it might be desirable to change the permissions of it, so other
+users can get the lock, when the file is not cleaned up after
+uncontrolled program termination. At the beginning of a sh-script
+write e.g.:
+
+ LOCKFILE=/tmp/my_lockfile
+ LOCKPID=`af-lockfile -p $$ -t 10000 $LOCKFILE`
+ if [ _"$LOCKPID" = _0 -o _"$LOCKPID" = _ ] ; then
+   echo "Cannot get lock. Exiting."
+   exit 1
+ fi
+
+When the shell, that is interpreting the script, dies or terminates,
+the lock will disappear automatically, so no further cleanup is
+required. If the lock should be released before the script ends,
+simply kill the background process, whose PID is available
+in $LOCKPID
+.SH AUTHOR
+.B af-lockfile 
+was written by Albert Fluegel (af@muc.de)

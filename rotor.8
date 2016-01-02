@@ -1,0 +1,15 @@
+.TH ROTOR 8 "2001 May 3" "Debian Project"
+.SH NAME
+rotor \- run program displaying a rotating bar
+.SH SYNOPSIS
+.B rotor <command> [ <command-args> ... ]
+.SH DESCRIPTION
+rotor starts the command supplied in the arguments and prints
+the characters necessary to show a rotating bar. Whenever
+there is output from the program, the current rotor character
+is deleted and the output from the program printed.
+.SH EXAMPLE
+rotor sleep 5
+.SH AUTHOR
+.B rotor 
+was written by Albert Fluegel (af@muc.de)

@@ -1,0 +1,59 @@
+.TH AFSERVER 8 "2001 April 1" "Debian Project"
+.SH NAME
+afmserver \- the multi-stream server of the afbackup package
+.SH SYNOPSIS
+.B afmserver
+[ <options> ] [ <configuration-file> ]
+.SH DESCRIPTION
+The multi-stream server able to serve several clients in parallel.
+This program works as a protocol multiplexing frontend for the
+normal server, that in turn is started as backend in slave mode.
+For the client side this server looks exactly like the normal
+single stream server, so for them there is nothing special contac-
+ting the multi stream server.
+The clients must pass a unique identifier to the multi stream
+server. Otherwise it cannot distinguish the clients, especially
+when dispatching the data on tape to the clients. By default this
+identifier is the official hostname of the client, that is
+determined from the connection. A client may pass a different
+identifier after having connected and authenticated successfully.
+The options are identical to those of the server program except
+for option -S, that is not applicable here, cause the multi-stream
+server doesn't know a slave mode. The other options are also passed
+to the server backend (see: afserver(8)), except for the following,
+that are understood
+only by mserver:
+.PP
+.TP
+.B -d
+Daemonize. Go into the background and run forever.
+This is the way, the multi stream server can be
+started without using the inetd. -p should be
+supplied when using this option
+.TP
+.B -p <port>
+The TCP port number or service name, the server
+should bind to. If started via inetd, the inetd
+binds to the port and starts the mserver connected
+to the port. When started as daemon, the mserver
+must be told the port to bind to. If not given,
+the service entry afmbackup is used or, if not
+found, the default port 2989
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file
+.IP @serverlogdir@
+The directory for logging the server actions
+.IP @servervardir@
+Some internal state information of the server.
+.SH SEE ALSO
+afserver(8), afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), cartis(8), cartready(8), label_tape(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/progress_display,v $
+# $Id: progress_display,v 1.1 2005/02/13 14:09:38 alb Exp alb $
+#
+POLL_INTERVAL=2
+LINE_IN_FILE=1
+FIELD_IN_LINE=1
+TTY_WIDTH=unknown
+
+while echo _"$1" | grep '^_-' >/dev/null ; do
+  case "$1" in
+    -i)
+	shift
+	POLL_INTERVAL="$1"
+	;;
+    -l)
+	shift
+	LINE_IN_FILE="$1"
+	;;
+    -f)
+	shift
+	FIELD_IN_LINE="$1"
+	;;
+    -w)
+	shift
+	TTY_WIDTH="$1"
+	;;
+  esac
+  shift
+done
+if [ $# -ne 1 ] ; then
+  echo "Usage: `basename $0` [ -i <poll-interval> ] [ -l <line-in-file> ] [ -f <field-in-line> ] [ -w <terminal-width> ] <filename>" >&2
+  exit 2
+fi
+FILE="$1"
+if [ _"$TTY_WIDTH" = _unknown ] ; then
+  TTY_WIDTH=`stty -a | grep columns | sed 's/^.*columns[ 	]*//g' \
+		| sed 's/[^0-9].*$//g'`
+  if [ `echo "$TTY_WIDTH" | grep '^[0-9][0-9]*$' | wc -l` -lt 1 ] ; then
+    echo "Warning: cannot determine TTY width, assuming 80" >&2
+    TTY_WIDTH=80
+  fi
+fi
+
+echo "$FIELD_IN_LINE" | grep '^[0-9][0-9]*$' >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "Error: Invalid numerical format for option -f" >&2
+  exit 3
+fi
+echo "$TTY_WIDTH" | grep '^[0-9][0-9]*$' >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "Error: Invalid numerical format for option -w" >&2
+  exit 3
+fi
+echo "$LINE_IN_FILE" | grep '^[0-9][0-9]*$' >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "Error: Invalid numerical format for option -l" >&2
+  exit 3
+fi
+echo "$POLL_INTERVAL" | grep '^[0-9][0-9]*$' >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "Error: Invalid numerical format for option -i" >&2
+  exit 3
+fi
+
+while true ; do
+  VALUE=0
+  if [ -r "$FILE" ] ; then
+    VALUE=`awk 'NR == '"$LINE_IN_FILE"' { print $'"$FIELD_IN_LINE"' }' "$FILE"`
+  fi
+  echo "$VALUE" | egrep '^[0-9][0-9]*([.][0-9]*)?$' >/dev/null
+  if [ $? -eq 0 ] ; then
+    echo "$VALUE" | awk '{
+	n = '"$TTY_WIDTH"' - 6;
+	p = 0.5 - 1.0 + ($1 * n / 100.0);
+	printf "\r"
+	for(i = 0; i <= n; i++)
+	  printf " ";
+	printf "\r|";
+	for(i = 0; i < p; i++)
+	  printf "X";
+	for(; i < n; i++)
+	  printf "-";
+	printf "|%3d%%", $1;
+	}'
+  fi
+  sleep $POLL_INTERVAL
+done

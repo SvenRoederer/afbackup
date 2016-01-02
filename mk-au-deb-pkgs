@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+# Instead of contructing even more magic around Debian's build system
+# this script does only the things that are actually required
+
+PACKAGE=`egrep '^Name:' albiutils.spec.rh | awk '{print $2}'`
+VERSION=`egrep '^Version:' albiutils.spec.rh | awk '{print $2}'`
+REPLPAT="sed s/@"'PACKAGE'"@/$PACKAGE/g;s/@"'VERSION'"@/$VERSION/g"
+
+PKGEXT=""
+
+# Exit on any failure - like make usually does
+set -e
+
+# Start anew with an empty debian directory
+/bin/rm -rf debian
+mkdir -p debian
+
+make "$PACKAGE".install INSTTOP=`pwd`/debian/"$PACKAGE"
+
+for FILE in changelog compat control."$PACKAGE" docs."$PACKAGE" menu."$PACKAGE" README ; do
+  $REPLPAT";s/@"'DEBPACKAGE'"@/$PKGEXT/g" debian.tmpl/"$FILE" > debian/"$FILE"
+done
+for FILE in debian/*."$PACKAGE" ; do
+  mv "$FILE" `echo "$FILE" | sed 's/.'"$PACKAGE"//g`
+done
+
+# Debian magic
+dh_installmenu -v
+fakeroot dh_installdocs -v
+fakeroot dh_installchangelogs -v
+fakeroot dh_installdebconf -v
+dh_compress -v
+fakeroot dh_fixperms -v
+fakeroot dh_installdeb -v
+dh_installinit
+fakeroot dh_gencontrol -v
+fakeroot dh_md5sums -v
+# finally create the package. It will reside in the parent directory
+dh_builddeb -v

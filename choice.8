@@ -1,0 +1,30 @@
+.TH CHOICE 8 "2001 May 3" "Debian Project"
+.SH NAME
+choice \- wait for stroke of a key from a given list
+.SH SYNOPSIS
+.B choice [ -p <prompt> ] [ -c <choice-chars> ]
+[ -d <default-choice> ] [ -t <timeout> ]
+.SH DESCRIPTION
+choice prints out the prompt and waits for strokes of keys
+from the choice-chars list, until the timeout expires. In
+that case the default-choice becomes the choosen character.
+In the prompt the following replacements will be made:
+%c is replaced with the given choice-chars string. %d is
+replaced with the default character and %t with the number
+of remaining seconds until the timeout expires. The prompt
+output is updated every second to reflect the changed value
+of %t. A timeout value of 0 means: Wait forever. The default
+values are 60 (seconds) for timeout, "yn" for the choices.
+the first character in the choices list for the default
+choice and "Please choose one of (%c) [%d after %t sec]: "
+for the prompt. The default arguments make for a yes/no
+choice with a default of yes after 60 seconds.
+
+The choosen character will be written to stderr (file
+descriptor 2). Thus the choice program can easily be
+used in backquotes within shell scripts.
+.SH EXAMPLE
+CHOICE=`choice -c nfb -t 10`
+.SH AUTHOR
+.B choice 
+was written by Albert Fluegel (af@muc.de)

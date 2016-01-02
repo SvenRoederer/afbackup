@@ -1,0 +1,29 @@
+################### Start of $RCSfile: changer.conf.test,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/changer.conf.test,v $
+# $Id: changer.conf.test,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+# Test configuration for pseudo-changer
+#
+####################################################################
+#
+
+Move Drive To Slot Cmd: echo "moving drive %n(%m) to slot %N(%M)"
+
+Move Loadport To Slot Cmd: echo "moving loadport %n(%m) to slot %N(%M)"
+
+Move Slot To Loadport Cmd: echo "moving slot %n(%m) to loadport %N(%M)"
+
+Move Slot To Drive Cmd: echo "moving slot %n(%m) to Drive %N(%M)"
+
+Move Drive To Loadport Cmd: echo "moving drive %n(%m) to loadport %N(%M)"
+
+#Empty Slots Command:	echo 7; echo 2 4; echo 8-11
+Empty Slots Command:   echo ' '
+
+#Empty Loadports Command:	echo 3-4

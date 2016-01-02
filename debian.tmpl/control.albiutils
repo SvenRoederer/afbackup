@@ -1,0 +1,24 @@
+Source: @PACKAGE@
+Section: unknown
+Priority: optional
+Maintainer: Albert Fluegel <af@muc.de>
+Build-Depends: debhelper (>= 7), autotools-dev, libssl-dev, mawk, gettext
+Standards-Version: 3.8.3
+Homepage: http://www.sourceforge.net/projects/afbacup
+
+Package: @PACKAGE@
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, gettext
+Description: Miscellaneous utilities for various purposes
+ ssu: silent su. To easily switch to different user/group/supplemental-groups as root
+ af-lockfile: Create lockfiles with the lock bound to the process enabling automatic cleanup
+ ttywrap: run command as subprocess connected to a pseudo TTY with the master side connected
+          to standard I/O. So it is e.g. possible to pipe passwords into commands, that want
+          to be interactive via TTY
+ udf: unified df. To get rid of platform specifics of df
+ rotor: run a subcommand and show a rotor meanwhile
+ choice: choose by pressing a single key (similar to the DOS-choice)
+ bufrate: Like the cat command with the option to limit throughput
+ descrypt: encrypt or decrypt applying DES3 or DES non-interactively with a key read from a file
+ numset: Operations on sets of numbers
+

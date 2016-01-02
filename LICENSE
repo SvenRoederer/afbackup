@@ -1,0 +1,11 @@
+This software comes under the GNU-GPL. The terms of
+the GPL can be obtained from the attached "COPYING"
+file or from a lot of places all over the internet,
+e.g. http://www.gnu.org . This file must not be
+removed from the distribution nor is it allowed to
+change it or the attached file "COPYING", that
+contains the unmodified GNU general public license
+version 2. The utilities library, that can be built
+following the instructions in INSTALL.utilslib has
+the LGPL as LICENSE. This one is not attached, but
+see the above URL to get it.

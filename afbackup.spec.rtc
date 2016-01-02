@@ -1,0 +1,385 @@
+# RPM for Redhat 6 and above.
+
+Summary: Common files for AF's network backup system
+Name: afbackup
+Version: 3.3.7pl2
+Release: 2.h
+Source0: http://dl.sourceforge.net/sourceforge/afbackup/%{name}-%{version}.tar.gz
+URL: http://sourceforge.net/projects/afbackup/
+License: GPL
+Packager: Gerd v. Egidy <egidy@deam.de>
+Group: Applications/Archiving
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Prereq: grep
+
+%package server
+Summary: Server side of AF's backup system
+Group: Applications/Archiving
+Requires: afbackup
+Prereq: /usr/sbin/groupadd, /usr/sbin/useradd
+#BuildRequires: libdes
+
+%package client
+Summary: Client side of AF's backup system
+Group: Applications/Archiving
+Requires: afbackup
+#BuildRequires: libdes
+
+%description
+afbackup is a client-server backup system offering several workstations to
+perform a backup to a special central backup server.  Backing up only one
+computer is easily possible, too.  Any streaming device can be used
+for writing the data to, usually this will be a tape device, but hard 
+disks can be used, too.  Writing backups is normally done sequentially; data
+is appended after the end of the previous backup regardless of restore
+operations issued on other tapes in the meantime.
+
+Features:
+- Client is authenticated before being allowed to perform backup
+- Access restriction for the streamer device -> security
+- Client-side per-file compression -> reliability
+- Data stream is written to tape in chunks -> fast finding of files
+- Tape position logging for each file
+- Tape capacity is fully used
+- Full/incremental backups
+- Raw partitions can be backed up
+- Client and server use buffering for maximal throughput
+
+%description server
+The afbackup server runs on the machine which offers storage (tape or 
+sometimes hard drive) for backups on your network. Any machines running
+backup clients contact the server in regular intervals and send data
+to store on the backup medium.
+
+%description client
+The afbackup client needs to be installed on all machines which have data 
+to back up.  It is started either via remote control or using a local cron 
+job, connects then to the server over the network and sends the data to be 
+backed up.
+
+%prep
+%setup -q
+
+./configure --prefix=%{_prefix} \
+	--without-prefixext \
+	--with-zlib \
+	--with-zlib-include=%{_includedir} \
+	--with-zlib-libdir=%{_libdir} \
+	--with-serverbindir=%{_sbindir} \
+	--with-serverlibdir=%{_libdir}/%{name} \
+	--with-serverconfdir=%{_sysconfdir}/%{name} \
+	--with-servervardir=%{_var}/lib/%{name}/server \
+	--with-servermandir=%{_mandir} \
+	--with-serverlogdir=%{_var}/log/%{name} \
+	--with-serverconf=server.conf \
+	--with-clientbindir=%{_sbindir} \
+	--with-clientlibdir=%{_libdir}/%{name} \
+	--with-clientconfdir=%{_sysconfdir}/%{name} \
+	--with-clientvardir=%{_var}/lib/%{name}/client \
+	--with-clientmandir=%{_mandir} \
+	--with-clientlogdir=%{_var}/log/%{name} \
+	--with-clientconf=client.conf \
+	--with-rexecdir=%{_sysconfdir}/%{name}/rexec \
+	--with-commondir=%{_libdir}/%{name} \
+	--with-commondatadir=%{_datadir} \
+	--with-commonshlibdir=%{_datadir}/%{name} \
+	--disable-threads
+#	--with-des \
+#	--with-des-include=%{_includedir} \
+#	--with-des-libdir=%{_libdir}
+
+%build
+make all < debian/cryptkey
+
+%install
+test $RPM_BUILD_ROOT != / && rm -rf $RPM_BUILD_ROOT
+
+mkdir -p $RPM_BUILD_ROOT%{_var}/log/%{name}
+
+make install.client install.server \
+	SERVERBINDIR=$RPM_BUILD_ROOT%{_sbindir} \
+	SERVERCONFDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name} \
+	SERVERLIBDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{_libdir}/%{name} \
+	SERVERVARDIR=$RPM_BUILD_ROOT%{_var}/lib/%{name}/server \
+	SERVERMANDIR=$RPM_BUILD_ROOT%{_mandir} \
+	CLIENTBINDIR=$RPM_BUILD_ROOT%{_sbindir} \
+	CLIENTCONFDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name} \
+	CLIENTLIBDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{_libdir}/%{name} \
+	CLIENTVARDIR=$RPM_BUILD_ROOT%{_var}/lib/%{name}/client \
+	CLIENTMANDIR=$RPM_BUILD_ROOT%{_mandir} \
+	SERVERREXECDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name}/rexec \
+	COMMONDIR=$RPM_BUILD_ROOT%{_libdir}/%{name} \
+	COMMONDATADIR=$RPM_BUILD_ROOT%{_datadir} \
+	COMMONSHLIBDIR=$RPM_BUILD_ROOT%{_datadir}/%{name}
+
+make install.rexeclinks \
+	CLIENTBINDIR=%{_sbindir} \
+	SERVERREXECDIR=$RPM_BUILD_ROOT%{_sysconfdir}/%{name}/rexec \
+
+%find_lang %name
+
+%clean
+test $RPM_BUILD_ROOT != / && rm -rf $RPM_BUILD_ROOT
+
+%pre server
+# Add the "backup" user and group
+/usr/sbin/groupadd -g 14 backup 2>/dev/null || :
+/usr/sbin/useradd -c "Backup Server" -u 14 -g 14 \
+	-s /bin/false -r -d %{_var}/lib/%{name}/server backup 2> /dev/null || :
+
+%post server
+chown backup /dev/st0 /dev/nst0
+
+if ! grep -q '^afbackup[[:space:]].*/tcp' %{_sysconfdir}/services; then
+	if grep -q '^#afbackup[[:space:]].*/tcp' %{_sysconfdir}/services; then
+		sed -e 's,^#\(afbackup[[:space:]].*/tcp.*\)$,\1,' \
+			%{_sysconfdir}/services > /tmp/services.$$
+		mv /tmp/services.$$ %{_sysconfdir}/services
+	else
+		echo 'afbackup	2988/tcp' >> %{_sysconfdir}/services
+	fi
+fi
+
+if ! grep -q '^afmbackup[[:space:]].*/tcp' %{_sysconfdir}/services; then
+	if grep -q '^#afmbackup[[:space:]].*/tcp' %{_sysconfdir}/services; then
+		sed -e 's,^#\(afmbackup[[:space:]].*/tcp.*\)$,\1,' \
+			%{_sysconfdir}/services > /tmp/services.$$
+		mv /tmp/services.$$ %{_sysconfdir}/services
+	else
+		echo 'afmbackup	2989/tcp' >> %{_sysconfdir}/services
+	fi
+fi
+
+if [ -d %{_sysconfdir}/xinetd.d ]; then
+	cut -c2- <<EOF > %{_sysconfdir}/xinetd.d/afbackup
+	# default: on
+	# description: The afbackup server is for doing backup of a client host
+	service afbackup
+	{
+		disable		= no
+		flags		= REUSE NAMEINARGS
+		socket_type	= stream
+		protocol	= tcp
+		wait		= no
+		user		= backup
+		server		= %{_sbindir}/afserver
+		server_args	= %{_sbindir}/afserver %{_sysconfdir}/%{name}/server.conf
+	}
+EOF
+	cut -c2- <<EOF > %{_sysconfdir}/xinetd.d/afmbackup
+	# default: on
+	# description: The afbackup multi-stream server is for doing backup of\
+	#        multiple clients at once
+	service afmbackup
+	{
+		disable		= no
+		flags		= REUSE NAMEINARGS
+		socket_type	= stream
+		protocol	= tcp
+		wait		= no
+		user		= backup
+		server		= %{_sbindir}/afmserver
+		server_args	= %{_sbindir}/afmserver %{_sysconfdir}/%{name}/server.conf
+	}
+EOF
+else
+	if ! grep -q '^afbackup[[:space:]]' %{_sysconfdir}/inetd.conf; then
+		if grep -q '^#afbackup[[:space:]]' %{_sysconfdir}/inetd.conf
+		then
+			sed -e 's,^#\(afbackup[[:space:]].*\)$,\1,' \
+				%{_sysconfdir}/inetd.conf > /tmp/inetd.conf.$$
+			mv /tmp/inetd.conf.$$ %{_sysconfdir}/inetd.conf
+		else
+			echo 'afbackup	stream	tcp	nowait	backup	%{_sbindir}/tcpd	afserver %{_sysconfdir}/%{name}/server.conf' >> %{_sysconfdir}/inetd.conf
+
+		fi
+	fi
+	if ! grep -q '^afmbackup[[:space:]]' %{_sysconfdir}/inetd.conf; then
+		if grep -q '^#afmbackup[[:space:]]' %{_sysconfdir}/inetd.conf
+		then
+			sed -e 's,^#\(afmbackup[[:space:]].*\)$,\1,' \
+				%{_sysconfdir}/inetd.conf > /tmp/inetd.conf.$$
+			mv /tmp/inetd.conf.$$ %{_sysconfdir}/inetd.conf
+		else
+			echo 'afmbackup	stream	tcp	wait	backup	%{_sbindir}/tcpd	afmserver %{_sysconfdir}/%{name}/server.conf' >> %{_sysconfdir}/inetd.conf
+
+		fi
+	fi
+fi
+
+if [ ! -f %{_var}/lib/%{name}/server/readonly_tapes ]; then
+	touch %{_var}/lib/%{name}/server/readonly_tapes
+	chmod 600 %{_var}/lib/%{name}/server/readonly_tapes
+	chown backup.backup %{_var}/lib/%{name}/server/readonly_tapes
+fi
+
+if [ ! -f %{_var}/log/%{name}/server.backup.log ]; then
+	touch %{_var}/log/%{name}/server.backup.log
+	chown backup.backup %{_var}/log/%{name}/server.backup.log
+fi
+
+%preun server
+if [ $1 = 0 ]; then
+	if grep -q '^afbackup[[:space:]].*/tcp' %{_sysconfdir}/services; then
+		sed -e 's,^\(afbackup[[:space:]].*/tcp.*\)$,#\1,' \
+			%{_sysconfdir}/services > /tmp/services.$$
+		mv /tmp/services.$$ %{_sysconfdir}/services
+	fi
+
+	if grep -q '^afmbackup[[:space:]].*/tcp' %{_sysconfdir}/services; then
+		sed -e 's,^\(afmbackup[[:space:]].*/tcp.*\)$,#\1,' \
+			%{_sysconfdir}/services > /tmp/services.$$
+		mv /tmp/services.$$ %{_sysconfdir}/services
+	fi
+
+	if [ -d %{_sysconfdir}/xinetd.d ]; then
+		rm -f %{_sysconfdir}/xinetd.d/afbackup \
+			%{_sysconfdir}/xinetd.d/afmbackup
+	else
+		if grep -q '^afbackup[[:space:]]' %{_sysconfdir}/inetd.conf
+		then
+			sed -e 's,^\(afbackup[[:space:]].*\)$,#\1,' \
+				%{_sysconfdir}/inetd.conf > /tmp/inetd.conf.$$
+			mv /tmp/inetd.conf.$$ %{_sysconfdir}/inetd.conf
+		fi
+
+		if grep -q '^afmbackup[[:space:]]' %{_sysconfdir}/inetd.conf
+		then
+			sed -e 's,^\(afmbackup[[:space:]].*\)$,#\1,' \
+				%{_sysconfdir}/inetd.conf > /tmp/inetd.conf.$$
+			mv /tmp/inetd.conf.$$ %{_sysconfdir}/inetd.conf
+		fi
+	fi
+	chown root /dev/st0 /dev/nst0
+
+	if [ ! -s %{_var}/lib/%{name}/server/readonly_tapes ]; then
+		rm %{_var}/lib/%{name}/server/readonly_tapes
+	fi
+	if [ ! -s %{_var}/log/%{name}/server.backup.log ]; then
+		rm %{_var}/log/%{name}/server.backup.log
+	fi
+fi
+
+%files -f %{name}.lang
+%defattr(-,root,root)
+%doc CONFIG HOWTO FAQ DO-DONT INTRO README PROGRAMS
+%doc UPGRADE INSTALL INSTALL.utilslib LICENSE ChangeLog COPYING
+#%dir %{_libdir}/%{name}
+%dir %{_datadir}/%{name}
+%dir %{_sysconfdir}/%{name}
+%dir %{_var}/lib/%{name}
+%dir %{_var}/log/%{name}
+%{_datadir}/%{name}/aftcllib.tcl
+
+%files server
+%defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/server.conf
+%config(noreplace) %{_sysconfdir}/%{name}/changer.conf
+%attr(0755,backup,backup) %dir %{_var}/lib/%{name}/server
+%dir %{_sysconfdir}/%{name}/rexec
+%attr(-,backup,backup) %{_sbindir}/label_tape
+%attr(-,backup,backup) %{_sbindir}/cartready
+%attr(-,backup,backup) %{_sbindir}/afserver
+%attr(-,backup,backup) %{_sbindir}/afmserver
+%{_sbindir}/__mt
+%{_sbindir}/__inc_link
+%{_sbindir}/cart_ctl
+%{_sbindir}/cartis
+%{_sbindir}/changerready
+%{_sbindir}/afserverconfig
+%{_sbindir}/serverconfig
+%{_sbindir}/xafserverconfig
+%{_sbindir}/xserverconfig
+%{_sbindir}/xafserverstatus
+%{_sbindir}/xserverstatus
+%{_sbindir}/__numset
+%{_sbindir}/cartagehandler
+%{_mandir}/man8/afserver.8*
+%{_mandir}/man8/afmserver.8*
+%{_mandir}/man8/cartis.8*
+%{_mandir}/man8/cartready.8*
+%{_mandir}/man8/label_tape.8*
+%{_mandir}/man8/afserver.conf.8*
+%{_mandir}/man8/cart_ctl.8*
+%{_sysconfdir}/%{name}/rexec/full_backup
+%{_sysconfdir}/%{name}/rexec/incr_backup
+%{_sysconfdir}/%{name}/rexec/afverify
+%{_sysconfdir}/%{name}/rexec/afrestore
+%{_sysconfdir}/%{name}/rexec/copy_tape
+%{_sysconfdir}/%{name}/rexec/update_indexes
+
+%files client
+%defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/client.conf
+%dir %{_var}/lib/%{name}/client
+%{_sbindir}/afclient
+%{_sbindir}/afbackup
+%{_sbindir}/full_backup
+%{_sbindir}/incr_backup
+%{_sbindir}/afverify
+%{_sbindir}/copy_tape
+%{_sbindir}/afbackout
+%{_sbindir}/update_indexes
+%{_sbindir}/afrestore
+%{_sbindir}/afclientconfig
+%{_sbindir}/clientconfig
+%{_sbindir}/xafclientconfig
+%{_sbindir}/xclientconfig
+%{_sbindir}/xafrestore
+%{_sbindir}/xrestore
+%{_sbindir}/autocptapes
+%{_sbindir}/__packpats
+%{_sbindir}/__piper
+%{_sbindir}/__z
+%{_mandir}/man8/afclient.8*
+%{_mandir}/man8/afclient.conf.8*
+%{_mandir}/man8/afrestore.8*
+%{_mandir}/man8/afverify.8*
+%{_mandir}/man8/full_backup.8*
+%{_mandir}/man8/incr_backup.8*
+%{_mandir}/man8/update_indexes.8*
+%{_mandir}/man8/copy_tape.8*
+%{_mandir}/man8/xafrestore.8*
+
+%changelog
+* Fri Sep 13 2002 Peter Backes <rtc@gmx.de> 3.3.7pl2-2.h
+- Fixed group name.
+- Added automatic removal of readonly_tapes if it is empty.
+- Added creation of server.backup.log with appropriate ownership and
+  automatic removal.
+
+* Sun Aug 18 2002 Peter Backes <rtc@gmx.de> 3.3.7pl2-1.h
+- Removed baseversion/version twiddling as the current tar archive
+  has patchlevel in the base directory name.
+
+* Tue Aug 13 2002 Peter Backes <rtc@gmx.de> 3.3.7-1.h
+- Removed dependency to glibc-2.2 (automatically determinded by rpm).
+- Removed duplicate --with-clientlogdir.
+- Removed automake invocation, use shipped files instead.
+- Langified.
+- Generalized paths by macros.
+- Added xinetd auto-sensing and inetd handling.
+- Made configuration noreplaceable (as it's backwards compatible).
+- Relocated rexec dir to /etc/afbackup/rexec.
+- Added backup system account creation.
+- Relocated client binaries to /usr/sbin as they are not user programs.
+- Overall cleanup of the directory structure.
+- Removed readonly_tapes from file list and added manual creation in the
+  %post server section because it doesn't belong to the configuration, is 
+  not immutable, but part of the server's var files.  This way it's protected
+  from removal on uninstall and silent replacement on update.
+
+* Wed May 15 2002 Gerd v. Egidy <egidy@deam.de> 3.3.7pl0-1
+- upgrade to afbackup 3.3.6pl6
+- fix patchlevel handling
+- rediffed symlink-patch
+
+* Thu May 31 2001 Gerd v. Egidy <egidy@deam.de>
+- upgrade to afbackup 3.3.3beta3
+
+* Thu Dec 28 2000 Gerd v. Egidy <egidy@deam.de>
+- upgrade to afbackup 3.3
+- require glibc-2.2 instead of using the no-64bit-patch
+
+* Fri Oct 20 2000 Gerd v. Egidy <egidy@deam.de>
+- started writing the RPM from scratch.

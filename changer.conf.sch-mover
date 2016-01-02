@@ -1,0 +1,87 @@
+################### Start of $RCSfile: changer.conf.sch-mover,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/changer.conf.sch-mover,v $
+# $Id: changer.conf.sch-mover,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#  Configuration file for media changer devices using the mover command
+#
+####################################################################
+#
+# Contributed by: Johann Pfefferl at Agfa, Munich
+#   The full path to the mover command is required,
+#   if not in a standard place
+#
+# See http://www.in-berlin.de/User/kraxel/linux.html for more
+# information about the mover command and the sch changer driver
+#
+# Typical output of mover as reported by Dirk Wallmeier:
+# /dev/sch0: mt=1 st=15 ie=0 dt=1
+# medium transport
+# 0:
+# storage
+# 0: access full (no volume tag)
+# 1: access full (no volume tag)
+# 2: access full (no volume tag)
+# 3: access full (no volume tag)
+# 4: access full (no volume tag)
+# 5: access full (no volume tag)
+# 6: access full (no volume tag)
+# 7: access full (no volume tag)
+# 8: access full (no volume tag)
+# 9: access full (no volume tag)
+# 10: access full (no volume tag)
+# 11: access full (no volume tag)
+# 12: access full (no volume tag)
+# 13: access full (no volume tag)
+# 14: access
+# import/export
+# data transfer
+# 0: access
+#
+# Replacements in the commands:
+#
+# pattern  replaced with
+#
+# %d       streamer device filename
+# %D       changer device filename
+# %n       the origin number, if counting starts with 1
+# %m       the origin number, if counting starts with 0
+# %N       the target number, if conuting starts with 1
+# %M       the target number, if counting starts with 0
+#
+# Commands to move cartridges
+# (moves, that are not supported, should be commented out)
+#
+Move Drive To Slot Command:	mt -f %d rewoffl  && mover unload %M
+
+Move Slot To Drive Command:	mover load %m && sh -c 'i=0; while true ; do mt -f %d status; if [ $? -ne 0 ] ; then if [ $i -gt 10 ] ; then exit 1 ; fi ; sleep 10; i=`expr $i + 1` ; else exit 0 ; fi ; done'
+
+#Move Drive To Loadport Command:	
+
+#Move Loadport To Drive Command:	
+
+#Move Slot To Loadport Command:	
+
+#Move Loadport To Slot Command:	
+
+#Move Drive To Drive Command:	
+
+Move Slot To Slot Command:	mover mv s%m s%M
+
+#Move Loadport To Loadport Command:	
+
+#
+# Commands to find free resources
+#
+ListEmpty Slots Command:	mover | sed '/data transfer/,$ d' | sed '/import.*export/,$ d' | awk 'BEGIN{st_found=0}{ if(! st_found){ if($1 == "storage") st_found = 1 } else { if(($2 == "access") && ($3 != "full")){print $1 + 1; } }}'
+# Note:
+# The version of Johann Pfefferl lacks the sed-s and the test for
+# "full" in the 3rd field, but according to Mr. Wallmeier they are
+# necessary
+#
+#ListEmpty Loadports Command:	

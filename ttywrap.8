@@ -1,0 +1,36 @@
+.TH TTYWRAP 8 "2001 May 3" "Debian Project"
+.SH NAME
+ttywrap \- run program with a TTY connected to stdin/out/err
+.SH SYNOPSIS
+.B ttywrap [ {-r|-rr} ] <command> [ <command-args> ... ]
+.SH DESCRIPTION
+ttywrap starts the command supplied in the arguments with stdin
+(i.e. file descriptor 0), stdout (fd 1) and stderr (fd 2)
+connected to a pseudo-TTY it grabs from the
+available ones. Input supplied to stdin of ttywrap is written
+to the pseudo-TTY and output received from the TTY is written
+to stdout. That is, stdout and stderr cannot be distinguished,
+as the program is writing both to the TTY, that the ttywrap has
+connected it to. With this program pipes can be used, where
+a program wants to use the controlling TTY to read or write,
+e.g. passwd.
+
+If the option -r is given, newline characters being read from
+stdin are converted to carriage return, before being written
+to the pseudo-TTY. If -rr is given, newline characters are
+converted to the sequence carriage return + newline. Sometimes
+one of these options is necessary when dealing with interactive
+programs (e.g. "whiptail").
+
+The exit status is the exit status of the started
+program. The program will receive all signals, ttywrap receives,
+with the usual exceptions SIGCHLD, SIGKILL, etc. The first
+argument is the command name, that will be searched in the PATH
+environment variable like the shell would do, when it is not
+a path to an executable.
+.SH EXAMPLE
+(sleep 1 ; echo old-pwd ; sleep 1 ; echo new-pwd ; sleep 1 ; echo new-pwd ; sleep 1) | ttywrap passwd
+
+.SH AUTHOR
+.B ttywrap 
+was written by Albert Fluegel (af@muc.de)

@@ -1,0 +1,321 @@
+/****************** Start of $RCSfile: budefs.h.in,v $  ****************
+*
+* $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/budefs.h.in,v $
+* $Id: budefs.h.in,v 1.7 2008/10/07 22:08:38 alb Exp alb $
+* $Date: 2008/10/07 22:08:38 $
+* $Author: alb $
+*
+*
+******* description ***********************************************
+*
+*
+*
+*******************************************************************/
+
+#ifndef	BUDEFS_H
+#define	BUDEFS_H	BUDEFS_H
+
+#include <version.h>
+
+#include <sys/stat.h>
+#ifdef	HAVE_SYS_MODE_H
+#include <sys/mode.h>
+#endif
+#include <x_types.h>
+
+#define	FILECONTOPTION		"-r"
+#define	FILECONTZOPTION		"-R"
+#define	LOCALDEVOPTION		"-m"
+
+#define	NOOPERATION		'\0'
+#define	WRITETOTAPE		'W'
+#define	SETCARTRIDGE		'c'
+#define	SETFILE			'f'
+#define	OSETCARTRIDGE		'C'
+#define	OSETFILE		'F'
+#define	SKIPFILES		'S'
+#define	SETCARTSET		's'
+#define	GOODBYE			'X'
+#define	ERASETAPE		'E'
+#define	READFROMTAPE		'R'
+#define	OPENFORREAD		'<'
+#define	CLOSETAPE		'*'
+#define	OPENFORWRITE		'>'
+#define	CLOSETAPEN		'.'
+#define	REQUESTNEWFILE		'n'
+#define	REQUESTNEWCART		'N'
+#define	SETRAWFILE		'G'
+#define	SETRAWCARTRIDGE		'D'
+#define	OPENFORRAWREAD		'r'
+#define	OPENFORRAWWRITE		'w'
+#define	QUERYPOSITION		'p'
+#define	QUERYWRPOSITION		'i'
+#define	QUERYRDPOSITION		'g'
+#define	QUERYCARTSET		'q'
+#define	OQUERYPOSITION		'P'
+#define	OQUERYWRPOSITION	'I'
+#define	QUERYNUMCARTS		'@'
+#define	QUERYRDYFORSERV		'?'
+#define	QUERYWRITTENTAPES	'T'
+#define	QUERYTAPEBLOCKSIZE	'b'
+#define	QUERYNEEDEDTAPES	'%'
+#define	CLIENTBACKUP		'|'
+#define	OCLIENTBACKUP		'~'
+#define	SETBUFFEREDOP		'+'
+#define	SETSERIALOP		'-'
+#define	SETCHCARTONEOT		'^'
+#define	SETERRORONEOT		'_'
+#define	GETNUMREADVALID		'#'
+#define	SETNUMWRITEVALID	'&'
+#define	CLIENTIDENT		'!'
+#define	SERVERIDENT		'{'
+#define USERIDENT		'U'
+#define	SETCOMMBUFSIZ		'l'
+#define	MESSAGETEXT		'M'
+#define	CHECKACCESS		'A'
+#define	AUTHENTICATE		'a'
+#define	GETCURMSG		'm'
+
+
+#define	COMMAND_OK		'\0'
+#define	CLOSE_FAILED		'*'
+#define	OPENRD_FAILED		'<'
+#define	OPENWR_FAILED		'>'
+#define	DEVINUSE		'U'
+#define	SERVICEINUSE		'B'
+#define	DEVNOTOPENRD		'R'
+#define	DEVNOTOPENWR		'W'
+#define	DEVNOTREADY		'-'
+#define	ENDOFFILEREACHED	'.'
+#define	ENDOFTAPEREACHED	':'
+#define	PROTOCOL_ERROR		'p'
+#define	CHANGECART_FAILED	'C'
+#define	REQNEWCART_FAILED	'N'
+#define	SETFILE_FAILED		'F'
+#define	ERASETAPE_FAILED	'E'
+#define	FATAL_ERROR		'!'
+#define	CONFIG_ERROR		'$'
+#define	REOPEN_FAILED		'~'
+#define	WRITE_FAILED		'w'
+#define	NO_VALID_CARTRIDGE	'@'
+#define	NO_VALID_FILENUM	'#'
+#define	NO_VALID_CARTSET	's'
+#define	AUTHENTICATION		'='
+#define	SUBPROCESS_FAILED	'S'
+#define	CLIENT_NOT_UNIQUE	'd'
+#define	TOO_MANY_CLIENTS	'^'
+#define	NO_VALID_COMMBUFSIZ	'l'
+#define	MESSAGE_UNRECOGNIZED	'M'
+#define	CARTSET_EACCESS		'A'
+#define	CANNOT_LOCK		'L'
+#define	RESERVED_ERROR_CODE	1
+
+#define	WARNING			0
+
+
+#define STREAMER_UNKNOWN	0
+#define	STREAMER_READY		1
+#define	STREAMER_UNLOADED	2
+#define	STREAMER_BUSY		3
+#define	STREAMER_DEVINUSE	4
+#define	STREAMER_UNAVAIL	5
+#define	STREAMER_STATE_MASK	0x0f
+#define	STREAMER_CHANGEABLE	(1 << 4)
+#define	STREAMER_FLAGS_MASK	0xf0
+
+#define	SERVERMODE_VARAPPEND	1
+
+#define DEFBINDIR		"@clientbindir@"
+#define DEFVARDIR		"@clientvardir@"
+#define DEFLIBDIR		"@clientlibdir@"
+#define DEFLOGDIR		"@clientlogdir@"
+#define DEFCONFDIR		"@clientconfdir@"
+#define DEFSERVBINDIR		"@serverbindir@"
+#define DEFSERVVARDIR		"@servervardir@"
+#define DEFSERVLIBDIR		"@serverlibdir@" 
+#define DEFSERVLOGDIR		"@serverlogdir@" 
+#define DEFSERVCONFDIR		"@serverconfdir@" 
+#define DEFCLIENTCONF		"@clientconf@"
+#define DEFSERVERCONF		"@serverconf@"
+
+#define	PREVIOUS_CARTRIDGE	0xffffffff	/* -1 in 4 bytes */
+
+#define	INFOBLOCKSIZE		500
+#define	INFOHEADER		"AF's backup system\n\nINFO HEADER"
+#define	CARTNOTEXT		"Cartridge number:\t"
+#define	CART2NOTEXT		"2nd cartridge number:\t"
+#define	COPYFROMTEXT		"Copy from:\t\t"
+#define	DATETEXT		"Labeling time:\t\t"
+#define	BLOCKSIZETEXT		"Tape Blocksize:\t\t"
+#define	CDATETEXT		"Duplicating time:\t"
+#define	VERSIONTEXT		"Program version:\t" VERSION_STRING
+#define	COMMENTTEXT		"Comment:\t\t"
+
+#define	VERBOSE_NORMAL		1
+#define	VERBOSE_CART_FILE	(VERBOSE_NORMAL << 1)
+#define	VERBOSE_UID		(VERBOSE_NORMAL << 2)
+#define	VERBOSE_LOCATION	(VERBOSE_NORMAL << 3)
+#define	VERBOSE_MTIME		(VERBOSE_NORMAL << 4)
+
+#ifndef	ACCESSKEY
+#define	ACCESSKEY		0x6b31e5a9
+#endif
+
+#define	AFSERVER_CONNECT_TIMEOUT	90
+
+/* size of communications buffer */
+#ifndef	DEFCOMMBUFSIZ
+#define	DEFCOMMBUFSIZ		1000
+#endif
+
+#define	MAXCOMMBUFSIZ		65536
+#define	MINCOMMBUFSIZ		DEFCOMMBUFSIZ
+
+#define	VARCOMMBUFSIZ		0x2fefefef	/* place holder */
+
+
+#define	CARTREADY_FILE		"/tmp/afbu_cartready.@locspec@"
+#define	CHANGERREADY_FILE	"/tmp/afbu_changerready.@locspec@"
+
+#define	GREETING_MESSAGE	"AF's backup server ready.\n"
+
+#define	VERSION_MESSAGE_KEY	"afbackup"
+#define	VERSION_MESSAGE		VERSION_MESSAGE_KEY " " VERSION_STRING "\n\n"
+
+#define	LAST_SERVER_WITHOUT_VERSIONMSG	"3.2.3"
+
+#define	COMPRESS_SUFFIX		".z"
+#define	TMP_SUFFIX		".tmp"
+
+#define	UIDSEP			"|"
+#define	MTIMESEP		"~"
+#define	LOCSEP			"!"
+#define	PORTSEP			"%"
+#define	SEPLOC			"@"
+
+#if	!defined(__hpux) && !defined(hpux)
+#define	MT_FILE_OPTION	"-f"
+#else
+#define	MT_FILE_OPTION	"-t"
+#endif
+
+#ifdef	sun
+#define	DEFAULT_TAPE_DEVICE	"/dev/rmt/0bn"
+#define	END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#ifdef	_AIX
+#define	DEFAULT_TAPE_DEVICE	"/dev/rmt0.1"
+#define	END_OF_TAPE(e)		(e == ENXIO || e == ENOSPC)
+#endif
+#ifdef	sgi
+#define	DEFAULT_TAPE_DEVICE	"/dev/tps0d4nr"
+#define	END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#ifdef	linux
+#define	DEFAULT_TAPE_DEVICE	"/dev/nst0"
+#define	END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#ifdef	__osf__
+#define	DEFAULT_TAPE_DEVICE	"/dev/nrmt0"
+#define	END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#if	defined(__hpux) || defined(hpux)
+#define	DEFAULT_TAPE_DEVICE	"/dev/rmt/0hnb"
+#define	END_OF_TAPE(e)		(e == ENOSPC || e == ENOSPC)
+		/* this might be irritating ^^ it's just to remind me, */
+		/* that there is an open issue that should be clarified */
+#endif
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#define DEFAULT_TAPE_DEVICE	"/dev/nsa0"
+#define END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#if	defined(__OpenBSD__) || defined(__NetBSD__)
+#define DEFAULT_TAPE_DEVICE	"/dev/nrst0"
+#define END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#ifdef	UnixWare_5
+#define	DEFAULT_TAPE_DEVICE	"/dev/rmt/ctape"
+#define	END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#ifdef	__APPLE__
+#define	DEFAULT_TAPE_DEVICE	"/dev/sa0"
+#define	END_OF_TAPE(e)		(e == ENOSPC)
+#endif
+#if ! defined(sun) && ! defined(_AIX) && ! defined(sgi) && ! defined(linux) && ! defined(__osf__) && ! defined(__hpux) && !defined(hpux) && ! defined(__FreeBSD__) && ! defined(__FreeBSD_kernel__) && ! defined(__OpenBSD__) && ! defined(__NetBSD__) && ! defined(UnixWare_5) && ! defined(__APPLE__)
+# error		unknown architecture
+#endif
+
+#define	MAX_TAPE_POSITIONING_TRIES	3
+
+#define	USUAL_BLOCKSIZES	\
+			2048, 1024, 512, 32768, 65536, 10240, 8192, 131072
+
+#define	DEFAULT_CLIENT_CONFIGFILES	\
+				"/etc/buclient.conf",	\
+				"/etc/afbuclient.conf", \
+				"/etc/afclient.conf", \
+				"/etc/afbackup/client.conf"
+#define	DEFAULT_SERVER_CONFIGFILES	\
+				"/etc/buserver.conf",	\
+				"/etc/afbuserver.conf", \
+				"/etc/afserver.conf", \
+				"/etc/afbackup/server.conf"
+#define	DEFAULT_SETFILECMD	"mt "	\
+				MT_FILE_OPTION " %d rewind && mt "	\
+				MT_FILE_OPTION " %d fsf %m"
+#define	DEFAULT_SKIPFILESCMD	"mt " MT_FILE_OPTION " %d fsf %n"
+#define	DEFAULT_NEXTCARTCMD	"mt " MT_FILE_OPTION " %d rewoffl"
+#define	DEFAULT_WEOFCMD		"mt " MT_FILE_OPTION " %d eof"
+#define	DEFAULT_TAPEPOSFILE	"@servervardir@/tapepos"
+#define	DEFAULT_USERTOINFORM	"postmaster"
+#define	DEFAULT_MAILPROGRAM	"mail"
+#define	DEFAULT_TAPEBLOCKSIZE	512
+#define	DEFAULT_MAXBYTESPERFILE	50000000
+#define	DEFAULT_CARTGRACETIME	120
+#define	DEFAULT_DEVUNAVSENDMAIL	5
+#define	DEFAULT_DEVUNAVGIVEUP	60
+#define	DEFAULT_DEVPROBEITV	2
+#define	DEFAULT_TAPEBUFHIGHMARK	67.0
+#define	DEFAULT_TAPEBUFLOWMARK	0.0
+#define	DEFAULT_SERVERLOCKFILE	"Lck.afbu_server.@locspec@"
+#define	DEFAULT_CLIENTLOCKFILE	"Lck.afbu_client.@locspec@"
+#define	DEFAULT_CHANGERLOCKFILE	"Lck.afbu_changer.@locspec@"
+
+#define	DEFAULT_SERVER		"backuphost"
+#define	DEFAULT_PORT		0xbac
+#define	DEFAULT_MPORT		0xbad
+#define	DEFAULT_SERVICE		"afbackup"
+#define	DEFAULT_MSERVICE	"afmbackup"
+#define	DEFAULT_CLIENT_IDSTR	"<client-program>"
+#define	DEFAULT_GETCURMSG_ITV	3
+
+#define	BYTESONTAPE_FILE	"bytes_on_tape"	/* in @servervardir@ */
+#define	STATUSFILE		"status"	/* in @servervardir@ */
+#define	PREFCLIENT_FILE		"pref_client"	/* in @servervardir@ */
+#define	PRECIOUS_TAPES_FILE	"precious_tapes"	/* dito */
+#define	READONLY_TAPES_FILE	"readonly_tapes"	/* dito */
+#define	CARTRIDGE_ORDER_FILE	"cartridge_order"	/* dito */
+#define	TAPE_USAGE_FILE		"tape_uses"		/* dito */
+#define	CARTRIDGE_LOCATION_FILE	"cartridge_locations"	/* dito */
+#define	CARTRIDGE_NAMES_FILE	"cartridge_names"	/* dito */
+#define	USED_BLOCKSIZES_FILE	"ever_used_blocksizes"	/* dito */
+#define	CLIENT_MESSAGE_FILE	"client_message"	/* dito */
+
+#define	NEEDED_TAPES_FILE	"needed_tapes"	/* in @clientvardir@ */
+#define	START_POSITIONS_FILE	"start_positions"	/* dito */
+#define	LEVEL_TIMESTAMPS_FILE	"level_timestamps"	/* dito */
+#define	SAVE_ENTRIES_FILE	"save_entries"		/* dito */
+
+#define	PRECIOUS_TAPES_MESSAGE	"PreciousTapes:"
+#define	READONLY_TAPES_MESSAGE	"TapesReadOnly:"
+#define	RDWR_TAPES_MESSAGE	"TapesReadWrite:"
+#define	REUSE_TAPES_MESSAGE	"ReuseTapes:"
+#define	CARTREADY_MESSAGE	"CartridgeReady"
+#define	DELETE_CLIENT_MESSAGE	"DeleteClient:"
+
+#define	ALIGN_4(i)	(((((long int) (i) - 1) >> 2) + 1) << 2)
+
+#define	REMOTEUSERENVVAR	"AFBACKUPREMOTEUSER"
+#define	REMOTEHOSTENVVAR	"AFBACKUPREMOTEHOST"
+
+#endif	/* !defined(BUDEFS_H) */

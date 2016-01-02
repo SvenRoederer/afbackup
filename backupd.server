@@ -1,0 +1,74 @@
+#! /bin/sh
+
+TZ="NFT-1DFT,J91,J273"
+export TZ
+
+ATJOBS="`atq|awk '{print $1}'`"
+
+if [ "$ATJOBS""X" != "X" ] ; then
+  for i in $ATJOBS ; do
+    EXISTS="`tail /var/spool/cron/atjobs/$i |grep help/backup|wc -l`"
+    if [ $EXISTS -gt 0 ] ; then
+      exit
+    fi
+  done
+fi
+
+
+STARTTIME="19:45"
+
+DATE=`date`
+
+DAY=`echo $DATE|awk '{print $1}'`
+MIN=`echo $DATE|awk '{print $4}'|cut -d: -f1-2|sed 's/[^0-9]*//g'`
+STARTMIN=`echo $STARTTIME|sed 's/[^0-9][^0-9]*/ /g'|awk '{printf "%s%s",$1,$2}'`
+
+test $MIN -lt $STARTMIN
+TODAY=$?			# is 0 if MIN < STARTMIN
+
+case $DAY in
+    M*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Tue"
+	fi
+	;;
+    Tu*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Wed"
+	fi
+	;;
+    We*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Thu"
+	fi
+	;;
+    Th*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Fri"
+	fi
+	;;
+    Fr*)
+	if [ $TODAY = 0 ] ; then
+	  START=$STARTTIME
+	else
+	  START="$STARTTIME Mon"
+	fi
+	;;
+    *)
+	START="$STARTTIME Mon"
+	;;
+esac
+
+cat << END_OF_AT_IN | at $START
+sh -c "( sleep 70; /usr/help/backup/backupd ) &"
+/usr/sbin/cfgmgr >&! /dev/null
+END_OF_AT_IN
+

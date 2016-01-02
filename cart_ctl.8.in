@@ -1,0 +1,443 @@
+.TH CART_CTL 8 "2006 November 25" "Debian Project"
+.SH NAME
+cart_ctl \- perform operations on cartridges, e.g. moves
+.SH SYNOPSIS
+.B cart_ctl
+[ -ilmtefFrN ] [ -P [ <location> ] ] \
+[ -s <serverconfigfile> ] \
+[ -c <changerconfigfile> ] \
+[ -d <changerdevice> ] [ -C <cartridges> ] \
+[ -S [ <slots> ] ] [ -D [ <drives> ] ] \
+[ -L [ <loadports> ] ] [ -b <blocksize> ] \
+[ -a [ <cartridge-attribute-specs> ] ] \
+[ -n <comment> ] [ <cartridge-descriptions> ... ]
+.SH DESCRIPTION
+This command performs operations on cartridges and maintains the
+cartridge location, label, attributes and description databases.
+One major functionality is to move cartridges around, serving as
+a wrapper for those commands, that are actually fulfilling this
+functionality. cart_ctl adds the maintenance of other data in the
+context of cartridges and unifies the command interface. E.g. the
+counting of slots, loadports and drives always starts with 1 here.
+Several cartridges, slots, drives and loadports can be supplied
+using numbers, dashes and commas to the respective option, e.g.
+-C 3-5,8 . The order is significant, e.g. -m -C 2-3,1 -S 5,4,3
+will move cartridge 2 to slot 5, 3 to 4 and 1 to slot 3. This
+command evaluates the serverside configuration file and reads
+another file to configure the media changer driving commands. The
+path to this second configuration file must be given in the server
+configuration file as parameter
+Changer-Configuration-File .
+See below under FILES for more details on this.
+.SH MOVING CARTRIDGES
+With option -m, one or more cartridges are moved to a different
+location. The location must be specified using the options -S
+for slots, -D for drives, -L for loadports and -P for a freetext
+description, if the cartridge is placed outside of any cartridge
+handling system. Thus the administrator can store any kind of
+text as reminder, where the tapes are. If no slots are given with
+option -S, free slots are searched and the cartridge(s) are moved
+there. The same applies for -L. If no drive is given with -D, the
+drive configured in the server configuration file is used. The
+number of the drive can be given, or the device name, but in the
+current version simply -D is mostly suitable. If there is a tape
+in the drive, it will first be unloaded to a free slot. If slots
+or loadports are given as targets that appear to be occupied, an
+error message is printed and the move is not performed. If there
+is no argument given with -P, the user is prompted to enter a
+line of text, that is stored in the cartridge locations database.
+If several cartridges are moved outside of a robot, the text
+given with -P will be assigned to all of them. When moving to a
+loadport is possible, moves to the outside will first be targeted
+to a loadport and the maintainer is asked to take the tape out of
+this place to it's final destination. When moving tapes in and
+there are loadports, the maintainer is asked to put the cartridge
+into a loadport and the robot does the rest. If there isn't yet
+any location stored for a cartridge, the maintainer is asked to
+perform the move manually, naming the origin location `unknown'.
+.PP
+Option -e makes the tape in the drive to be ejected to a free
+slot. No tape number has to be supplied. Optionally the slot can
+be specified using option -S.
+.SH PLACING CARTRIDGES
+Option -P can be used, if a location of a tape changes, but it
+should not be moved by any robot. So -P just inserts or replaces
+the new location in the database. To specify the locations the
+same options can be used like when moving with -m, so please see
+the previous section for details.
+.SH LISTING CARTRIDGE INFORMATION
+Option -l displays information about cartridges. Without modifying
+options, the locations of cartridges are listed. When -S is also
+supplied, the contents of the slots are listed (if no slots given:
+of all slots). A dash means, that the slot is empty. A question
+mark means, that there is a cartridge in this slot, but it is
+unknown, which that might be. A dash, followed by a question mark
+and a number, all in braces, means, that the slot is empty, but
+the locations database has the given cartridge number stored for
+this slot, what means an inconsistency. Option -L together with
+-l has the respective meaning for loadports like -S for slots. The
+options -a, -r, -N and -i modify the operation mode of -l in terms
+of the information, that is displayed.
+All listings can be limited to certain cartridges using the option
+-C like explained above. Some listings can be limited to slots
+giving -S, to loadports using -L or to drives passing -D, if
+applicable.
+.PP
+With -a some attributes of cartridges are displayed. They include
+the quantity of data on the tapes, indicates, whether they are
+full, set to read-only, how often they have become full and when
+they have been written the last time. Futhermore it shows, whether
+a cartridge is permitted to be overwritten completely. This is
+true, if no client has reserved the cartridge for restore. This
+information is stored in the file "precious_tapes" in the server's
+var-directory.
+.PP
+With -a some attributes of cartridges are displayed. They include
+the quantity of data on the tapes, indicates, whether they are
+full, set to read-only, how often they have become full and when
+they have been written the last time. Futhermore it shows, whether
+a cartridge is permitted to be overwritten completely. This is
+true, if no client has reserved the cartridge for restore. This
+information is stored in the file "precious_tapes" in the server's
+var-directory.
+.PP
+Together with -i the hardware inventory is run (without updating
+the stored information about barcodes or locations) and shows a
+listing of these informations including the optionally assigned
+description (see option -N ). If option -N is given additionally,
+the cartridge numbers resulting from the stored assignments are
+listed, too. This only gives the proper result, if the status of
+the hardware (i.e. the locations of cartridges in the robot) is in
+sync with the data stored by the afbackup server. Synchronizations
+can be performed using the option -i , see below. The listings
+performed with -l (except together with -i - hardware inventory)
+can be run by normal users as well, if the respective files in the
+server's var directory are readable. If some required files cannot
+be read, the program issues warnings indicating, what file lacks
+read permission.
+.SH TAKING INVENTORY OF CARTRIDGES
+Option -i makes an inventory of the slots specified with -S. If
+the cartridges in the slots have barcode labels known to the server
+side (can be listed with -lN ), the cartridge location assignment
+is updated without reading the label from the media (except, when
+option -F is given, see below). If the barcode is unknown or no
+barcode could be figured out, the label written to the cartridge
+media must be read. This can be enforced overriding the knowledge
+about barcode - cartridge assignments using option -F . That is,
+the cartridges in these slots are loaded to drive, the labels are
+read from media and evaluated. If the label is recognized as valid
+for afbackup, the location database is updated. The cartridge will
+be put back to the original slot afterwards. If a barcode has been
+recognized, it is assigned to the cartridge. That is, a respective
+line is written to the file "cartridge_names" in the var-directory
+of the server and can now be listed using options -lN . Together
+with -N the funcionality of -i changes notably. In this mode not
+the location data is updated, but the barcode information. Using
+-iN the user tells the program, that the location information is
+correct and the barcode information has changed. Thus the program
+will look up the barcodes by querying the hardware, check with the
+location data (listable with option -l alone) and assigns the
+barcodes according to these informations. This ( -iN ) has to be
+done, if the barcodes on the cartriges have been changed or new
+cartridges with new barcodes are to be introduced, that the server
+has never seen yet. Usually before running this program with -iN
+it must be run with -P -S ... -C ... telling the server, what
+cartriges have been positioned in what place, otherwise -iN cannot
+obtain sufficient information to make the assignments.
+.SH LABELING CARTRIDGES
+Option -t can be used to write a media label to tapes in several
+slots. The label numbers must be given using option -C and the
+slots with option -S. If the label numbers are not given, it is
+assumed, that the tapes should get the currently registered numbers.
+If it cannot be determined, which cartridges are in the given slots,
+this is an error. If the slots are not given, the program tries to
+figure them out using the given cartridge numbers. If the given
+cartridges are currently not located in any slot, this is an error.
+Like with the command label_tape, a comment to be written to tape
+can be supplied with option -n. If option -r is not given, the user
+will be asked, whether the labeled cartridges should be marked
+overwritable. To achieve this without further asking, the option
+-r must be given. If barcode information could be read from the
+hardware, it is assigned to the cartridge and can be displayed with
+options -lN .
+.SH ASSIGNING DESCRIPTIONS
+Using option -N freetext comments or descriptions can be assigned
+to cartridges. They can be displayed using the options -lN .
+Several descriptions can be assigned passing several cartridge
+numbers with -C . The descriptions are specified in additional
+arguments, one per cartridge. Descriptions may contain whitespace
+and must then be given enclosed in quotes as usual in a shell
+interpreted context. When there are more cartridges specified than
+descriptions, the last given description is assigned to all the
+remaining cartridges. The token %C can be used within descriptions
+and will be replaced with the number of the cartridge. E.g. try:
+ cart_ctl -N -C 1-3 "Tape %C"
+.SH SETTING ATTRIBUTE VALUES
+With option -a certain attribute values can be set for
+cartridges. The format is:
+.PP
+ <cartridge-set>:[!]<attribute-name>[=<attribute-value>][,...]
+.PP
+<cartridge-set> has the same format like with option -C
+(see above). <attribute-name> is one of:
+.TP
+.B r
+read-only. Cartridges set to read-only are not
+subject of write operations any more
+.TP
+.B o
+overwrite. When this flag is set to yes, the entire cartridge
+is allowed to be overwritten. That means, no client request
+to protect this cartridge from overwriting is in effect any more
+.TP
+.B f
+full-counter. A counter is maintained reflecting, how often each
+cartridge has became full during it's lifetime
+.PP
+The attributes r and o can be set simply specifying it without
+assignment and unset prefixing it with a bang ! Alternatively
+the value yes or no can be assigned. Example:
+.PP
+ cart_ctl -a 4-5:r,6:!o,8:f=0
+.PP
+This means: Set cartridges 4 and 5 to read-only, protect cartridge 6
+from overwriting and assign a full-counter of 0 to cartridge 8.
+.PP
+Notes:
+.TP
+.B *
+To list the current settings, run this program with options -la
+.TP
+.B *
+In csh and friends the bang must be prefixed with a backslash
+to protect it from shell-history interpretation.
+.TP
+.B *
+4-5:r can be written as 4-5:r=yes
+.TP
+.B *
+6:!o can be written as 6:o=no
+.TP
+.B *
+Setting a cartridge to overwrite removes all reservations from clients
+(see file precious_tapes in the server's var-directory)
+.TP
+.B *
+Setting a cartridge to o=no adds a line to the precious_tapes file,
+that is not specific to any client and thus has the effect of a
+general write protection, what is quite the same like setting it
+to read-only.
+.SH OPTIONS OVERVIEW
+For detailed usage and functionality see above
+.TP
+.B -a <attribute-assignment>
+change the values of some settable cartridge attributes. Together
+with -l (see there): list cartridge attributes
+.TP
+.B -b <blocksize>
+override the blocksize setting in the server
+configuration file (discouraged)
+.TP
+.B -C <cartridges>
+specify the cartridge numbers to operate on
+.TP
+.B -c <config-file>
+use the given file to configure the media changer
+driving commands
+.TP
+.B -D <drives>
+use the given drive as target for moves or location
+settings. The drive may be specified as number
+inside a changer system (starting with 1) or as
+device name. If no drive is given, the drive
+configured in the server configuration file is
+used
+.TP
+.B -d <device>
+operate on the given media changer device, don't
+use the settings in the configuration file
+.TP
+.B -F
+force operations, ignore active locks on streamer
+and changer devices, if applicable.
+Together with -i : Do read the tape label from media
+though the cartridge is possibly known by barcode
+.TP
+.B -f
+force labeling operations without further asking.
+.TP
+.B -i
+inventory the cartridges in the slots specified
+with -S . Together with -l (see there): List the cartridges
+as queried from the hardware
+.TP
+.B -l
+Without other options: list the locations of cartridges.
+In combination with -l several other options lose
+their meaning while selecting special list modes:
+.RS
+.TP
+.B -a
+list some of the stored attributes of cartridges
+.TP
+.B -i
+list the information obtainable from the hardware e.g. barcodes,
+cartridge locations, if applicable
+.TP
+.B -N
+list the stored barcode labels of
+the cartridges (if applicable)
+and optionally assigned freetext comments (see option -N )
+.TP
+.B -r
+list the cartridges reserved i.e. protected from overwriting
+by clients and by which clients
+.RE
+.TP
+.B -L <loadports>
+specify the loadports, that should be part of the
+desired operation. If no loadports are given,
+free ones are searched for when moving
+.TP
+.B -m
+perform moves of one or more cartridges. These
+must be given using -C. Targets for the moves
+must be given using -S for slots, -L for loadports,
+-D for drives or -P for somewhere else
+.TP
+.B -N <description> [ <descriptions...> ]
+set freetext descriptions for cartridges given with -C .
+%C is replaced with the cartridge's number. Together with
+-l (see there): list barcode labels and descriptions
+.TP
+.B -n <comment>
+use the given comment when labeling tapes with -t
+.TP
+.B -P <place>
+Specify the target place for moving or just setting
+a cartridge location. If no place is given on the
+command line, the program will prompt for one
+.TP
+.B -r
+Together with option -t: delete the labeled cartridges
+from the cartridge database without further asking, so
+they will no longer be protected from overwriting.
+Together with -l (see there): list reservations of
+cartridges i.e. requests from clients to protect from
+overwriting
+.TP
+.B -S <slots>
+Specify the slots, that should be part of the
+desired operation. If no slots are given,
+free ones are searched for when moving
+.TP
+.B -s <serverconfigfile>
+Use the given file as server configuration file, not
+the default one
+.TP
+.B -t
+Write labels (`tags') to the cartridges in the slots
+specified with -S
+.SH CHANGER CONFIGURATION FILE
+A configuration file to specify the media changer commands must
+be given in the server configuration with parameter
+ Changer-Configuration-File
+.PP
+This file must name the commands, that actually operate e.g.
+move the cartridges in a changer. A maximum of nine entries can
+be given to specify, how to move a cartridge from or to a slot,
+a drive or a loadport (3 * 3 = 9). These parameters all have
+names of the form Move-<origin>-To-<target>-Command with origin
+and target being one of slot, drive and loadport, e.g.
+ Move-Slot-To-Drive-Command:
+.PP
+In these commands the following replacements are made:
+ %d   the streamer device i.e. drive
+ %D   the media changer device
+ %n   the origin (e.g. slot) number, if the command
+      starts to count with 1
+ %m   the origin number, if counting starts with 0
+ %N   the target number, if counting starts with 1
+ %M   the target number, if counting starts with 0
+.PP
+Commands, that are not supported for whatever reason, should
+be commented out in this configuration file.
+.PP
+Two commands can be configured, that print the numbers of free
+slots/loadports to standard output. If there are loadports, that
+should be used, the command, that lists the free ones, must be
+present. The command listing the free slots must always be
+there. The parameter names for these commands are:
+List-Empty-Slots-Command and List-Empty-Loadports-Command .
+In these commands only the pattern %D is replaced like
+explained above.
+.PP
+If barcode label support is desired, some more commands must be
+configured. The maintainer has the choice whether to configure
+one command for all 3 types of locations in a changer
+(slot, drive and loadport), or whether to configure 3 commands. If
+only one command is configured, it must be given as
+List-Tape-Labels-Command and must produce a minimum of
+3 fields of output, separated by whitespace.
+The first column must be one of the words "slot", "drive" or
+"loadport" (may be upper or lowercase), the second field must
+be the instance number starting with 1, the rest of the line must
+contain the text form of the barcode label. If three
+commands are wished to be configured separately, their names
+are List-Tapelabels-in-Slots-Command,
+List-Tapelabels-in-Drives-Command and
+List-Tapelabels-in-Loadports-Command. Their output must be
+similar like with the single command, but omitting the first
+field containing the location type. Configuring one command
+for all usually has the advantage of faster execution, but is
+a bit harder to code.
+.PP
+For the most common changer driving commands (mtx, stc, chio
+and mover/sch),
+appropriate files are included into the distribution (but may be
+incomplete due to lack of experience). They can
+be used without any modifcation, just comment out the commands,
+your hardware does not support (e.g. moving from slot to slot).
+.SH NOTES
+This command can be used as the SetCartridgeCommand in the
+server configuration. Option -F is required here, cause the
+server itself is already holding a lock on the streamer device,
+thus this command needs not and should not attempt any further
+locking. The entry in the server configuration file should look
+like this:
+             /path/to/cart_ctl -F -m -C %n -D
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file
+.IP @serverlibdir@/changer.conf
+The media changer driver configuration, see above under
+CHANGER CONFIGURATION FILE
+.IP @servervardir@
+Some internal state information of the server.
+.IP @servervardir@/cartridge_locations
+The ASCII file containing the cartridge locations database
+.IP @servervardir@/bytes_on_tape
+The ASCII file containing the number of bytes and files on the
+tapes, the flag, whether a tape is full and the most recent
+writing time.
+.IP @servervardir@/readonly_tapes
+The file containing the list of the numbers of the tapes set
+to read-only mode
+.IP @servervardir@/precious_tapes
+The ASCII file containing the information, what cartridges have
+been requested to be protected from overwriting by clients
+.IP @servervardir@/cartridge_names
+ASCII file containing the determined barcode labels and the
+freetext comments assigned to the cartridges
+.IP @servervardir@/tape_uses
+ASCII file containing information, how often a cartridge has
+become full during it's lifetime
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), label_tape(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de)

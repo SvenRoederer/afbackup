@@ -1,0 +1,51 @@
+#!/bin/sh
+################### Start of $RCSfile: ask_for_key,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/ask_for_key,v $
+# $Id: ask_for_key,v 1.6 2013/12/21 11:34:54 alb Exp alb $
+# $Date: 2013/12/21 11:34:54 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+echo_n(){
+  echo "$@" | awk '{printf "%s",$0}'
+}
+
+tty >/dev/null 2>&1
+if [ $? -eq 0 ] ; then
+  echo "Please enter at least 5 characters as a unique"
+  echo "key for some encryption used for authenticating"
+  echo "the client to the server."
+  k=" "
+  while [ `echo "$k"|wc -c` -lt 5 ] ; do
+    echo " "
+    echo_n "Key: "
+    k=`awk '{print;exit 0}'`
+    if [ `echo "$k"|wc -c` -lt 5 ] ; then
+      echo " "
+      echo "Please enter AT LEAST FIVE characters."
+    fi
+  done
+else
+  echo "WARNING: Cannot read key from stdin (is not a TTY)."
+  echo "WARNING: Creating somewhat random key."
+  ( sleep 5 & ) >/dev/null 2>&1
+  k=`ps | sed 's/[^0-9]//g' | awk '{for(i=1;i<length($1)/2;i++){ r=sprintf("%d", substr($1,i*2-1,2)); if(r==0)continue; s=(s+r)%91; n=sprintf("%d", s+35); if(n==92 || n==34) continue; printf "%d\n",n}}' | awk '{printf "%c", $1}'`
+fi
+
+h=`echo "$k" | od -b | head -1 | awk '{ s=0; for(i=0;i<=4;i++){ b=0; for(j=1;j<=3;j++){ b=(b*8)+substr($(i+2),j,1)} s=((s*95)+b-32)%2147483647} printf "%x\n",s}'`
+
+/bin/rm -f cryptkey.h
+echo '/* autocreated by $RCSfile: ask_for_key,v $ */' > cryptkey.h
+echo ' ' >> cryptkey.h
+
+echo "#define	ACCESSKEY	0x$h" >> cryptkey.h
+
+k=`echo "$k"|sed 's#\\\\#\\\\\\\\#g'|sed 's#"#\\\\"#g'`
+echo "#define	ACCESSKEYSTRING	"'"'"$k"'"' >> cryptkey.h

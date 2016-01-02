@@ -1,0 +1,2122 @@
+
+Programs of AF's backup system
+==============================
+
+
+Programs of the server side
+---------------------------
+
+ $BASEDIR/server/bin/cartis
+
+  Administration of the cartridge numbers. Usage:
+
+      cartis <number>
+
+      cartis -i <ins-cart> <ins-file> [ -S <cartset> ]
+
+  The first form of this command is used to give the backup
+  server a hint, which cartridge number is currently placed inside
+  the streamer. If the tape has a valid afbackup label, then it
+  is not necessary to tell the server, what tape is in the drive,
+  cause it will try to read and evaluate it. If the tape is not
+  labeled (e.g. if it has not been used before), the server has
+  no chance to find out the number and must maintain it's own
+  information about it. The server will automatically label new
+  tapes, if they don't already have a valid label, the next time,
+  a write operation is attempted on the tape. By issuing cartis
+  after inserting an unlabeled tape you tell the server, what
+  tape it should become. If you are not initially starting with
+  cartridge number 1 and an unlabeled tape, you have to enter this
+  command at least one time. (see: README, "BEFORE YOU START")
+  if you have not labeled a tape or variable append mode is on.
+  The second form instructs the server to write the next backup
+  data stream to cartridge number <ins-cart>, starting at file
+  number <ins-file>. This is useful, if for some reason you want
+  to take the cartridge currently lying inside the drive out and
+  continue on a different tape or at the beginning of the tape
+  you have put in instead. Note, that it usually causes problems,
+  if you try to write at a tape position, that is not at the end
+  of the last file, that has been written to tape. So set the
+  <ins-file> number only to a value different from 1, if you
+  really know, that this is the end of the used tape area. In
+  other words, if n files are on tape, set <ins-file> to n+1. So
+  if you don't know n, you're better off starting to write at the
+  beginning of a new tape entering the appropriate cartis-command.
+  To find out, what the server is thinking, which cartridge is
+  currently inside the drive, you can give the command
+  $BASEDIR/client/bin/afclient -q  on any client. If the value, that
+  is printed out, does not reflect the reality, you have to inform
+  the backup server about this fact via this command entering both
+  forms of this command. The first form with the real cartridge
+  number and the second one with the next cartridge number and a 1
+  as file number. Then the next backup goes to the next cartridge.
+  You may also set the next backup writing position to the current
+  file number on the correct cartridge. To find out, where the
+  server side intents to write the next backup, enter the command
+  $BASEDIR/client/bin/afclient -Q  on any client.
+  It makes sense to check the consistency from time to time, if
+  the backup server has the right idea of the current cartridge.
+
+   -S <cartset>    The cartridge set to use, where <cartset> is the
+                     number of a valid cartridge set on the server
+                     side. Default is 1
+
+
+ $BASEDIR/server/bin/cartready
+
+  (No arguments evaluated)
+  If you have no cartridge handling system, a human must put the
+  next cartridge into the drive, if necessary. Then the backup-
+  server must get a hint, when the maintainer has done it. This
+  is achieved entering this command on the backup server host,
+  after the new cartridge is inserted. Nonetheless the server
+  process waits a certain timespan, until it accesses the drive
+  the next time (See: "Cart-Insert-Gracetime" in CONFIG).
+
+
+ $BASEDIR/server/bin/label_tape
+
+  Write a label to tape or display it. Usage:
+
+       label_tape <label-number> [ -rfF ] [ -c <configfile> ] \
+                  [ -S <sec-label-number ] [ -n <comment> ] \
+                  [ -d <devicename> ] [ -b <blocksize> ] \
+                  [ -s <set-file-cmd> ] [ -C <num-cartridges> ]
+       label_tape -q [ -c <configfile> ] [ -d <devicename> ] \
+                  [ -b <blocksize> ] [ -s <set-file-cmd> ]
+
+  The first form writes a label to the tape, the second form shows
+  the label on the tape, that is currently loaded.
+  The tape-label must be an integer number. This number is written
+  to the tape currently in the drive and identifies it uniquely. It
+  must be in the range from 1 to the number of cartridges given in
+  the configuration file. This label is written at the beginning
+  of the tape, so all data on tape will be lost. Due to that fact
+  the user is always prompted, if he really wants to do this.
+  <config-file> can be a different configuration file than the one
+  the server process is started with. Normally it makes no sense
+  to use this option, but in extremely pathological cases the
+  program might not be able to find out the full path to the
+  configuration file. Then is has to be supplied at the command
+  line.
+  The normal case is to use this command without options, but the
+  settings in the serverside configuration file can be overridden,
+  if necessary.
+  If it is intended to label a tape, while a server is waiting for
+  another cartridge being put into the drive, the -F option must
+  be used to override the lock, that is held by the server process.
+  The server will be kept from probing, whether a tape is in the
+  drive, while the label_tape program is running. label_tape
+  should be started, before the tape to be labeled is put into the
+  drive. Otherwise the server might eject it at once after probing.
+  label_tape will prompt for confirmation before performing any
+  tape access (if started without -f option). Thus the tape should
+  be loaded after starting the command and before confirming.
+
+   -b <blocksize>  The blocksize of the device to use
+
+   -C <num-carts>  The total number of handled cartridges
+
+   -c <configfile> A different configuration file to use
+
+   -d <devicename> The device to use
+
+   -f              Force operation without further asking
+
+   -F              Continue regardless of a lock, probably set
+                     by other running applications, especially
+                     the server. This option may be used to label
+                     a tape, while the server is waiting for a
+                     cartridge to be put into the streamer device
+
+   -n <comment>    A comment to include into the tape label
+                     (256 characters max)
+
+   -r              Remove the cartridge in the drive from the
+                     cartridge handling database without further
+                     asking
+
+   -S <sec-label>  The secondary label number, the server will
+                     accept, if the primary label number does
+                     not match
+
+   -s <setf-cmd>   The command to reel the tape to a given
+                     file position
+
+
+ $BASEDIR/server/bin/cart_ctl
+
+  Perform operations on tapes: move, set location, inventory, list
+  locations, label several tapes in changer slots, drives, loadports
+
+       cart_ctl [ -ilmtefFrN ] [ -P [ <location> ] ] \
+                  [ -s <serverconfigfile> ] \
+                  [ -c <changerconfigfile> ] \
+                  [ -d <changerdevice> ] [ -C <cartridges> ] \
+                  [ -S [ <slots> ] ] [ -D [ <drives> ] ] \
+                  [ -L [ <loadports> ] ] [ -b <blocksize> ] \
+                  [ -a [ <cartridge-attribute-specs> ] ] \
+                  [ -n <comment> ] [ <cartridge-descriptions> ... ]
+
+  This command performs operations on cartridges and maintains the
+  cartridge location, label, attributes and description databases.
+  One major functionality is to move cartridges around, serving as
+  a wrapper for those commands, that are actually fulfilling this
+  functionality. cart_ctl adds the maintenance of other data in the
+  context of cartridges and unifies the command interface. E.g. the
+  counting of slots, loadports and drives always starts with 1 here.
+  Several cartridges, slots, drives and loadports can be supplied
+  using numbers, dashes and commas to the respective option, e.g.
+  -C 3-5,8 . The order is significant, e.g. -m -C 2-3,1 -S 5,4,3
+  will move cartridge 2 to slot 5, 3 to 4 and 1 to slot 3. This
+  command evaluates the serverside configuration file and reads
+  another file to configure the media changer driving commands. The
+  path to this second configuration file must be given in the server
+  configuration file as parameter
+   Changer-Configuration-File .
+  See below under FILES for more details on this.
+
+  With option -m, one or more cartridges are moved to a different
+  location. The location must be specified using the options -S
+  for slots, -D for drives, -L for loadports and -P for a freetext
+  description, if the cartridge is placed outside of any cartridge
+  handling system. Thus the administrator can store any kind of
+  text as reminder, where the tapes are. If no slots are given with
+  option -S, free slots are searched and the cartridge(s) are moved
+  there. The same applies for -L. If no drive is given with -D, the
+  drive configured in the server configuration file is used. The
+  number of the drive can be given, or the device name, but in the
+  current version simply -D is mostly suitable. If there is a tape
+  in the drive, it will first be unloaded to a free slot. If slots
+  or loadports are given as targets that appear to be occupied, an
+  error message is printed and the move is not performed. If there
+  is no argument given with -P, the user is prompted to enter a
+  line of text, that is stored in the cartridge locations database.
+  If several cartridges are moved outside of a robot, the text
+  given with -P will be assigned to all of them. When moving to a
+  loadport is possible, moves to the outside will first be targeted
+  to a loadport and the maintainer is asked to take the tape out of
+  this place to it's final destination. When moving tapes in and
+  there are loadports, the maintainer is asked to put the cartridge
+  into a loadport and the robot does the rest. If there isn't yet
+  any location stored for a cartridge, the maintainer is asked to
+  perform the move manually, naming the origin location `unknown'.
+
+  Option -e makes the tape in the drive to be ejected to a free
+  slot. No tape number has to be supplied. Optionally the slot can
+  be specified using option -S.
+
+  Option -P can be used, if a location of a tape changes, but it
+  should not be moved by any robot. So -P just inserts or replaces
+  the new location in the database. To specify the locations the
+  same options can be used like when moving with -m, so please see
+  the previous section for details.
+
+  Option -l displays information about cartridges. Without modifying
+  options, the locations of cartridges are listed. When -S is also
+  supplied, the contents of the slots are listed (if no slots given:
+  of all slots). A dash means, that the slot is empty. A question
+  mark means, that there is a cartridge in this slot, but it is
+  unknown, which that might be. A dash, followed by a question mark
+  and a number, all in braces, means, that the slot is empty, but
+  the locations database has the given cartridge number stored for
+  this slot, what means an inconsistency. Option -L together with
+  -l has the respective meaning for loadports like -S for slots. The
+  options -a, -r, -N and -i modify the operation mode of -l in terms
+  of the information, that is displayed.
+  All listings can be limited to certain cartridges using the option
+  -C like explained above. Some listings can be limited to slots
+  giving -S, to loadports using -L or to drives passing -D, if
+  applicable.
+
+  With -a some attributes of cartridges are displayed. They include
+  the quantity of data on the tapes, indicates, whether they are
+  full, set to read-only, how often they have become full and when
+  they have been written the last time. Futhermore it shows, whether
+  a cartridge is permitted to be overwritten completely. This is
+  true, if no client has reserved the cartridge for restore. This
+  information is stored in the file "precious_tapes" in the server's
+  var-directory.
+
+  Together with -r list the cartridges, that have been reserved by
+  clients (shown as not allowed to be overwritten with options -la ),
+  and by which clients. Together with -N list the stored barcode
+  labels of the cartridges (if determinable and initialized, see
+  option -i ) and the optionally assigned freetext comments or
+  descriptions. The latter ones can be set using option -N without -l .
+
+  Together with -i the hardware inventory is run (without updating
+  the stored information about barcodes or locations) and shows a
+  listing of these informations including the optionally assigned
+  description (see option -N ). If option -N is given additionally,
+  the cartridge numbers resulting from the stored assignments are
+  listed, too. This only gives the proper result, if the status of
+  the hardware (i.e. the locations of cartridges in the robot) is in
+  sync with the data stored by the afbackup server. Synchronizations
+  can be performed using the option -i , see below. The listings
+  performed with -l (except together with -i - hardware inventory)
+  can be run by normal users as well, if the respective files in the
+  server's var directory are readable. If some required files cannot
+  be read, the program issues warnings indicating, what file lacks
+  read permission.
+
+  Option -i makes an inventory of the slots specified with -S. If
+  the cartridges in the slots have barcode labels known to the server
+  side (can be listed with -lN ), the cartridge location assignment
+  is updated without reading the label from the media (except, when
+  option -F is given, see below). If the barcode is unknown or no
+  barcode could be figured out, the label written to the cartridge
+  media must be read. This can be enforced overriding the knowledge
+  about barcode - cartridge assignments using option -F . That is,
+  the cartridges in these slots are loaded to drive, the labels are
+  read from media and evaluated. If the label is recognized as valid
+  for afbackup, the location database is updated. The cartridge will
+  be put back to the original slot afterwards. If a barcode has been
+  recognized, it is assigned to the cartridge. That is, a respective
+  line is written to the file "cartridge_names" in the var-directory
+  of the server and can now be listed using options -lN . Together
+  with -N the funcionality of -i changes notably. In this mode not
+  the location data is updated, but the barcode information. Using
+  -iN the user tells the program, that the location information is
+  correct and the barcode information has changed. Thus the program
+  will look up the barcodes by querying the hardware, check with the
+  location data (listable with option -l alone) and assigns the
+  barcodes according to these informations. This ( -iN ) has to be
+  done, if the barcodes on the cartriges have been changed or new
+  cartridges with new barcodes are to be introduced, that the server
+  has never seen yet. Usually before running this program with -iN
+  it must be run with -P -S ... -C ... telling the server, what
+  cartriges have been positioned in what place, otherwise -iN cannot
+  obtain sufficient information to make the assignments.
+
+  Option -t can be used to write a media label to tapes in several
+  slots. The label numbers must be given using option -C and the
+  slots with option -S. If the label numbers are not given, it is
+  assumed, that the tapes should get the currently registered numbers.
+  If it cannot be determined, which cartridges are in the given slots,
+  this is an error. If the slots are not given, the program tries to
+  figure them out using the given cartridge numbers. If the given
+  cartridges are currently not located in any slot, this is an error.
+  Like with the command label_tape, a comment to be written to tape
+  can be supplied with option -n. If option -r is not given, the user
+  will be asked, whether the labeled cartridges should be marked
+  overwritable. To achieve this without further asking, the option
+  -r must be given. If barcode information could be read from the
+  hardware, it is assigned to the cartridge and can be displayed with
+  options -lN .
+
+  Using option -N freetext comments or descriptions can be assigned
+  to cartridges. They can be displayed using the options -lN .
+  Several descriptions can be assigned passing several cartridge
+  numbers with -C . The descriptions are specified in additional
+  arguments, one per cartridge. Descriptions may contain whitespace
+  and must then be given enclosed in quotes as usual in a shell
+  interpreted context. When there are more cartridges specified than
+  descriptions, the last given description is assigned to all the
+  remaining cartridges. The token %C can be used within descriptions
+  and will be replaced with the number of the cartridge. E.g. try:
+   cart_ctl -N -C 1-3 "Tape %C"
+
+  With option -a certain attribute values can be set for cartridges.
+  The format is:
+
+   <cartridge-set>:[!]<attribute-name>[=<attribute-value>][,...]
+
+  <cartridge-set> has the same format like with option -C (see above).
+  <attribute-name> is one of:
+
+      r   read-only. Cartridges set to read-only are not subject
+          of write operations any more
+
+      o   overwrite. When this flag is set to yes, the entire
+          cartridge is allowed to be overwritten. That means, no
+          client request to protect this cartridge from overwrit-
+          ing is in effect any more
+
+      f   full-counter. A counter is maintained reflecting, how
+          often each cartridge has became full during it's life-
+          time
+
+  The attributes r and o can be set simply specifying it without
+  assignment and unset prefixing it with a bang ! Alternatively the
+  value yes or no can be assigned. Example:
+
+   cart_ctl -a 4-5:r,6:!o,8:f=0
+
+  This means: Set cartridges 4 and 5 to read-only, protect cartridge
+  6 from overwriting and assign a full-counter of 0 to cartridge 8.
+
+  Notes:
+
+     *    To list the current settings, run this program with
+          options -la
+
+     *    In csh and friends the bang must be prefixed with a
+          backslash to protect it from shell-history interpreta-
+          tion.
+
+     *    4-5:r can be written as 4-5:r=yes
+
+     *    6:!o can be written as 6:o=no
+
+     *    Setting a cartridge to overwrite removes all reserva-
+          tions from clients (see file precious_tapes in the
+          server's var-directory)
+
+     *    Setting a cartridge to o=no adds a line to the
+          precious_tapes file, that is not specific to any client
+          and thus has the effect of a general write protection,
+          what is quite the same like setting it to read-only.
+
+  Options overview:
+   (For detailed usage and functionality see above)
+
+     -a <attribute-assignment>
+          change the values of some settable cartridge attri-
+          butes. Together with -l (see there): list cartridge
+          attributes
+
+     -b <blocksize>
+          override the blocksize setting in the server configura-
+          tion file (discouraged)
+
+     -C <cartridges>
+          specify the cartridge numbers to operate on
+
+     -c <config-file>
+          use the given file to configure the media changer driv-
+          ing commands
+
+     -D <drives>
+          use the given drive as target for moves or location
+          settings. The drive may be specified as number inside a
+          changer system (starting with 1) or as device name. If
+          no drive is given, the drive configured in the server
+          configuration file is used
+
+     -d <device>
+          operate on the given media changer device, don't use
+          the settings in the configuration file
+
+     -F   force operations, ignore active locks on streamer and
+          changer devices, if applicable
+          Together with -i : Do read the tape label from media
+          though the cartridge is possibly known by barcode
+
+     -f   force labeling operations without further asking
+
+     -i   inventory the cartridges in the slots specified with -S
+          . Together with -l (see there): List the cartridges as
+          queried from the hardware
+
+     -l   Without other options: list the locations of car-
+          tridges. In combination with -l several other options
+          lose their meaning while selecting special list modes:
+
+          -a   list some of the stored attributes of cartridges
+
+          -i   list the information obtainable from the hardware
+               e.g. barcodes, cartridge locations, if applicable
+
+          -N   list the stored barcode labels of the cartridges
+               (if applicable) and optionally assigned freetext
+               comments (see option -N )
+
+          -r   list the cartridges reserved i.e. protected from
+               overwriting by clients and by which clients
+
+     -L <loadports>
+          specify the loadports, that should be part of the
+          desired operation. If no loadports are given, free ones
+          are searched for when moving
+
+     -m   perform moves of one or more cartridges. These must be
+          given using -C. Targets for the moves must be given
+          using -S for slots, -L for loadports, -D for drives or
+          -P for somewhere else
+
+     -N <description> [ <descriptions...> ]
+          set freetext descriptions for cartridges given with -C
+          . %C is replaced with the cartridge's number. Together
+          with -l (see there): list barcode labels and descrip-
+          tions
+
+     -n <comment>
+          use the given comment when labeling tapes with -t
+
+     -P <place>
+          Specify the target place for moving or just setting  a
+          cartridge location. If no place is given on the command
+          line, the program will prompt for one
+
+     -r   Together with option -t: delete the labeled cartridges
+          from the cartridge database without further asking, so
+          they will no longer be protected from overwriting.
+          Together with -l (see there): list reservations of car-
+          tridges i.e. requests from clients to protect from
+          overwriting
+
+     -S <slots>
+          Specify the slots, that should be part of the desired
+          operation. If no slots are given, free ones are
+          searched for when moving
+
+     -s <serverconfigfile>
+          Use the given file as server configuration file, not
+          the default one
+
+     -t   Write labels (`tags') to the cartridges in the slots
+          specified with -S
+
+  This command can be used as the SetCartridgeCommand in the server
+  configuration. Option -F is required here, cause the server itself
+  is already holding a lock on the streamer device, thus this command
+  needs not and should not attempt any further locking. The entry in
+  the server configuration file should look like this:
+
+             /path/to/cart_ctl -F -m -C %n -D
+
+  Changer configuration file:
+
+  A configuration file to specify the media changer commands must be
+  given in the server configuration with parameter
+   Changer-Configuration-File
+
+  This file must name the commands, that actually operate e.g. move
+  the cartridges in a changer. A maximum of nine entries can be given
+  to specify, how to move a cartridge from or to a slot, a drive or a
+  loadport (3 * 3 = 9). These parameters all have names of the form
+  Move-<origin>-To-<target>-Command with origin and target being one
+  of slot, drive and loadport, e.g.
+   Move-Slot-To-Drive-Command:
+
+  In these commands the following replacements are made:
+   %d   the streamer device i.e. drive
+   %D   the media changer device
+   %n   the origin (e.g. slot) number, if the command
+        starts to count with 1
+   %m   the origin number, if counting starts with 0
+   %N   the target number, if counting starts with 1
+   %M   the target number, if counting starts with 0
+
+  Commands, that are not supported for whatever reason, should be
+  commented out in this configuration file.
+
+  Two commands can be configured, that print the numbers of free slots
+  or loadports to standard output. If there are loadports, that should
+  be used, the command, that lists the free ones, must be present. The
+  command listing the free slots must always be there. The parameter
+  names for these commands are:
+   List-Empty-Slots-Command
+  and
+   List-Empty-Loadports-Command  .
+  In these commands only the pattern %D is replaced like explained
+  above.
+
+  If barcode label support is desired, some more commands must be
+  configured. The maintainer has the choice whether to configure one
+  command for all 3 types of locations in a changer (slot, drive and
+  loadport), or whether to configure 3 commands. If only one command is
+  configured, it must be given as List-Tape-Labels-Command and must
+  produce a minimum of 3 fields of output, separated by whitespace. The
+  first column must be one of the words "slot", "drive" or "loadport"
+  (may be upper or lower-case), the second field must be the instance
+  number starting with 1, the rest of the line must contain the text form
+  of the barcode label. If three commands are wished to be configured
+  separately, their names are List-Tapelabels-in-Slots-Command,
+  List-Tapelabels-in-Drives-Command and List-Tapelabels-in-Loadports-Command.
+  Their output must be similar like with the single command, but omitting
+  the first field containing the location type. Configuring one command
+  for all usually has the advantage of faster execution, but is a bit
+  harder to code.
+
+  For the most common changer driving commands (mtx, stc, chio and
+  mover/sch), appropriate files are included into the distribution (but
+  may be incomplete due to lack of experience). They can be used without
+  any modifcation, just comment out the commands, your hardware does not
+  support (e.g. moving from slot to slot).
+
+
+ $BASEDIR/server/bin/afserver [ <options> ] [ <configuration-file> ]
+
+  The server program. It must be started by the inetd-superdaemon.
+  The configuration-file is read as $BASEDIR/server/lib/backup.conf
+  if not given explicitly and if not found there the default files
+  /etc/buserver.conf, /etc/afbuserver.conf, /etc/afserver.conf and
+  /etc/afbackup/server.conf are tried.
+
+  Options:
+
+    -b         Turns off buffering mode. This reduces performance
+                but seems to be necessary on some OSes
+
+    -L <locale> Set the locale to the given string. Note, that this
+                option might not be honoured due to insufficiencies
+                of the gettext implementation on some systems
+
+    -S         Run in slave mode. This option should is used, when
+                the program is started as backend for the multi-
+                stream server and should not be configured for
+                normal startup
+
+  Options for debugging purposes only:
+
+    -D         Enter an infinite loop at startup to be caught
+                using a debugger or continue, when a USR1 signal
+                is sent to the process
+
+    -s         Don't use secure mode for client requests. No
+                authentication is performed
+
+    -l <file>  Use a different logfile than set in the config
+                file (see: Parameter Logging-File)
+
+    -x <dir>   Use a different directory for remotely startable
+                programs (see: Parameter Program-Directory)
+
+
+ $BASEDIR/server/bin/afmserver [ options ] [ <configuration-file> ]
+
+  The multi-stream server able to serve several clients in parallel.
+  This program works as a protocol multiplexing frontend for the
+  normal server, that in turn is started as backend in slave mode.
+  For the client side this server looks exactly like the normal
+  single stream server, so for them there is nothing special contac-
+  ting the multi stream server.
+   The clients must pass a unique identifier to the multi stream
+  server. Otherwise it cannot distinguish the clients, especially
+  when dispatching the data on tape to the clients. By default this
+  identifier is the official hostname of the client, that is
+  determined from the connection. A client may pass a different
+  identifier after having connected and authenticated successfully.
+
+  The options are identical to those of the server program except
+  for -S, that is not applicable here, cause the multi-stream
+  server doesn't know a slave mode. The other options are passed to
+  the server backend (see under afserver above), except for the
+  following, that are understood only by afmserver:
+
+    -d         Daemonize. Go into the background and run forever.
+                This is the way, the multi stream server can be
+                started without using the inetd. -p should be
+                supplied when using this option
+
+    -p <port>  The TCP port number or service name, the server
+                should bind to. If started via inetd, the inetd
+                binds to the port and starts the afmserver connected
+                to the port. When started as daemon, the afmserver
+                must be told the port to bind to. If not given,
+                the service entry afmbackup is used or, if not
+                found, the default port 2989
+
+
+
+Programs of the client side
+---------------------------
+
+ $BASEDIR/client/bin/full_backup
+
+  Run a full backup. The usage:
+
+      full_backup [ -daG ] [ {+-}LBx ] [ <files> <directories> ... ] \
+                  [ -C <root-directory> ] [ -F \"<files-to-skip>\" ] \
+                  [ -D \"<directories-to-skip>\" ] \
+                  [ -c <configuration-file> ] [ -W <identity> ] \
+                  [ -h <backuphosts> ] [ -P <backup-ports> ] \
+                  [ -I <indexfile-part> ] \
+                  [ { -N <num-indexes-to-store> ] | \
+                      -O <max-age-of-indexes-to-store-in-days> } ] \
+                  [ -z <process-cmd> <unprocess-cmd> ] \
+                  [ -Z <built-in-compress-level> ] \
+                  [ -s \"<dont-process-patterns>\" ] \
+                  [ -X <exclude-list-file> ] [ -l <logfile> ] \
+                  [ -i <startup-info-program> ] \
+                  [ -b <init-program> ] [ -e <exit-program> ] \
+                  [ -k <encryption-key-file> ] \
+                  [ -f <filesystem-types> ] \
+                  [ -V <var-directory> ] [ -S <cartridge-sets> ] \
+                  [ -M <server-message-config> ]
+
+  This program reads the client-side configuration file and runs
+  (eventually a part of) a full backup of all files and directories
+  specified in the configuration file or on the commandline. It is
+  recommended to setup everything in the configuration file and run
+  this command without any arguments (same applies for incr_backup).
+  If files and/or directories are supplied on the commandline, those
+  specified in the configuration file are overridden. Furthermore
+  the program then behaves slightly different: If backup parts are
+  configured, they are ignored. The timestamp, that is evaluated
+  during incremental backup to determine, whether files have been
+  modified, is not changed. This behaviour reflects the assumption,
+  that supplying files or directories on the commandline is done
+  for testing or other temporary purposes. Modifying the timestamp
+  would confuse the normal regularly running backup mechanism. In
+  these temporary cases the -a option should make sense, see below
+  for details. Be also aware of the -C option's meaning. If the name
+  of a file is preceded with -r, the contents of the file is stored,
+  but not the characteristics of the inode. This is useful for
+  saving raw devices. By default, processing is always turned off.
+  Using -R forces processing of the contents. Preceding a directory
+  name with -m the recursive descent into this directory is limited
+  to the filesystem, where the directory resides.
+  The names of the files and directories, that are stored, are
+  written into logfiles, that comprise of the indexfile-part (-I)
+  and the current total backup counter. This counter is incremented
+  each time a full backup (part 1) starts. A minimum information
+  required to restore after a hard crash having lost everything is
+  piped into the startup-info-program (-i). 
+  Whether only a part of a full backup is run depends on the setting
+  of the parameter NumBackupParts (See: CONFIG). If the configuration
+  file is not supplied explicitly, then it is searched for in the
+  .../lib-directory and if not found there the files
+  /etc/buclient.conf, /etc/afbuclient.conf, /etc/afclient.conf and
+  /etc/afbackup/client.conf are tried.
+  Commandline options generally override configuration file settings.
+  Every option described below (except -c) has a corresponding
+  entry in the configuration file, but there are more possible
+  settings in the config file.
+
+   -a              Append mode. Do not increment the total backup
+                     counter. (See -N)
+
+   {+-}B           Perform per-file processing on the stored files
+                     (+B) or not (-B) (See: -F)
+
+   -b <initprog>   Run the given program before attempting a backup.
+                     If the command returns an exit status unequal
+                     to 0, no backup is performed (see: -e). Not to
+                     be mixed up with option -i
+
+   -C <rootdir>    Change to the given directory before starting the
+                     backup climbing down into the directories to be
+                     stored
+
+   -c <configfile> A different configuration file to use
+
+   -D <skip-dirs>  A list of directory name patterns separated by
+                     whitespace to ignore for backup. Several must be
+                     put into quotes (See: -F and -X)
+
+   -d              Detach from the terminal when starting
+
+   -e <exitprog>   Run the specified program after finishing. If the
+                     command comprises of several words separated by
+                     whitespace, it must be put into quotes (See: -i)
+
+   -F <skip-files> A list of filename patterns separated by whitespace
+                     to ignore for backup. Several must be put into
+                     quotes (See: -D and -X)
+
+   -f <fs-types>   A list of filesystem types, separated by whitespace
+                     and/or commas. The type names can be prefixed
+                     with a plus, what is identical with no prefix,
+                     with a dash - or a slash / . No prefix or a plus
+                     means, that only files in filesystems of the
+                     given type are saved, no others. A minus means,
+                     files in a filesystem of the named type are not
+                     saved, nonetheless such filesystems are traversed
+                     to search for filesystems of other types probably
+                     mounted underneath. The slash means, that such
+                     filesystems are not even entered or traversed. If
+                     the - or + prefix is used, no space is allowed
+                     between option -f and it's argument, e.g. -f-nfs
+
+   -G              To request a new cartridge. If the current writing
+                     position is already at the beginning of a new or
+                     reused tape, nothing happens
+
+   -h <backuphosts> The names of the hosts, where a backup server side
+                     lives. The list can be separated by commas and/or
+                     whitespace. If whitespace is present, quotes are
+                     necessary. The hosts are tested for service
+                     availability. If a backup server is not ready,
+                     the next one is tried. If all are busy, the program
+                     waits for a minute and tries again
+
+   -I <idx-prefix> The first part of the filename, the names of the
+                     stored files and directories are written to. The
+                     current total backup number is appended (that
+                     increments each start of a full backup). If these
+                     files undergo processing, .z is appended
+
+   -i <info-prog>  The command to save startup information. A minimum
+                     information to recover from a hard crash is piped
+                     into this program (at stdin). If the command
+                     comprises of several words, it must be put into
+                     quotes. Not to be mixed up with option -b
+
+   -k <file>       Use the contents of the given file as encryption
+                     key for authenticating to the server
+
+   {+-}L           Process the filename list files (+L) or not (-L)
+                     (See: -I)
+
+   -l <logfile>    Write loggings into the given logfile. A dash -
+                     means: no logging, only write to stderr
+
+   -M <svrmsg-conf> The configuration to output messages from the server,
+                     that normally are sent only via mail to a maintainer.
+                     The first word consisting of the letters b r v and c
+                     tells, whether to output messages during backup,
+                     restore, verify and copy-tape, respecively. The next
+                     words must name the service name or port number of
+                     the single stream servers, related to the option -P .
+                     For each multi stream service configured with -P or
+                     in the configuration file, the respective single
+                     stream service must be given here
+
+   -N <num-idxes>  The number of filename list files, that is stored
+                     over time. A new list is begun at each start of
+                     a full backup (except -a is supplied)
+
+   -O <maxidxage>  The maximum age of the filename list files (== index
+                     files) in days, that is stored. See also option
+                     -N . A floating point number is allowed here
+
+   -P <portnos>    The port numbers, that are tried to connect at the
+                     servers. They must be supplied positionally according
+                     to the configured or (with the -h option) given
+                     backup servers. The list may be separated by whitespace
+                     and/or commas. If whitespace is present, quotes are
+                     necessary
+
+   -S <cartsets>   The cartridge sets to use, where <cartsets> is a
+                     number of a valid cartridge set on the appropriate
+                     server side. Default is 1. These must be supplied
+                     positionally according to the configured or (with
+                     the -h option) given backup servers. The list may
+                     be separated by whitespace and/or commas. If
+                     whitespace is present, quotes are necessary
+
+   -s <noproc>     A list of filename patterns, that no processing is
+                     attempted on, what can save time significantly.
+                     The list should always be enclosed in quotes
+
+   -V <var-dir>    The directory, where varying files are put
+
+   -v              be verbose
+
+   -W <id>         Identify as <id> to the server. This is needed when
+                     connecting a multi-stream server to distinguish
+                     between the clients. Default is the official
+                     hostname of the client. If the client should fake
+                     to be a different one than it is in fact, this
+                     option must be used. This flag can also be useful
+                     e.g. to explicitly store the serverside
+                     var-directory, that is crucial for restore and
+                     should be saved seperately after all other backup
+                     clients are done
+ 
+   -X <excl-file>  The name of a file, that may exist in any directory
+                     containing a list of filename patterns, one per
+                     line. All files and directories in that directory
+                     matching one of the patterns are exluded from
+                     backup (See: -D and -F)
+
+   {+-}x           Write CRC32 checksums for each file to tape (+x) or
+                     don't do this (-x). This option is ignored, if
+                     built-in compression is selected, cause then CRC32
+                     checksumming is already performed
+
+   -z <z> <uz>    The commands to use for process and unprocess. If
+                    a command comprises of several words, it must be
+                    put in quotes
+
+   -Z <level>     If built-in compression should be used, the level
+                    can be supplied here. If commands to process and
+                    unprocess are also supplied with option -z, then
+                    data is first processed by the process command,
+                    then by built-in compression. During uncompress
+                    it works the other way round
+
+
+  A table of corresponding command line options and configuration
+  file entries, (subsets) accepted by full_backup, incr_backup,
+  restore, verify:
+
+   Option       Client configuration file parameter name
+
+    +B -B       ProcessBackupedFiles
+
+    -b          InitProgram
+
+    -C          RootDirectory
+
+    -D          DirsToSkip
+
+    -E          UseCTime
+
+    -e          ExitProgram
+
+    -F          FilesToSkip
+
+    -f          FilesystemTypes
+
+    -h          BackupHosts
+
+    -I          IndexFilePart
+
+    -i          StartupInfoProgram
+
+    -k          EncryptionKeyFile
+
+    -l          LoggingFile
+
+    +L -L       ProcessLogfiles
+
+    -M          PrintServerMessages
+
+    -N          NumIndexesToStore (*_backup), NumIndexesToScan (afrestore)
+
+    -O          DaysToStoreIndexes (*_backup), DaysToScanIndexes (afrestore)
+
+    -P          BackupPorts
+
+    -S          CartridgeSets
+
+    -s          DoNotProcess
+
+    -V          VarDirectory
+
+    -W          ClientIdentifier
+
+    -X          ExcludeListFile
+
+    -x          WriteChecksums
+
+    -z          ProcessCmd UnprocessCmd
+
+    -Z          BuiltinCompressLevel
+
+  Signals
+
+  When receiving SIGHUP or a single SIGINT (i.e. keyboard Ctrl-C)
+  this program tries to process all pending writes to the server
+  before terminating. That is, if the server is currently not
+  ready to process requests, this program will wait until the
+  server is done or terminates unexpectedly, what will break the
+  connection to all clients. Any connection breakdown will cause
+  a SIGPIPE and thus make a client terminate prematurely. If this
+  program should not wait for the server to terminate properly,
+  but shut down as soon as a consistent status of the client's
+  local persistent data can be achieved, SIGQUIT (== Ctrl-\\) or
+  SIGABRT must be sent (once) or SIGINT (== Ctrl-C) 3 times within
+  2 seconds. Pressing Ctrl-C the second time a respective hint is
+  written to the user. The same can be achieved by sending SIGTERM,
+  which is the default using the kill(1) command. This signal is
+  typically sent to all processes, when a Unix-system goes down in
+  a controlled manner without crashing or fast halt. When SIGINT
+  is received and standard input of this program is not a TTY, the
+  immediate shutdown without waiting for the server is attempted
+  as well. A shutdown like this can be expected to finish quite
+  surely within one second.
+
+
+ $BASEDIR/client/bin/incr_backup
+
+  Run an incremental backup. Usage: See full_backup above.
+  Additional options:
+                              [ -EH ] [ -Q <backup-level> ]
+
+  This program reads the client-side configuration file and runs
+  an incremental backup, i.e. all files and directories are saved,
+  whose modification time is later than the moment the previous
+  backup (full or incremental) has started. The options and their
+  meanings are exactly the same as for full_backup, except for the
+  -a option, see below. The total backup counter is not increased.
+
+   -a              Differential mode. The timestamp storing the
+                     time of the last backup is not modified
+
+   -E              Use not only the modification time comparing
+                     the timestamps to select filesystem entries
+                     for backup, but also the inode change
+                     time (ctime)
+
+   -H              If this flag is set, all backups with a lower level
+                     since the last full backup are removed from the
+                     indexes and the respective tapes freed, if there
+                     is no other backup data on them. In differential
+                     mode (-a) a previous differential backup is also
+                     removed and the tapes freed, if possible
+
+   -Q <level>      The backup level. All files modified since the
+                     most recent backup with a level equal or
+                     higher are saved. The higher this number, the
+                     more files are redundantly saved again.
+                     <level> can be an arbitrary number from 0
+                     up to 2147483646 (== MAXINT - 1). Default: 0.
+                     A full backup has an implicit backup level of
+                     2147483647 (== MAXINT)
+
+
+ $BASEDIR/client/bin/afrestore
+
+  The restore utility. The Usage:
+
+       afrestore [ -nltvmi ] [ -<past-backup-no> ] [ -C <root-directory> ] \
+               [ -h <backuphosts> ] [ -P <backup-ports> ] \
+               [ -c <configuration-file> ] [ -W <identity> ] \
+               [ -A "<after-date> [ % <after-backup-date> ]" ] \
+               [ -B "<before-date> [ % <before-backup-date> ]" ] \
+               [ -T <tapes> ] [ -I <indexfile-part> ] \
+               [ -V <var-directory> ] [ -k <encryption-key-file> ] \
+               [ -z <process-cmd> <unprocess-cmd> ] \
+               [ -Z <built-in-compress-level> ] [ -F <format> ] \
+               [ { -N <num-indexfiles> | -O <indexfile-age-days> } ] \
+               [ -M <server-message-config> ] \
+               [ -p ] <path-pattern> [ [ -p ] <path-patterns> [ ... ] ]
+       afrestore -a [ -nlvm ] [ -<past-backup-no> ] [ -C <root-directory> ] \
+               [ -h <backuphosts> ] [ -P <backup-ports> ] \
+               [ -c <configuration-file> ] [ -W <identity> ] \
+               [ -I <indexfile-part> ] [ -V <var-directory> ] \
+               [ -k <encryption-key-file> ] \
+               [ -z <process-cmd> <unprocess-cmd> ] \
+               [ -Z <built-in-compress-level> ] [ -F <format> ] \
+               [ -M <server-message-config> ]
+       afrestore -{ef} [ -evm ] [ -C <root-directory> ] [ -h <backuphosts> ] \
+               [ -P <backup-ports> ] [ -V <var-directory> ] \
+               [ -z <process-cmd> <unprocess-cmd> ] \
+               [ -Z <built-in-compress-level> ] \
+               [ -k <encryption-key-file> ] [ -W <identity> ] \
+               [ -M <server-message-config> ] \
+               [ -c <configuration-file> ] < <startup-info-file>
+       afrestore -E [ -Enlvm ] [ -C <root-directory> ] [ -h <backuphosts> ] \
+       	       [ -P <backup-ports> ] [ -V <var-directory> ] \
+       	       [ -z <process-cmd> <unprocess-cmd> ] \
+               [ -Z <built-in-compress-level> ] \
+       	       [ -k <encryption-key-file> ] [ -W <identity> ] \
+               [ -M <server-message-config> ] \
+       	       [ -c <configuration-file> ] \
+       	       [ <cartridge-number> | <cartridge-range> ] ... ]
+
+  The first form can be used for restoring selected pieces of
+  a certain previous backup run. If no option of the type
+  -<past-backup-no> is supplied (e.g. -2 ), the most recently
+  made backup is accessed. If an option like this is given,
+  the backup system tries to extract the files from the backup
+  before ( -1 ) or even an earlier one. This requires, that
+  enough file- and directory-name-logging is provided. This
+  can be done with the client-side configuration parameter
+  NumIndexesToStore (See: CONFIG). The parameters <path-pattern>
+  indicate, which files and directories should be restored. An
+  asterisk is implicitely put before and after the <path-pattern>,
+  so it is assumed to be a substring of the path. This can be
+  prevented preceding the <path-pattern> with the option -p.
+  These may be wildcards for the full path name leading to the
+  file relative to the directory, to that the client changes
+  before starting any backup or restore (See under the parameter
+  RootDirectory in CONFIG). Note, that you have to put these into 
+  quotes, if you are using wildcards to prevent substutition. It
+  is a bad idea to restore a total backup entering: restore "*"
+  This leads to a huge filelist to be processed by the client,
+  what might plug up memory and/or temporary space in some
+  filesystem. Instead you should use the second form with the
+  option -a, what restores a total backup. The third form
+  restores without looking for filename log files. Instead it
+  reads the standard input for information, where to extract
+  from. The format expected at standard input is the same as
+  produced by incr_backup or full_backup, if the configuration
+  option StartupInfoProgram is used. The given program is then
+  supplied with the appropriate information and should write
+  it to some place outside the local host, so that it will not
+  be affected by a hard crash (see: StartupInfoProgram in
+  CONFIG). The flag -e can be supplied more than one time. In
+  that case the emergency restore goes back to the beginning of
+  the previous full backup, if the full backup is split into
+  several parts (configuration parameter NumBackupParts) and
+  the last part of the current full backup has not yes run. If
+  the backup parts configuration has changed after the beginning
+  of the previous full backup, this option should be considered,
+  as it gives additional safety, that really everything will be
+  restored. The fourth form scans the cartridges (if supplied)
+  on the given servers (if supplied, eventually with alternate
+  given port numbers - see below for the format, how to specify
+  cartridge/host/port-triples) for backups done from the host,
+  where the restore program is started and restores everything
+  it finds. The functionality is similar to -e, but no input has
+  to be supplied. Like with option -e, the -E flag can be given
+  several times, what has the same meaning like with option -e
+  (see above). If the client's hostname has changed or restore
+  should be done on another host, the original client ID must be
+  supplied with the -W option. Otherwise nothing or the wrong
+  stuff will be restored. Scanning the cartridges can take a lot
+  of time, but it should be several minutes, not hours.
+  Cartridges can be supplied in three forms as arguments: simple
+  numbers, ranges (e. g. as 3-5 without spaces), and ranges
+  relative to the current backup writing position (e. g. as -3).
+  In the latter case -0 means the cartridge, that will be written
+  to next time i.e. that holds the current writing point. -2 stands
+  for the latest 3 cartridges. To indicate, that a cartridge is
+  located at a certain backup server, maybe with a special port
+  number (if there are several backup servers), the cartridge
+  number or range can be followed by the at-character @, optionally
+  followed by the percent character % and the port number, e. g.
+  3-5@buhost%2989 . No whitespace is allowed in such a specifier.
+  If no port is given, the default port is assumed (2988). If no
+  hostname is given, the default backup server is used. Default
+  backup server is the first one in the list, that is configured
+  in the parameter file or overriden by the option -h. Any number
+  of ranges or numbers can be supplied, overlapping duplicates are
+  ignored. If no cartridge numbers are given, the program searches
+  backward from the current writing position on each configured
+  backup server until it thinks, it has enough backups found, or
+  all cartridges on that server have been tried. The found backups
+  are sorted in the correct order (using the stored backup time)
+  and afterwards everything found is restored. This form of the
+  command needs no information at all for an emergency restore. If
+  the configuration file is not supplied explicitly, then it is
+  searched for in the .../lib-directory and if not found there the
+  files /etc/buclient.conf, /etc/afbuclient.conf, /etc/afclient.conf
+  and /etc/afbackup/client.conf are tried.
+
+  Flags
+
+    -A <dates>    Restore files modified after the given date. A second
+                    date may be given prefixed with a percent sign %
+                    telling to search only backups started after the
+                    given date. Either of the dates can be omitted, so
+                    valid specifications are "<date>" "%<backupdate>"
+                    or "<date> % <backupdate>" . Like shown, the argument
+                    should be put into quotes, cause it usually contains
+                    whitespace. Valid formats for <date> are e.g.:
+                      MM/DD/YYYY hh:mm:ss
+                      DD.MM.YYYY hh:mm:ss
+                    or the formats produced by ctime(3) or date(1).
+                    The year may be supplied in two digits or in the
+                    non-US-formats be omitted, then the current year
+                    is assumed. The seconds may also be omitted
+                    (hh:mm), the whole time may be left off, then
+                    00:00 is assumed. Thus the shortest valid format
+                    is DD.MM
+
+    -B <dates>    Restore files modified before the given date. A second
+                    date may be given prefixed with a percent sign %
+                    telling to search only backups started before the
+                    given date. See -A for the valid date formats
+
+    -C <root-dir> Change to the given root-directory before restoring
+                    files instead of the one specified in the client
+                    side configuration file. If this directory does
+                    not exist, it will be created
+
+    -c <conffile> Use the given file for configuration information
+
+    -e            Restore all files from the previous backup in an
+                    emergency case without looking for the filename
+                    logfiles, which are also restored
+
+    -F            In combination with -l a format string for output.
+                    Default is: only the full paths of the stored
+                    files are printed, one per line. The format string
+                    can also contain patterns representing other file
+                    attributes present in the index file(s). Possible
+                    patterns are:
+
+                     %n   The filename with full path like default
+
+                     %b   The basename of the file, without path
+
+                     %O   The username of the file owner
+
+                     %o   The user-ID of the file owner (integer)
+
+                     %m   The modification time in seconds since epoch
+
+                     %M   The modification time in readable format
+
+                     %t   The starting time of the backup containing
+                          the file in seconds since epoch
+
+                     %T   Like %t, but in readable format
+
+                     %h   The hostname of the backup server, to that
+                          the file has been backuped
+
+                     %p   The port number of the backup server, to that
+                          the file has been backuped
+
+                     %c   The cartridge number on the server, the saved
+                          file can be found on
+
+                     %f   The tape file number on cartridge %c, where
+                          the saved file can be found
+
+                     %%   A percent character
+
+                    Notes:
+                    * The usual C-like backslash sequences are allowed,
+                      but special characters within the filenames are
+                      still printed as escape sequences, e.g. \n
+                    * A newline at the end must be given explicitly as
+                      backslash n (\n), otherwise no new line will start
+                    * Double quotes should be written as \" within the
+                      argument enclosed in single quotes
+                    * To see several versions of a saved filesystem entry
+                      in the indexes the option -B or -A must be given,
+                      maybe with a condition, that is always true, e.g.
+                      -B 23:59, what means: before today, 23:59
+
+    -f            Restore only the filename logfiles in an emergency
+                    case
+
+    -h <hostnames> Use the given list of hosts as backup servers. This
+                    list is used only, if no hostname information can
+                    be found as associated with the current filesystem
+                    entry, that should be restored. The first host in
+                    this list is the default server, if no hostname
+                    information at all can be found. If -E is given
+                    and no cartridge number is supplied at all, all
+                    hosts in this list are tried one after the other.
+                    The hostnames in this list can be separated by
+                    whitespace and/or commas
+
+    -I <idx-prefix> The first part of the filename, the names of the
+                    stored files and directories are written to. The
+                    current total backup number is appended (that
+                    increments each start of a full backup). If these
+                    files undergo processing, .z is appended
+
+    -i            Ignore case distinctions in the filename patterns
+
+    -k <file>     Use the contents of the given file as encryption
+                    key for authenticating to the server
+
+    -l            Do not restore anything, just list the names of
+                    the files and/or directories, that fit the supplied
+                    path-part(s); in combination with -E: just scan the
+                    given tape(s) and printout the minimum restore info,
+                    that can be read by restore -e
+
+    -M <svrmsg-conf> The configuration to output messages from the server,
+                    that normally are sent only via mail to a maintainer.
+                    The first word consisting of the letters b r v and c
+                    tells, whether to output messages during backup,
+                    restore, verify and copy-tape, respecively. The next
+                    words must name the service name or port number of
+                    the single stream servers, related to the option -P .
+                    For each multi stream service configured with -P or
+                    in the configuration file, the respective single
+                    stream service must be given here
+
+    -m            Do not overwrite existing files (merge)
+
+    -N <numidxs>  The maximum number of index files, that are scanned
+                    for matching filenames. With each full backup, a new
+                    index file is created. If time restrictions are given
+                    (options -A or -B), all existing index files are
+                    read, what may take a long time, if many of them are
+                    kept available (see clientside configuration option
+                    NumIndexesToStore or option -N of full_backup). So
+                    using this parameter the scanning can be restricted
+                    to a certain number of files
+
+    -O <maxidxag> The maximum age of index files, that are scanned for
+                    matching filenames, in days. See option -N . The
+                    given number of days may be a floating point value
+
+    -n            Do not restore anything, just printout a message, how
+                    many files and/or directories match the supplied
+                    path-part(s); in combination with -E: just scan the
+                    given tape(s) and printout, what backups have been
+                    written there
+
+    -P <portnos>  The list of port numbers for the backup servers
+                    either configured in the parameter file or supplied
+                    with the -h option. This list is used only, if no
+                    port number information can be found as associated
+                    with the current filesystem entry, that should be
+                    restored. The port numbers supplied here are asso-
+                    ciated with the backup server names by position.
+                    The port numbers in this list can be separated by
+                    whitespace and/or commas
+
+    -T <tapes>    Restore and list only files from the given list of
+                    tapes. Tapes can be specified using numbers, commas
+                    and dashes, e.g. 3-5,8,1
+
+    -t            Do not restore anything, just list the tapes, that
+                   would be needed to restore everything that matches
+                   the supplied path-part(s)
+
+    -V <var-dir>  The directory, where varying files are put
+
+    -v            be verbose
+
+    -W <id>       Identify as <id> to the server. This is needed when
+                    connecting a multi-stream server to distinguish
+                    between the clients. Default is the official
+                    hostname of the client. If the client should fake
+                    to be a different one than it is in fact, this
+                    option must be used
+ 
+    -z <z> <uz>   The commands to use for process and unprocess. If
+                    a command comprises of several words, it must be
+                    put in quotes
+
+    -Z <level>    If built-in compression should be used, the level
+                    can be supplied here. If commands to process and
+                    unprocess are also supplied with option -z, then
+                    data is first processed by the process command,
+                    then by built-in compression. During uncompress
+                    it works the other way round
+
+  I suggest to run restore with the -l option before really going
+  to restore anything. So you see, what files will be generated,
+  maybe overwriting existing ones unintendedly (or use option -m).
+
+
+ $BASEDIR/client/bin/afverify
+
+  Run a verify of a previous backup. The usage:
+
+     afverify [ -lav ] [ -c <configuration-file> ] \
+              [ -<past-run-no>[.<past-backup-no>] ] \
+              [ -h <backuphosts> ] [ -P <backup-ports> ] \
+              [ -C <root-directory> ] [ -S <cartridge-sets> ] \
+              [ -I <indexfile-part> ] [ -V <var-directory> ] \
+              [ -k <encryption-key-file> ] [ -W <identity> ] \
+              [ -z <process-cmd> <unprocess-cmd> ] \
+              [ -Z <built-in-compress-level> ] \
+              [ -M <server-message-config> ]
+
+  Without any arguments, this program runs a verify over the
+  previously written backup. This may either be a full or an
+  incremental backup, only the contents of the very previous
+  run are used. All found differences are reported.
+   Though it is not considered to make too much sense, it is
+  also provided, that files and directories saved during a run
+  before the previous one can be checked. This can be done
+  supplying the <past-backup-specifier>. If this is a simple
+  number, it counts back from the previous full or incremental
+  backup of the same total backup number (this number is increased
+  each run of the full_backup-command, not by subsequent
+  incremental backups). -1 means, that the backup before the
+  previous one is checked and so on. If the contents of a previous
+  total backup run should be checked, the following form may
+  be used: -<previous-run>.<previous-total-backup>, where
+  <previous-total-backup> counts back from the current total backup
+  number and <previous-run> counts back from the last backup
+  (incremental or full) run among the previous total. previous-run
+  may be 0 here. E.g. verify -0.1 checks the files saved during
+  the last run of the previous total backup. Run afverify with
+  option -l, optionally -a or -<prev-total-backup> to get a list
+  of backups available for verify.
+
+    -a            Together with -l list the available backups from
+                    all indexes and not only the most recent one
+
+    -C <root-dir> Change to the given root-directory before verifying
+                    files instead of the one specified in the client
+                    side configuration file.
+
+    -c <conffile> Use the given file for configuration information
+
+    -h <hostnames> Use the given list of hosts as backup servers. This
+                    list is used only, if no hostname information can
+                    be found as associated with the current filesystem
+                    entry, that should be verified. The first host in
+                    this list is the default server, if no hostname
+                    information at all can be found. The hostnames in
+                    this list can be separated by whitespace and/or
+                    commas
+
+    -I <idx-prefix> The first part of the filename, the names of the
+                    stored files and directories can be found. The
+                    current total backup number is appended (that
+                    increments each start of a full backup). If these
+                    files undergo processing, .z is appended
+
+   -M <svrmsg-conf> The configuration to output messages from the server,
+                     that normally are sent only via mail to a maintainer.
+                     The first word consisting of the letters b r v and c
+                     tells, whether to output messages during backup,
+                     restore, verify and copy-tape, respecively. The next
+                     words must name the service name or port number of
+                     the single stream servers, related to the option -P .
+                     For each multi stream service configured with -P or
+                     in the configuration file, the respective single
+                     stream service must be given here
+
+    -k <file>     Use the contents of the given file as encryption
+                    key for authenticating to the server
+
+    -l            Don't actually verify, but print summary information
+                    about available backups, that can be verified or
+                    restored from, prefixed with the arguments, that
+                    may be supplied as -<past-run-no>[.<past-backup-no>]
+
+    -P <portnos>  The list of port numbers for the backup servers
+                    either configured in the parameter file or supplied
+                    with the -h option. This list is used only, if no
+                    port number information can be found as associated
+                    with the current filesystem entry, that should be
+                    verified. The port numbers supplied here are asso-
+                    ciated with the backup server names by position.
+                    The port numbers in this list can be separated by
+                    whitespace and/or commas
+
+    -V <var-dir>  The directory, where varying files are put
+
+    -v            Verbose mode: print information records on tape and
+                     the names of the checked files during operation
+
+    -W <id>       Identify as <id> to the server. This is needed when
+                     connecting a multi-stream server to distinguish
+                     between the clients. Default is the official
+                     hostname of the client. If the client should fake
+                     to be a different one than it is in fact, this
+                     option must be used
+ 
+    -z <z> <uz>   The commands to use for process and unprocess. If
+                    a command comprises of several words, it must be
+                    put in quotes
+
+    -Z <level>    If built-in compression should be used, the level
+                    can be supplied here. If commands to process and
+                    unprocess are also supplied with option -z, then
+                    data is first processed by the process command,
+                    then by built-in compression. During uncompress
+                    it works the other way round
+
+  In my opinion a verify makes only sense immediately following
+  an incremental or full backup with the purpose to check, whether
+  the files and directories did not get corrupt on the storage
+  media. If you want to do this (via cron or however), keep in
+  mind, that the verify takes at least the same time as the
+  backup itself. If you have a huge amount of data to save, the
+  additional verify might run you into time consumtion problems.
+
+
+ $BASEDIR/client/bin/copy_tape
+
+  Make a duplicate of a tape. The usage:
+
+     copy_tape [ -v ] [ -c <configuration-file> ] \
+                 [ -l <logfile> ] [ -T <tmpdir> ] \
+                 [ -M <server-message-config> ] \
+                 [ -h <source-server> ] [ -P <source-serverport> ] \
+                 [ -C <source-cartridge> ] [ -F <tape-filenumber> ] \
+                 [ -k <source-encryption-key-file> ] \
+                 [ -D \
+                  [ -h <target-server> ] [ -P <target-serverport> ] \
+                  [ -C <target-cartridge> ] \
+                  [ -k <target-encryption-key-file> ] ]
+
+  This command connects to one or two backup servers and makes
+  an identical copy of a tape to another one. The tape label
+  is rewritten, so that the destination tape keeps it's primary
+  cartridge number, but gets the number of the source tape as
+  secondary number. Thus it can be used instead of the tape
+  with that primary number. In fact both numbers are accepted
+  for backup, restore or other operations except the copy_tape
+  operation itself. Recursively copying an already duplicated
+  tape does not further change the secondary cartridge number,
+  so e.g. any copy of cartridge number 3 will be usable as such.
+  Copying cartridge 3 to cartridge 5 and then 5 to 8 does not
+  make cartridge number 8 usable as cartridge 5, but still as
+  cartridge number 3. When the backup server sees a cartridge
+  with the wrong primary number, but the correct secondary
+  number, this cartridge is accepted, but a warning is written
+  to the serverside log. The defaults for the copying source are
+  taken from the client side configuration file. Default source
+  cartridge is the one currently loaded in the drive on the
+  server, that will be asked for this information. If no target
+  parameters are supplied, they get the values of the appropriate
+  source parameters as default. So if no arguments are supplied,
+  the current tape would be copied to itself, what is prevented
+  while printing an error message. Target (or: destination)
+  parameters must always be following the -D option, source
+  parameters must be supplied in an earlier position. If the
+  source tape is operated by a different server than the target,
+  copying goes straight from one to the other. As two servers
+  (with a different port number) can reside on one host, this
+  process does not necessarily imply a network connection.
+  If source and target tape are handled by the same server, the
+  data to be copied must be stored somewhere inbetween. For this
+  purpose a temporary directory is created on the client, where
+  this program is started, usually in /tmp or /var/tmp (see:
+  tmpnam(3)). The filesystem, where this directory lives, must
+  have a free capacity of at least the largest occurring tape
+  file. This maximum tape file size is configured on the server
+  side by the parameter MaxBytesPerFile (see: afserver.conf(8)).
+  If there is not enough space, the duplication of the tape
+  fails. The copying program writes as many tape files to disk
+  as it can, while a certain amount will remain free. Then it
+  ejects the source cartridge and loads the target cartridge.
+  Now the files in the temporary directory are written to the
+  target tape while immediately removing files, that are no
+  longer needed. The more space is available in the temporary
+  directory, the fewer cartridge loads/ejects are necessary.
+
+   -C <cartridge>    The number of the cartridge to use as copying
+                      source or target (depends on argument position:
+                      before or behind -D).
+
+   -c <configfile>   Use the given file for configuration information
+
+   -F <tapefilenum>  If reading and writing should not start at the
+                      beginning of the tape, but at the tape file with
+                      the given number. This can avoid the overhead of
+                      copying entire tapes, when only some tape files
+                      have been appended
+
+   -h <hostname>     The name of the backup server host, where the
+                       source or target cartridge is handled,
+                       respectively
+
+   -k <file>         Use the contents of the given file as encryption
+                      key for authenticating to the server, where the
+                      source or target cartridge is handled,
+                      respectively
+
+   -l <logfile>      A file to write log information to
+
+   -M <svrmsg-conf> The configuration to output messages from the server,
+                     that normally are sent only via mail to a maintainer.
+                     The first word consisting of the letters b r v and c
+                     tells, whether to output messages during backup,
+                     restore, verify and copy-tape, respecively. The next
+                     words must name the service name or port number of
+                     the single stream servers, related to the option -P .
+                     For each multi stream service configured with -P or
+                     in the configuration file, the respective single
+                     stream service must be given here
+
+   -P <portnum>      The port number of the backup server on the
+                      backup server host, where the source or target
+                      cartridge is handled
+
+   -v                Verbose option, tell more about what is going on
+
+
+ $BASEDIR/client/bin/update_indexes
+
+  clean indexes from erased tapes
+
+    update_indexes [ -v ]  [ -c <configuration-file> ]
+                   [ -h <backuphosts> ] [ -P <backup-ports> ]
+                   [ -I <indexfile-part> ] [ -V <var-directory> ]
+                   [ -k <encryption-key-file> ] [ -W <identity> ]
+                   [ -z <process-cmd> <unprocess-cmd> ]
+                   [ -Z <built-in-compress-level> ]
+
+  This command asks all the servers, which tapes are considered
+  precious for the client, it is run on. If the server will tell
+  fewer tapes than the client has in mind, then the tapes, that
+  the server omitted, have been erased on the server side. Now
+  those entries will be removed from the client's indexes, who
+  list the erased tapes as backup location.
+  This command may be installed setuid root, so normal users can
+  start it. As it performs just a defined update operation and
+  nothing else, there should not be a security problem. It might
+  be a good idea to run this command before some user restore
+  program (e.g. xafrestore) is started, so only those entries
+  are listed to the user, that really exist on backup media and
+  can be restored. When started by a normal user, all arguments
+  will be ignored and only the configuration file is evaluated.
+
+   -c <configfile>   Use the given file for configuration information
+
+   -h <hostnames>    Use the given list of hosts as backup servers. 
+                      The hostnames in this list can be separated by
+                      whitespace and/or commas
+
+   -I <idx-prefix>   The first part of the filename, the names of the
+                      stored files and directories can be found. The
+                      current total backup number is appended (that
+                      increments each start of a full backup). If these
+                      files undergo processing, .z is appended
+
+   -k <file>         Use the contents of the given file as encryption
+                      key for authenticating to the server, where the
+                      source or target cartridge is handled,
+                      respectively
+
+   -P <portnos>      The list of port numbers for the backup servers
+                      either configured in the parameter file or supplied
+                      with the -h option. The port numbers in this list
+                      can be separated by whitespace and/or commas
+
+   -V <var-dir>      The directory, where varying files are put
+
+   -v                Verbose option, tell more about what is going on
+
+   -W <id>           Identify as <id> to the server. This is needed
+                      by the server to tell the client the correct
+                      information about tapes, that are considered
+                      crucial for this client for restore
+ 
+   -z <z> <uz>       The commands to use for process and unprocess. If
+                      a command comprises of several words, it must be
+                      put in quotes
+
+   -Z <level>        If built-in compression should be used, the level
+                      can be supplied here. If commands to process and
+                      unprocess are also supplied with option -z, then
+                      data is first processed by the process command,
+                      then by built-in compression. During uncompress
+                      it works the other way round
+
+
+ $BASEDIR/client/bin/afclient
+
+  The main program of the client side. This program does not read
+  configuration files or filelists nor does it maintain any other
+  persistently stored information. It's just the workhorse providing
+  the functionality, that is required by the higher level programs.
+  Here's the usage, that can be printed out typing:  client -usage
+
+      afclient -cxtd [ -[RraunOvgiIqQZwbjGK] ] \
+               [ -D <destination> ] \
+               [ -m <message-poll-interval> ] \
+               [ -M <server-message> ] \
+               [ -h <backup-server> ] \
+               [ -z <zipcmd> <unzipcmd> ] \
+               [ -T <to-extract-file/tmpdir-for-copytape> ] \
+               [ -C <cartridge-number> ] \
+               [ -F <filenumber-on-tape> ] \
+               [ -f <archive-filename> ] \
+               [ -e <errorlog-filename> ] \
+               [ -p <server-port-number> ] \
+               [ -N <newer-than-filename> ] \
+               [ -o <user-ID> ] \
+               [ -k <encrption-key-file> ] \
+               [ -s <dont-process-filepattern> [ -s ... ] ] \
+               [ -H <header> ] \
+               [ -V <statistics-report-file> ] \
+               [ -A <after-time-seconds> ] \
+               [ -B <before-time-seconds> ] \
+               [ -W <identity> ] \
+               [ <files> <directories> ... ]
+
+      afclient -X <program> \
+               [ -h <backup-client> ]
+
+      afclient -\?  (to get help)
+
+  The first form is similar to tar, except that it contacts a
+  backup server, if the -f option is not supplied.
+
+  The second form is used to start a program remotely on
+  another host. In most cases this will be one of:
+
+  client -X full_backup -h <some-host>
+  client -X incr_backup -h <some-host>
+
+  Normally this host is a backup client and a backup is started
+  this way. Only programs can be started, that reside in the
+  directory, that is configured in the backup server's configu-
+  ration file unter "Program-Directory".
+
+  The third form produces the following help text:
+
+  Description
+  ===========
+  
+  This program is used to maintain archives on a backup server
+  host or in a file. Archives can be created, extracted or their
+  contents be listed. Almost one of the following flags has to
+  be supplied:
+  
+   -c  to create an archive
+  
+   -x  to extract from an archive
+  
+   -t  to list the contents of an archive
+  
+   -d  to verify (compare) the contents of an archive
+
+   -C  to set a certain cartridge on the backup server
+        (makes only sense extracting or listing with -x or
+         -t, the writing position can't be changed by clients)
+
+   -F  to set a certain file on the backup server's tape
+        (same applies as for -C)
+
+   -q  to printout the current cartridge and tape file number
+         on the backup server
+  
+   -Q  to printout the cartridge and tape file number for the
+         the next write access on the backup server
+
+   -X  followed by the full path name of a program to be started on
+         the client. This can be used to trigger a backup remotely.
+         If the program needs arguments, the command together with
+         the arguments has to be enclosed by quotes
+  
+   -I  to  printout an index of the backups written to the
+         current cartridge
+
+   -w  to check the status of the streamer on the server side, e.g.
+         whether it is ready and waiting for requests to service,
+         see below for possible states
+
+   -G  to request a new cartridge for the next writing operation.
+         If the current writing position is already at the beginning
+         of a new or reused tape, nothing happens
+
+   -D <destination> to make an exact copy of a tape to another one
+         (duplicate). See below how to specify the destination tape.
+         Duplication can be either from one cartridge to another on
+         the same server, or from one server to another one. When
+         copying to the same server chunks of data are stored in a
+         temporary directory on the client, where the command is
+         started, what should preferably be the source server
+
+   -M <message> send a message to the server. Messages will in the
+         most cases contain whitespace, so they should be enclosed
+         in quotes. Server messages should be sent to the single
+         stream server (port), the multi stream server might hang
+         receiving a message due to systematical reasons. Several
+         messages can be put into the string. They must be separated
+         by a real newline character or the usual C-like \n .
+         The following messages are currently supported:
+
+        PreciousTapes: <client-id> <list-of-tapes>
+                   The list of tapes is inserted into the table
+                   with the tapes, that are crucial for clients
+                   to restore all files, that are listed in all
+                   existing index files. The list is assigned to
+                   the client with the given client identifier,
+                   regardless of an id suppied with option -W .
+                   These tapes will not be overwritten until it
+                   is explicitly permitted. This message is sent
+                   automatically by full_backup or incr_backup
+                   and should not be used in other user contexts
+
+        ReuseTapes: <list-of-tapes>
+                   The opposite of PreciousTapes. Sending this
+                   message permits the server to overwrite the
+                   listed tapes, though they are crucial for
+                   some client
+
+        TapesReadOnly: <list-of-tapes>
+                   The list of tapes is inserted into the file
+                   listing the files, that should not be written
+                   any more for whatever reason
+
+        TapesReadWrite: <list-of-tapes>
+                   This reverts the status of tapes set read-only
+                   to read-write, the opposite of TapesReadOnly
+
+        CartridgeReady
+                   When an operator is requested to do something
+                   the server is waiting for, this message can be
+                   sent to trigger the server to proceed. This
+                   message has the same effect as the cartready
+                   command
+
+        DeleteClient: <client-identifier>
+                   The tapes, that are marked as reserved for a
+                   client to recover all the data in his indexes,
+                   are freed. That is, the appropriate line is
+                   removed from the server's precious_tapes file
+
+  -c, -x, -t and -X are mutual exclusive. The other options can
+  be supplied as needed. To set the cartridge and/or the tape file
+  on the backup server is only making sense when not creating
+  an archive. The serial order of writing to tape is handled by
+  the server machine independently of the client.
+  
+  
+  Filenames
+  
+  The names of the files and directories, that have to be put
+  into or extracted from an archive are by default read from the
+  standard input. If you supply filenames in the command line or
+  enter the -a flag when extracting, standard input is not read.
+  The same is valid, if filenames are read from a file with the
+  -T option. When reading the names from a file or from standard
+  input, they must be given one per line. If a name contains
+  special characters (like newline or nonprintable ones), they
+  have to be specified using backslash-sequences like in C-code,
+  e.g. \n for newline.
+  In save mode (-c) filenames can be prefixed with character
+  sequences, that have special meanings (no space between prefix
+  and filename):
+
+   /../   The file is not saved with all attributes present in
+          the inode, but only the contents are saved. This might
+          be useful for saving raw-devices
+   //../  With /../ the configured processing is not applied to
+          the file contents for safety reasons. With this prefix
+          processing can be forced nonetheless
+   |||    and a mandatory space character indicates, that the
+          following characters up to (but not including) another
+          triple bar ||| should be interpreted as a shell command,
+          that is started and whose standard output is written to
+          the backup. At restore time the command following the
+          second triple bar is started and the data stream read
+          at backup time is written to it's standard input. This
+          might be useful for saving e.g. databases. The second
+          command may be terminated by a triple sharp ###, that
+          starts an optional comment. Example:
+         ||| pg_dumpall ||| psql db_tmpl ### Store Postgres DBs
+
+
+  More options in alphabetical order:
+  
+   -            in combination with -c: read standard input and
+                  write it to tape, in combination with -x: read
+                  tape and write it to standard output
+
+   -A <time>    process files (save or extract) modified after
+                  the given time in seconds since 1.1.1970 00:00
+
+   -a           in combination with -x: extract all files and
+                  directories in the archive
+  
+   -B <time>    process files (save or extract) modified before
+                  the given time in seconds since 1.1.1970 00:00
+
+   -b           don't enter buffering mode
+
+   -e <errlog>  Use the file <errlog> to write error messages to
+                  instead of the standard error output
+  
+   -f <file>    write to or read from a file instead of querying
+                  the backup server
+  
+   -g           while extracting/reading: ignore leading garbage,
+                  suppress error messages at the beginning. This
+                  is useful when extracting from tape files, that
+                  are not the first ones of a whole archive.
+  
+   -H <header>  put the supplied informational header to the begin
+                  of the backup. If a - is supplied (no space may
+                  follow -H i.e. -H-) the information is read from
+                  the first line of stdin. Backslash sequences of
+                  C-like style are replaced
+
+   -h <host>    use the backup server with the name <host>
+                  default host is the machine with the name
+                  backuphost
+  
+   -i           while extracting: ignore the stored ownership and
+                  do not restore it
+
+   -j           when starting to write: request starting a new
+                  tape file
+
+   -K           when packing, do not keep the access time of the
+                  file. By default after packing a filesystem entry
+                  it's previous atime is restored
+
+   -k <file>    use the contents of the given file as encryption
+                  key for authenticating to the server
+  
+   -l           for each packed or unpacked filename, if sending
+                  to or receiving from a backup server in verbose
+                     mode in combination with -n:
+                  printout server name and port number at the
+                  beginning of the line, e.g.: orion%2988!
+
+   -N <file>    while archiving: ignore files with a modification
+                  time before the one of the given file, only save
+                  newer files or such with the same age in seconds
+
+   -n           for each packed or unpacked filename, if sending
+                  to or receiving from a backup server in verbose
+                     mode:
+                  printout cartridge and tape file number at the
+                  beginning of the line, e. g.: 7.15: <filename>
+                  In combination with -X: precede each line of
+                  output received from the remotely started program
+                  with the identifier of the remote host and a
+                  colon, e. g.:  darkstar: Full backup finished.
+
+   -O           for each packed file creating a backup in verbose
+                  mode: printout the user-ID of the file owner at
+                  the beginning of the line prefixed with a bar |
+                  eventually behind cartridge and file number
+
+   -o <uid>     archive or extract only files owned by the user
+                  with the given user-ID (an integer)
+  
+   -p <portno>  use a different port number for communicating with
+                  the backup server. Default is TCP-Port 2988
+  
+   -R           pack or extract directories recursively with all
+                  of their contents
+  
+   -r           use filenames relative to the current directory,
+                  whether they start with a slash or not. If -r
+                  is given more then 1 time, also let symlinks
+                  originally pointing to absolute paths now point
+                  to paths relative to the directory, where the
+                  symlink will be created. If given twice, the
+                  current directory is assumed to be the relative
+                  root directory for the symbolic link target.
+                  If given three times, the root directory of the
+                  current process is used as the relative root
+                  directory of the symbolic link targets
+
+   -S <cartset> The cartridge set to use, where <cartset> is the
+                  number of a valid cartridge set on the server
+                  side. Default is 1. This option makes sense only
+                  when creating backups with -c
+
+   -s <filepat> do not attempt processing on files matching the
+                  given filename pattern. This parameter may
+                  appear several times
+
+   -T <file/dir> read the filenames to process from the <file>.
+                  The filenames must be separated by whitespace.
+                  If whitespace is part of a filename, it has to
+                  be enclosed by double quotes. Double quotes or
+                  backslashes within the filename have to be
+                  preceded by a backslash. In combination with
+                  -D: the tape files to be copied are temporarily
+                  stored in the given directory instead of the
+                  default directory /tmp
+  
+   -u           while extracting: remove existing files with the
+                  same name as found in the archive. Otherwise
+                  no existing files are overwritten
+  
+   -U           for each packed file creating a backup in verbose
+                  mode: printout the modification time of the file
+                  in seconds since 1970/1/1 0:00 at the beginning
+                  of the line prefixed with a tilde ~ eventually
+                  behind cartridge number, file number and owner
+
+   -V <file>    write a report containing statistics at the end of
+                  a backup to the <file>
+
+   -v           verbose mode: print the filenames while creating
+                  or extracting, be a little more verbose while
+                  listing contents. If -v is the only given flag:
+                  print out software name and version
+  
+   -W <id>      identify as <id> to the server. This is needed when
+                  connecting a multi-stream server to distinguish
+                  between the clients. Default is the string
+                  "<client-program>"
+ 
+   -z <z> <uz>  use <z> as the command, that is used to process
+                  files, <uz> for the corresponding unprocess.
+                  The command has to read from stdin and to write
+                  to stdout. If arguments have to be supplied to
+                  <z> and/or <uz>, don't forget to use quotes. If
+                  built-in compression is desired, the command for
+                  processing has to start with a dot (.), followed
+                  by a space and a number ranging from 1 to 9, that
+                  specifies the compression level. If an additional
+                  external command should process the data, it may
+                  follow, separated from the compression level by
+                  whitespace. The order of processing is: First the
+                  external program processes the data, then built-in
+                  compression is applied. An empty string has to be
+                  supplied for <uz> (or any other dummy is ok), if
+                  only built-in compression is desired.
+                  Examples for <z>:
+                   gzip       (run external command gzip),
+                   "gzip -2"  (the same with an argument),
+                   ". 8"      (only built-in compression level 8),
+                   ". 3 __descrpt -k /my/key" (run command __descrpt
+                              and apply built-in compression level 3)
+  
+   -Z           while printing out the contents: check those files
+                  in the archive that are processed for integrity.
+                  While creating an archive: write a CRC32 checksum
+                  for each file, file contents or command output to
+                  the backup stream
+  
+  
+   -?           to printout this text
+
+  The -w option reports one or more of the following states,
+  separated by the plus character + :
+
+    READY     the device is not in use by any program and the
+              server side is ready to service requests
+
+    BUSY      the device is in use and currently operated by the
+              afbackup service
+
+    DEVINUSE  the streamer device is in use by some program, that
+              is not part of the afbackup service
+
+    UNAVAIL   the streamer device is not accessible or in some
+              other way occupied
+
+    UNLOADED  the device is not busy, but there is no tape loaded
+
+    CHANGEABLE when reported together with UNLOADED, a tape can be
+              loaded quickly e.g. using the afclient command with
+              option -C <cartno>. It is not considered quickly,
+              if a human operator must put the cartridge into the
+              drive, so in this case only UNLOADED is reported.
+              When reported with READY, the tape can be changed
+              quickly (same understanding as before).
+
+  The destination tape for the duplicate operation (-D) can be given
+  in two ways: either with the options -h, -p, -C and -k following
+  the -D immediately without space and enclosed in quotes, so that
+  they appear as an own argument list in one real argument, e.g.:
+    -D' -C 5 -h targethost -p targetport'
+  (double quotes are of course also possible ...).
+  The second format is as follows:
+    [<targetcart>][@<targethost>][%targetport>][:<targetcryptkeyfile>]
+  At least one of the specifiers must be present. Examples:
+   5@otherhost  5%2990:/keyfile/for/target/server @otherhost%2970
+  If one of the specifiers is omitted, it is assumed identical with
+  the copy source specified in the normal options -h, -p, -C and -k.
+  Copying a tape to itself is prevented.
+
+
+Helper programs
+---------------
+
+  The names of all the following programs are starting with two
+  underscores __ to indicate, that they don't have a functionality,
+  which refers directly to any backup or restore operations. They
+  can be used to achieve additional functionality or for further
+  convenience. They are listed in alphabetical order regardless of
+  usefulness or importance.
+
+
+ __descrpt
+
+  Program to encrypt data using a DES-algorithm. Usage:
+
+    __descrpt { -e | [ -d ] } [ -w ] [ -k <cryptkeyfile> ]
+
+  This program en- or decrypts the standard input to standard output.
+  The used key is derived from the string supplied at compile time or
+  read from the given cryptkeyfile. If -d is not supplied, data will
+  be encrypted, otherwise decrypted. -e is optional i.e. the default.
+  By default 128 Bit DES encryption is active. With the flag -w this
+  is reduced to weaker 64 Bit DES encryption, what is much less secure
+  but notably faster. If -w is supplied when encrypting, it must also
+  be given for decrypt.
+  This program can only be built, if the Eric Young's DES library is
+  available. The command  make __descrpt  in the source distribution
+  directory will compile and link it.
+
+
+ __inc_link
+
+  Script to modify a symlink to point to the next file, counted
+  by the trailing number. Usage:
+
+    __inc_link [ -s ] <symlink> <increment>
+
+  It will be determined, to what the given symlink points. The
+  integer number at the end of this filesystem entry will be
+  increased by the given increment (may be negative). The symlink
+  will be removed and a new one created pointing to the resulting
+  filesystem entry. If no filesystem entry with the resulting name
+  exists, an error message is printed. If the new symlink cannot
+  be created or the old one cannot be removed, error messages are
+  printed. If everything works fine and the -s flag (silent) is
+  not supplied, the name of the filesystem entry, to that the new
+  symlink points, is printed. If any error occurs, the original
+  symlink remains unchanged. E.g. if  ls -l  reports (among others):
+
+  lrwxrwxrwx  1  af  user  13  Oct  8 14:00  the_link -> file.number.4
+
+  and the command  __inc_link the_link 2  is entered, the result
+  of a following  ls -l  will be:
+
+  lrwxrwxrwx  1  af  user  13  Oct  8 14:00  the_link -> file.number.6
+
+  and some more (file.number.6 must exist)
+
+
+ __mt
+
+  Wrapper script for mt on systems, where the count 0 for subcommands
+  like fsf leads to an error. Same usage applies for both __mt and mt.
+
+
+ __packpats
+
+  Auxiliary script used by xafrestore. The functionality of this
+  program is not important to any user or administrator. It's main
+  intention is to speed up the index scanning, cause otherwise the
+  Tcl/Tk-Script must do the entire evaluation, what is a real CPU
+  hog.
+
+
+ __piper
+
+  Program to create command pipes without the overhead of shells.
+  Usage:
+
+    __piper [ command [ args ] [ '|' command [ args ] [ '|' ... ] ] ]
+
+  This program simply gets one or more commands separated by the pipe
+  symbol | as arguments. When called from a shell commandline or in
+  any situation, where the whole command is interpreted by a shell,
+  the bar | has to be escaped from interpretation, either by preceding
+  it with a backslash or putting it into single quotes.
+   The arguments are chained (separated by single spaces each) and
+  then separated at word boundaries. If an argument should contain
+  whitespace, it must be double-quoted. The whole command pipeline may
+  be put into one single argument, so in a shell the following is ok:
+
+    __piper 'echo "Hello    lots of space" | sed "s/ts of/st in/g"'
+
+  Double quotes, the pipe symbol and the backslash itself may be
+  escaped by a preceding backslash \.
+  The advantage using this program instead of a shell with the -c
+  option should be a much faster startup of the whole pipeline. This is
+  useful in the process- and unprocess commands of the client side.
+
+
+ __z
+
+  Program, that performs the same (un)compression like the built-in
+  compression. The synopsis of this program is:
+
+      __z [ -{123456789|d} ]
+
+     __z [ -123456789 ]  compresses standard input to standard out
+                         using the given compression level
+
+     __z -d              uncompresses standard in to standard out
+
+
+ __numset
+
+  This program deals with sets of numbers and can either remove
+  elements of one set in another set of merge two sets. Synopsis:
+
+      __numset <set-1-specifier> {+|-|in} <set-2-specifier>
+      __numset # <set-specifier>
+
+  If the second argument is a +, then the two sets are merged. If
+  the second argument is -, the elements in set2 are removed from
+  set1. If the second argument is the word "in", then it is tested,
+  whether elements of set 1 are also contained in set 2. The number
+  of common elements will be the result in that case. If the first
+  argument is the character # (must be escaped in shell scripts,
+  e.g. write '#'), the result is the number of elements in the set
+  given as second argument. Number set specifiers should not contain
+  whitespace and may consist of numbers, commas and dashes. Examples
+  for number set specifiers:
+
+   3-9  4,5,9  1-3,6,9-13
+
+  Examples how to use __numset and the results:
+
+   prompt# __numset 1-3,5-9,14 + 10-12
+   1-3,5-12,14
+   prompt# __numset 1-3,5-9,14 - 5-13
+   1-3,14
+   prompt# __numset 3 - ""
+   3
+   prompt# __numset "" - 4,6,8
+
+   prompt# __numset 3 - 3-5
+
+   prompt# __numset # 4-9
+   6
+   prompt# __numset 3-6,9-12 in 10-20
+   3
+   prompt#
+
+  Notes: Any argument or result might be an empty string (i.e. set)
+         The numbers in the sets need not to be sorted

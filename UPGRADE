@@ -1,0 +1,222 @@
+General Information
+-------------------
+
+To upgrade from a previous release simply follow the
+installation instructions. Your configuration files will
+not be touched. New options have the older behaviour as
+default, if not set explicitly. I try to keep backward
+compatibility forever.
+
+
+To Version 2.5 or higher
+------------------------
+
+Upgrading to 2.5 or higher requires to first upgrade the
+server. It can handle requests from older clients, but
+newer clients fail on an older server.
+
+
+To version 3.0 or higher
+------------------------
+
+The name of the service name changed from to afbackup
+from backup (important for the entry in /etc/services).
+Keep this in mind, when you are going to modify the
+inetd's configuration.
+
+
+Check your configuration for commands, that consist of
+several subcommands separated by semicolons. It was no
+problem in earlier versions, but is now crucial to make
+sure, that these commands exit with a bad status (!= 0),
+if one of the subcommands fails. Thus the subcommands
+should be separated by && instead of the semicolon. This
+does not always make sense. In some cases a good exit
+status (0) must be enforced. In these cases you should
+write:  <commands-that-might-fail>; exit 0
+
+
+In some cases the server fails to run in buffering mode.
+Why this happens, is currently unknown, but work is done
+investigating this problem. In such a case error messages
+show up for no obvious reasons. As a temporary solution
+until the problem is fixed the server can be started with
+the option -b. Add -b in the file /etc/inetd.conf after
+the word afserver, so the whole line looks somewhat like
+this:
+
+afbackup stream tcp nowait backup /usr/backup/server/bin/afserver afserver -b /usr/backup/server/lib/backup.conf
+
+If you have the xinetd running instead of inetd, modify
+the section in /etc/xinetd.conf to be like this:
+
+service afbackup
+{
+        flags           = REUSE NAMEINARGS
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = backup
+        server          = /usr/backup/server/bin/afserver
+        server_args     = /usr/backup/server/bin/afserver -b /usr/backup/server/lib/backup.conf
+}
+
+Having successfully modified /etc/(x)inetd.conf, send a
+hangup signal to the (x)inetd to activate the change. Find
+out the PID typing   ps -uxa|grep inetd   and enter:
+kill -HUP <PID>
+with <PID> replaced by the real process id. The -b option
+turns off buffering, so performance is worse, but until
+the problem is fixed, there's no way around this, sorry.
+
+
+If you make the backup into a filesystem instead of a
+tape, check for the recommended settings of new parameters
+in the HOWTO. The default might not be appropriate for
+this configuration.
+
+
+You might want to use DES encryption instead of the old
+shuffeling algorithm. 128 Bit DES encryption can be used
+now, what is currently and i think for the next 100 years
+not crackable. Note, that whether using DES or not is a
+compile time option and no runtime setting. Thus clients
+and server must be compiled in the same manner. To get
+the appropriate DES library, go to the ftp-directory,
+where you got this package from. The current version by
+the time of writing this is 4.04b.
+
+
+To version 3.1 or higher
+------------------------
+
+If using several backup servers for one client, the server
+and port used for this client up to now should be the first
+one supplied in the client side configuration. I.e. the
+new entries should be appended to the existing ones for the
+backup server hostname, port number and cartridge set number
+(see: HOWTO Q9).
+
+The program name in column 7 of the /etc/inetd.conf entry
+must be the full path to the program. It is no longer sufficient
+to just give the basename of the program. The Install script
+considers this, but if you upgrade manually, /etc/inetd.conf has
+to be edited. The same applies for the first word in the
+server_args parameter of the xinetd, if this daemon is used
+instead of inetd.
+
+
+To version 3.2 or higher from versions < 3.2
+--------------------------------------------
+
+When going to use the multi-stream server, the existing
+single-stream configuration should be kept and the new
+server should get a new service (TCP port) assigned. This
+way existing backups don't become useless and restoring
+will transparently use the old server. It is not possible
+to get the data of backups written with the single-stream
+server through the multi-stream server, but provided to
+have the single-stream server working as configured before
+this is not necessary.
+
+Cause the emergency recovery mechanism changed heavily,
+a migration must be performed on the clients. The script
+migrate_to_3.2 in the distribution directory has been
+written to help migrating. Started as root, it will ask
+some stupid questions and then convert the old minimum
+restore info to the new format. The minimum restore info
+will also be written to the configured backup media doing
+a small backup of the file with it. So emergency recovery
+is possible also without the minimum restore info, but
+better don't rely on it. Keep the minimum restore info
+somewhere. It is no longer cumulative i.e. you need only
+the latest one to restore everything.
+The old style minimum restore information is required to
+perform this step. See the configuration parameter
+StartupInfoProgram on your clientside configuration,
+where it is saved.
+
+
+To version 3.2.2 or higher from versions < 3.2.2
+------------------------------------------------
+
+Built-in compression is available as new feature in
+version 3.2.2 . When choosing to use built-in compression
+see Q 17 of the HOWTO AND Q27 (!!!) of the FAQ how to
+build and configure it.
+Note, that nothing changed on the server side, so an
+update of the server will not have any effect.
+
+
+To version 3.2.2 or higher from versions < 3.2.3
+------------------------------------------------
+
+The server side configuration file entry to specify the
+cartridge sets has been reworked. It is no longer called
+LastCartridges: followed by the the numbers of the last
+cartridges in the sets. Now it reads as CartridgeSets:
+followed by a list of cartridge set specifiers separated
+by whitespace. See CONFIG or the manual pages for valid
+formats.
+The server program understands both versions, but if
+both are present, the old style entry is ignored. Also
+the configuration programs convert the configuration file
+entry to the new format silently. The recommended way to
+switch to the new style entry is nonetheless to run the
+script migrate_to_3.2.3 . It asks for the full path to
+the configuration file, makes a safety copy of it and
+converts it to the new format. The differences between
+old and new file are printed, so you can see, what has
+changed and if the automatic conversion fails, have a
+chance to adapt the file manually.
+
+
+To version 3.3 or higher from versions < 3.3
+--------------------------------------------
+
+Changes in the encryption routines were necessary due to
+a bug in all libdes versions. Thus the newly built programs
+are unable to authenticate successfully with existing
+installations. Furthermore if the __descrpt program was used
+to encrypt files, they cannot be decrypted with this program
+any longer. Nonetheless it is possible to build the package
+using the buggy function, so backward compatibility for
+existing installations is provided. If you are using the
+Install script, answer the question for backward compatibility
+appropriately. If you prefer to install step by step, don't
+miss the section about this in the INSTALL file.
+
+
+To version 3.3.4 or higher from versions < 3.3.4
+------------------------------------------------
+
+If it is desired to downgrade to earlier versions because of
+problems with this one, the serverside ´tapepos´ file must be
+converted back to the old format. The new format is e.g.:
+
+/dev/nst0 9 1
+1: 19 14
+2: 9 10
+3: 11 1
+
+This means: In device /dev/nst0 there is cartridge 9 wound back
+to tapefile 1. The next 3 lines indicate the writing position
+for 3 cartridge sets. To convert back to older format, take
+only the 2 trailing numbers from each line and put them into
+1 single line, beginning with the line starting with the
+device specifier, then following up the cartridge set numbers
+in serial order. This would for this example result in the
+following line:
+
+9 1 19 14 9 10 11 1
+
+
+To version 3.3.6 or higher from versions < 3.3.6
+------------------------------------------------
+
+The release of 3.3.6 was originally not planned. Modifications
+for the upcoming 4.0 were already done and i didn't feel like
+rolling them all back. So if upgrade to 3.3.6 has been done,
+but for some reason a downgrade to a lower version is desired,
+the configuration files must be moved back from the new .../etc
+directories to the appropriate .../lib .

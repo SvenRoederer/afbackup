@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/basedirs,v $
+# $Id: basedirs,v 1.2 2012/11/01 09:53:05 alb Exp alb $
+
+usage(){
+  echo "Usage: "`basename "$0"`" [ -i <subdirmarker> ] [ <directory> ... ]" >&2
+  exit 2
+}
+
+INCLDIR=""
+if [ _"$1" = _-i ] ; then
+  INCLDIR="$2"
+  shift 2
+fi
+
+if [ $# -gt 0 ] ; then
+  DIRECTORIES=`while [ $# -gt 0 ] ; do echo "$1" ; shift ; done`
+else
+  DIRECTORIES=`cat`
+fi
+
+echo "$DIRECTORIES" | while read LINE ; do
+  INCLDIR_SEEN=no
+
+  if [ _"$INCLDIR" != _ ] ; then
+    if echo "$LINE" | egrep '^(.*/)?'"$INCLDIR"'(/.*)?$' >/dev/null ; then
+      INCLDIR_SEEN=yes
+    fi
+  fi
+
+  THISDIR="$LINE"
+  DIRPRINTED=no
+
+  while true ; do
+    if [ -d "$LINE" -a $INCLDIR_SEEN = no ] ; then
+      break
+    fi
+
+    if [ $INCLDIR_SEEN = yes ] ; then
+      echo "$LINE" | egrep '^(.*/)?'"$INCLDIR"'(/.*)?$' >/dev/null
+      if [ $? -ne 0 ] ; then
+	break
+      fi
+    fi
+
+    if [ -d "$LINE" -o ! -f "$LINE" ] ; then
+      echo "$LINE"
+      DIRPRINTED=yes
+    fi
+
+    LINE=`dirname "$LINE"`
+  done
+
+  # the deepest directory also exists, print it with a tailing /*
+  echo "$THISDIR"/'*'
+done | sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g' | sort -u

@@ -1,0 +1,55 @@
+################### Start of $RCSfile: changer.conf.chio,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/changer.conf.chio,v $
+# $Id: changer.conf.chio,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#  Configuration file for media changer devices using the chio command
+#
+####################################################################
+#
+# Contributed by: Oliver Hartmann, Johannes Gutenberg Universitaet Mainz
+#   The full path to the chio command is required,
+#   if not in a standard place
+#
+# Replacements in the commands:
+#
+# pattern  replaced with
+#
+# %d       streamer device filename
+# %D       changer device filename
+# %n       the origin number, if counting starts with 1
+# %m       the origin number, if counting starts with 0
+# %N       the target number, if conuting starts with 1
+# %M       the target number, if counting starts with 0
+#
+# Commands to move cartridges
+# (moves, that are not supported, should be commented out)
+#
+Move Drive To Slot Command:	chio -f %D move drive %m slot %M
+
+Move Slot To Drive Command:	chio -f %D move slot %m drive %M
+
+#Move Drive To Loadport Command:	
+
+#Move Loadport To Drive Command:	
+
+#Move Slot To Loadport Command:	
+
+#Move Loadport To Slot Command:	
+
+#Move Drive To Drive Command:	
+
+#Move Slot To Slot Command:	
+
+#Move Loadport To Loadport Command:	
+
+#
+# Commands to find free resources
+#
+ListEmpty Slots Command:	chio -f %D status | grep '^slot [0-9]*: *<ACCESS>$' | awk '{print $2}' | sed 's/:*$//g' | awk '{print $1 + 1}'
+#ListEmpty Loadports Command:	

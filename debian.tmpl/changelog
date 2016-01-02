@@ -1,0 +1,5 @@
+@PACKAGE@@DEBPACKAGE@ (@VERSION@) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Albert Fluegel <af@muc.de>  Mon, 16 Dec 2013 12:43:13 +0100

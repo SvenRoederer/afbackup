@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cat "$@" | awk '{
+	while(substr($0, length($0), 1) == "\\"){
+		getline line;
+		$0 = substr($0, 1, length($0) - 1) line;
+	}
+	print $0;
+}'
+

@@ -1,0 +1,14 @@
+---+3.5
+   * barcode data and arbitrary cartridge descriptions supported. See
+     HOWTO 37 and the manual pages of cart_ctl for details
+   * some cartridge attributes (e.g. read-only setting) can be maintained
+     and listed by the cart_ctl command now. Refer to the manual page
+     of cart_ctl for more
+   * afbackup can be used on Mac-OS X now
+   * minor bug fixes, streamlining and performance enhancements
+   * release-notes wiki-fied ;-) (i *love* it), more docs to be
+
+---+3.5.1
+   * On recent releases of Solaris-10 NFS4 style ACLs are saved to backup.
+     Enter  man acl_set  to check, if your Solaris 10 has this capability
+   * Can be used on Debian GNU/kFreeBSD

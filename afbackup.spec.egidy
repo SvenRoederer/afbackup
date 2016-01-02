@@ -1,0 +1,254 @@
+#
+# This RPM is for RedHat 7 or newer (with xinetd instead of inetd)
+#
+# if you want to install it on older systems install xinetd there
+# or remove the xinetd-stuff from here, rebuild, install and put
+# the inetd-entries in by hand (see docs)
+#
+
+%define baseversion 3.3.7
+%define patchlevel pl0
+
+Summary: afbackup - a client/server backup system
+Name: afbackup
+Version: %{baseversion}%{patchlevel}
+Release: 1
+Source0: http://dl.sourceforge.net/sourceforge/afbackup/%{name}-%{version}.tar.gz
+Patch0: afbackup-3.3.6-symlink.patch
+URL: http://sourceforge.net/projects/afbackup/
+License: GPL
+Packager: Gerd v. Egidy <egidy@deam.de>
+Group: Applications/Archiving
+BuildRoot: /var/tmp/%{name}-%{version}-%{release}-root
+Prefix: /usr
+Prereq: grep
+Requires: glibc >= 2.2
+
+%package server
+Summary: afbackup - a client/server backup system
+Group: Applications/Archiving
+Provides: afbackup-server
+Requires: afbackup xinetd
+BuildRequires: libdes autoconf
+#Prereq:
+
+%package client
+Summary: afbackup - a client/server backup system
+Group: Applications/Archiving
+Provides: afbackup-client
+Requires: afbackup
+BuildRequires: libdes
+#Prereq:
+
+%description
+ Client-Server Backup System
+ This is a client-server backup system offering several workstations a
+ centralized backup to a special backup server. Backing up only one
+ computer is easily possible, too. Any streaming device can be used
+ for writing the data to it, usually this will be a tape
+ device. Writing backups is normally done sequentially: The next
+ writing to tape goes to the end of the previous write no matter where
+ you have restored from in the meantime.
+
+  Features:
+  - Authentication of the client is performed before it can take over control
+  - Access restriction for the streamer device -> security
+  - Client-side per-file compression -> reliability
+  - Data stream is written to tape in pieces -> fast finding of files
+  - Tape position logging for each file
+  - Tape capacity is fully used
+  - Full / incremental backups
+  - Raw partitions can be backuped
+  - Client and Server buffering for maximal throughput is done
+
+%description server
+ Client-Server Backup System (Server side)
+ This is a client-server backup system offering several workstations a
+ centralized backup to a special backup server. Backing up only one
+ computer is easily possible, too. Any streaming device can be used
+ for writing the data to it, usually this will be a tape
+ device. Writing backups is normally done sequentially: The next
+ writing to tape goes to the end of the previous write no matter where
+ you have restored from in the meantime.
+
+  Features:
+  - Authentication of the client is performed before it can take over control
+  - Access restriction for the streamer device -> security
+  - Client-side per-file compression -> reliability
+  - Data stream is written to tape in pieces -> fast finding of files
+  - Tape position logging for each file
+  - Tape capacity is fully used
+  - Full / incremental backups
+  - Raw partitions can be backuped
+  - Client and Server buffering for maximal throughput is done
+
+%description client
+Description: Client-Server Backup System (Client side)
+ This is a client-server backup system offering several workstations a
+ centralized backup to a special backup server. Backing up only one
+ computer is easily possible, too. Any streaming device can be used
+ for writing the data to it, usually this will be a tape
+ device. Writing backups is normally done sequentially: The next
+ writing to tape goes to the end of the previous write no matter where
+ you have restored from in the meantime. THIS IS ONLY THE CLIENT, YOU
+ NEED TO HAVE A SERVER RUNNING ON EITHER THIS OR ANOTHER HOST.
+
+  Features:
+  - Authentication of the client is performed before it can take over control
+  - Access restriction for the streamer device -> security
+  - Client-side per-file compression -> reliability
+  - Data stream is written to tape in pieces -> fast finding of files
+  - Tape position logging for each file
+  - Tape capacity is fully used
+  - Full / incremental backups
+  - Raw partitions can be backuped
+  - Client and Server buffering for maximal throughput is done
+
+
+%prep
+%setup -q -n %{name}-%{baseversion}
+
+%patch0 -p1
+
+autoconf
+
+./configure --prefix=%{prefix} \
+            --without-prefixext \
+            --with-des \
+            --with-des-include=/usr/include \
+            --with-des-libdir=/usr/lib \
+            --with-zlib \
+            --with-zlib-include=/usr/include \
+            --with-zlib-libdir=/usr/lib \
+            --with-serverbindir=%{prefix}/sbin \
+            --with-serverlibdir=/etc/afbackup \
+            --with-serverconfdir=/etc/afbackup \
+            --with-servervardir=/var/lib/afbackup \
+            --with-serverlogdir=/var/log/afbackup \
+            --with-serverconf=server.conf \
+            --with-clientbindir=%{prefix}/bin \
+            --with-clientlibdir=/etc/afbackup \
+            --with-clientconfdir=/etc/afbackup \
+            --with-clientvardir=/var/lib/afbackup \
+            --with-clientlogdir=/var/log/afbackup \
+            --with-clientconf=client.conf \
+            --with-rexecdir=%{prefix}/lib/afbackup/rexec \
+            --with-commondir=%{prefix}/lib/afbackup \
+            --with-clientlogdir=/var/log/afbackup \
+            --with-servermandir=%{_mandir} \
+            --with-clientmandir=%{_mandir}
+
+%build
+make all < debian/cryptkey
+
+%install
+rm -rf $RPM_BUILD_ROOT
+
+mkdir -p $RPM_BUILD_ROOT/etc/xinetd.d
+mkdir -p $RPM_BUILD_ROOT/var/log/afbackup
+
+make install.client install.server \
+            SERVERBINDIR=$RPM_BUILD_ROOT%{prefix}/sbin \
+            SERVERCONFDIR=$RPM_BUILD_ROOT/etc/afbackup \
+            SERVERVARDIR=$RPM_BUILD_ROOT/var/lib/afbackup \
+            CLIENTBINDIR=$RPM_BUILD_ROOT%{prefix}/bin \
+            CLIENTCONFDIR=$RPM_BUILD_ROOT/etc/afbackup \
+            CLIENTVARDIR=$RPM_BUILD_ROOT/var/lib/afbackup \
+            SERVERREXECDIR=$RPM_BUILD_ROOT%{prefix}/lib/afbackup/rexec \
+            COMMONDIR=$RPM_BUILD_ROOT%{prefix}/lib/afbackup \
+            COMMONDATADIR=$RPM_BUILD_ROOT%{prefix}/lib/afbackup/share \
+            COMMONSHLIBDIR=$RPM_BUILD_ROOT%{prefix}/lib/afbackup/share/lib \
+            SERVERMANDIR=$RPM_BUILD_ROOT%{_mandir} \
+            CLIENTMANDIR=$RPM_BUILD_ROOT%{_mandir}
+
+make install.rexeclinks \
+            CLIENTBINDIR=%{prefix}/bin \
+            SERVERREXECDIR=$RPM_BUILD_ROOT%{prefix}/lib/afbackup/rexec \
+
+cat <<EOF > $RPM_BUILD_ROOT/etc/xinetd.d/afbackup
+# default: on
+# description: The afbackup server is for doing backup of a client host
+service afbackup
+{
+	disable		= no
+	socket_type	= stream
+	wait		= no
+	user		= root
+	server		= /usr/sbin/afserver
+}
+EOF
+
+cat <<EOF > $RPM_BUILD_ROOT/etc/xinetd.d/afmbackup
+# default: on
+# description: The afbackup multi-stream server is for doing backup of\
+#        multiple clients at once
+service afmbackup
+{
+	disable		= no
+	socket_type	= stream
+	wait		= no
+	user		= root
+	server		= /usr/sbin/afmserver
+}
+EOF
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post
+
+grep -q ^afbackup /etc/services || echo "afbackup	2988/tcp" >>/etc/services
+grep -q ^afmbackup /etc/services || echo "afmbackup	2989/tcp" >>/etc/services
+
+%preun
+
+%files
+%doc CONFIG HOWTO FAQ DO-DONT INTRO README PROGRAMS
+%doc UPGRADE INSTALL INSTALL.utilslib LICENSE ChangeLog COPYING
+%{prefix}/lib/afbackup/
+
+%files server
+%config /etc/afbackup/server.conf
+%config /etc/afbackup/changer.conf
+/etc/xinetd.d/
+%{prefix}/sbin
+/var/lib/afbackup/
+%dir /var/log/afbackup
+%{_mandir}/man8/afserver.8.gz
+%{_mandir}/man8/afmserver.8.gz
+%{_mandir}/man8/cartis.8.gz
+%{_mandir}/man8/cartready.8.gz
+%{_mandir}/man8/label_tape.8.gz
+%{_mandir}/man8/afserver.conf.8.gz
+%{_mandir}/man8/cart_ctl.8.gz
+
+%files client
+%config /etc/afbackup/client.conf
+%{prefix}/bin
+%dir /var/lib/afbackup
+%dir /var/log/afbackup
+%{_mandir}/man8/afclient.8.gz
+%{_mandir}/man8/afclient.conf.8.gz
+%{_mandir}/man8/afrestore.8.gz
+%{_mandir}/man8/afverify.8.gz
+%{_mandir}/man8/full_backup.8.gz
+%{_mandir}/man8/incr_backup.8.gz
+%{_mandir}/man8/update_indexes.8.gz
+%{_mandir}/man8/copy_tape.8.gz
+%{_mandir}/man8/xafrestore.8.gz
+
+%changelog
+* Wed May 15 2002 Gerd v. Egidy <egidy@deam.de>
+- upgrade to afbackup 3.3.6pl6
+- fix patchlevel handling
+- rediffed symlink-patch
+
+* Thu May 31 2001 Gerd v. Egidy <egidy@deam.de>
+- upgrade to afbackup 3.3.3beta3
+
+* Thu Dec 28 2000 Gerd v. Egidy <egidy@deam.de>
+- upgrade to afbackup 3.3
+- require glibc-2.2 instead of using the no-64bit-patch
+
+* Fri Oct 20 2000 Gerd v. Egidy <egidy@deam.de>
+- started writing the RPM from scratch.

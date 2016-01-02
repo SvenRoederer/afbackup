@@ -1,0 +1,242 @@
+Summary: Client side of AF backup system
+Name: @PACKAGE@
+Version: @VERSION@
+Release: 1
+#Source0: http://dl.sourceforge.net/sourceforge/@PACKAGE@/%{name}-%{version}.tar.gz
+#Source0: %{name}-%{version}.tar.gz
+URL: http://sourceforge.net/projects/@PACKAGE@/
+License: GPL
+Packager: Albert Fluegel <af@muc.de>
+Group: Applications/Archiving
+BuildRoot: @CURWD@/root
+#BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Requires: openssl zlib tk
+BuildRequires: openssl zlib
+
+%define _rpmdir RPM/
+%define _rpmfilename %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm
+%define curwd @CURWD@
+
+# Autoreq: 0
+# Don't complain on unpackaged files:
+%define _unpackaged_files_terminate_build 0
+#%define _missing_doc_files_terminate_build 0
+
+%package server
+Summary: Server side of AF backup system
+Group: Applications/Archiving
+Requires: openssl zlib xinetd tk
+Prereq: /usr/sbin/groupadd, /usr/sbin/useradd
+BuildRequires: openssl zlib
+
+%package devel
+Summary: Libraries containing miscellaneous utilities
+Group: Utilities
+Requires: openssl zlib
+
+%description
+@PACKAGE@ is a client-server backup system offering several workstations to
+perform a backup to a special central backup server.  Backing up only one
+computer is easily possible, too.  Any streaming device can be used
+for writing the data to, usually this will be a tape device, but hard 
+disks can be used, too.  Writing backups is normally done sequentially; data
+is appended after the end of the previous backup regardless of restore
+operations issued on other tapes in the meantime.
+
+This @PACKAGE@ client needs to be installed on all machines which have data 
+to back up.  It is started either via remote control or using a local cron 
+job, connects then to the server over the network and sends the data to be 
+backed up.
+
+Features:
+- Client is authenticated before being allowed to perform backup
+- Access restriction for the streamer device -> security
+- Client-side per-file compression -> reliability
+- Data stream is written to tape in chunks -> fast finding of files
+- Tape position logging for each file
+- Tape capacity is fully used
+- Full/incremental backups
+- Raw partitions can be backed up
+- Client and server use buffering for maximal throughput
+
+%description server
+The @PACKAGE@ server runs on the machine which offers storage (tape or 
+sometimes hard drive) for backups on your network. Any machines running
+backup clients contact the server in regular intervals and send data
+to store on the backup medium.
+
+%description devel
+A library containing many many utilities to make every day's live of a
+C programmer easier (libx_utils)
+
+
+%find_lang %name
+
+%post
+@clientconfdir@/.postinstall client
+
+%preun
+# Only dismantle if the server package is gone, too
+if [ ! -f @serverbindir@/afserver ] ; then
+  @clientconfdir@/.preremove all
+fi
+
+%post server
+@serverconfdir@/.postinstall server
+
+%preun server
+# Only dismantle if the client package is gone, too
+if [ ! -f @clientbindir@/afbackup ] ; then
+  @serverconfdir@/.preremove all
+fi
+
+%files -f %{curwd}/client.autodirs~
+%defattr(-,root,root)
+%doc @commondatadir@/doc/CONFIG
+%doc @commondatadir@/doc/HOWTO
+%doc @commondatadir@/doc/FAQ
+%doc @commondatadir@/doc/DO-DONT
+%doc @commondatadir@/doc/INTRO
+%doc @commondatadir@/doc/README
+%doc @commondatadir@/doc/PROGRAMS
+%doc @commondatadir@/doc/LICENSE
+%doc @commondatadir@/doc/ChangeLog
+%doc @commondatadir@/doc/COPYING
+@commonshlibdir@/aftcllib.tcl
+@commondatadir@/locale/de/LC_MESSAGES/@PACKAGE@.mo
+@commondatadir@/locale/it/LC_MESSAGES/@PACKAGE@.mo
+
+%config(noreplace) @clientconfdir@/@clientconf@
+@clientbindir@/afclient
+@clientbindir@/afbackup
+@clientbindir@/full_backup
+@clientbindir@/incr_backup
+@clientbindir@/afverify
+@clientbindir@/copy_tape
+@clientbindir@/afbackout
+@clientbindir@/update_indexes
+@clientbindir@/afrestore
+@clientbindir@/afclientconfig
+@clientbindir@/clientconfig
+@clientbindir@/xafclientconfig
+@clientbindir@/xclientconfig
+@clientbindir@/xafrestore
+@clientbindir@/xrestore
+@clientbindir@/autocptapes
+@clientbindir@/__packpats
+@clientbindir@/__piper
+%if "@ZIP@"
+@clientbindir@/@ZIP@
+%endif
+%if "@DESCRPT@"
+@clientbindir@/@DESCRPT@
+%endif
+@clientmandir@/man8/afclient.8*
+@clientmandir@/man8/afclient.conf.8*
+@clientmandir@/man8/afrestore.8*
+@clientmandir@/man8/afverify.8*
+@clientmandir@/man8/full_backup.8*
+@clientmandir@/man8/incr_backup.8*
+@clientmandir@/man8/update_indexes.8*
+@clientmandir@/man8/copy_tape.8*
+@clientmandir@/man8/xafrestore.8*
+@clientconfdir@/.postinstall
+@clientconfdir@/.preremove
+
+%files server -f %{curwd}/server.autodirs~
+%defattr(-,root,root)
+%doc @commondatadir@/doc/CONFIG
+%doc @commondatadir@/doc/HOWTO
+%doc @commondatadir@/doc/FAQ
+%doc @commondatadir@/doc/DO-DONT
+%doc @commondatadir@/doc/INTRO
+%doc @commondatadir@/doc/README
+%doc @commondatadir@/doc/PROGRAMS
+%doc @commondatadir@/doc/LICENSE
+%doc @commondatadir@/doc/ChangeLog
+%doc @commondatadir@/doc/COPYING
+@commonshlibdir@/aftcllib.tcl
+@commondatadir@/locale/de/LC_MESSAGES/@PACKAGE@.mo
+@commondatadir@/locale/it/LC_MESSAGES/@PACKAGE@.mo
+
+%config(noreplace) @serverconfdir@/@serverconf@
+%config(noreplace) @serverconfdir@/changer.conf
+@serverbindir@/label_tape
+@serverbindir@/cartready
+@serverbindir@/afserver
+@serverbindir@/afmserver
+@initrddir@/@PACKAGE@
+@serverbindir@/__mt
+@serverbindir@/__inc_link
+@serverbindir@/cart_ctl
+@serverbindir@/cartis
+@serverbindir@/changerready
+@serverbindir@/afserverconfig
+@serverbindir@/serverconfig
+@serverbindir@/xafserverconfig
+@serverbindir@/xserverconfig
+@serverbindir@/xafserverstatus
+@serverbindir@/xserverstatus
+@serverbindir@/__numset
+@serverbindir@/cartagehandler
+@servermandir@/man8/afserver.8*
+@servermandir@/man8/afmserver.8*
+@servermandir@/man8/cartis.8*
+@servermandir@/man8/cartready.8*
+@servermandir@/man8/label_tape.8*
+@servermandir@/man8/afserver.conf.8*
+@servermandir@/man8/cart_ctl.8*
+@REXECDIR@/full_backup
+@REXECDIR@/incr_backup
+@REXECDIR@/afverify
+@REXECDIR@/afrestore
+@REXECDIR@/copy_tape
+@REXECDIR@/update_indexes
+@serverconfdir@/.postinstall
+@serverconfdir@/.preremove
+
+%files devel -f %{curwd}/devel.autodirs~
+%defattr(-,root,root)
+%dir @utilslibdir@
+%dir @utilslibdir@/@osname@
+%if "@INTLLIBS@"
+%dir @utilslibdir@/@osname@/gnuintl
+@utilslibdir@/@osname@/gnuintl/@INTLLIBS@
+%endif
+@utilslibdir@/@osname@/libx_utils.a
+@utilsincdir@/crptauth.h
+@utilsincdir@/fileutil.h
+@utilsincdir@/mvals.h
+@utilsincdir@/netutils.h
+@utilsincdir@/afpacker.h
+@utilsincdir@/genutils.h
+@utilsincdir@/sysutils.h
+@utilsincdir@/x_data.h
+@utilsincdir@/x_defs.h
+@utilsincdir@/x_errno.h
+@utilsincdir@/x_regex.h
+@utilsincdir@/x_timer.h
+@utilsincdir@/x_types.h
+@utilsincdir@/zutils.h
+@utilsincdir@/albiapps.h
+@utilsincdir@/lconf.h
+@utilsincdir@/@osname@/lconf.h
+@utilsbindir@/prosname.sh
+@utilsbindir@/prosspec.sh
+@commondir@/include/afbackup.h
+@commondir@/include/prot.h
+@commondir@/include/budefs.h
+@commondir@/include/server.h
+@commondir@/lib/lib@PACKAGE@.a
+
+
+%changelog
+* Tue Aug 21 2012 Albert Fluegel <af@muc.de> 3.5.8
+- proper error handling in string list functions
+- albiutils package integrated
+- rpmbuild now ignores BuildRoot in spec file (why tf !?!?!)
+
+* Tue Dec 6 2011 Albert Fluegel <af@muc.de> 3.5.7
+- postinstall / preremove parts are external script
+- spec file creation is subject to autoconf
+- rpms can be build running: make rpms

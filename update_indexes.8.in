@@ -1,0 +1,96 @@
+.TH UPDATE_INDEXES 8 "2001 April 1" "Debian Project"
+.SH NAME
+update_indexes \- clean indexes from erased tapes
+.SH SYNOPSIS
+.B update_indexes
+[ -v ]  [ -c <configuration-file> ]
+[ -h <backuphosts> ] [ -P <backup-ports> ]
+[ -I <indexfile-part> ] [ -V <var-directory> ]
+[ -k <encryption-key-file> ] [ -W <identity> ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -Z <built-in-compress-level> ]
+.SH DESCRIPTION
+This command asks all the servers, which tapes are considered
+precious for the client, it is run on. If the server will tell
+fewer tapes than the client has in mind, then the tapes, that
+the server omitted, have been erased on the server side. Now
+those entries will be removed from the client's indexes, who
+list the erased tapes as backup location.
+This command may be installed setuid root, so normal users can
+start it. As it performs just a defined update operation and
+nothing else, there should not be a security problem. It might
+be a good idea to run this command before some user restore
+program (e.g. xafrestore) is started, so only those entries
+are listed to the user, that really exist on backup media and
+can be restored. When started by a normal user, all arguments
+will be ignored and only the configuration file is evaluated.
+.PP
+.TP
+.B -c <configfile>
+Use the given file for configuration information
+.TP
+.B -h <hostname>
+Use the given list of hosts as backup servers. 
+The hostnames in this list can be separated by
+whitespace and/or commas
+.TP
+.B -I <idx-prefix>
+The first part of the filename, the names of the
+stored files and directories can be found. The
+current total backup number is appended (that
+increments each start of a full backup). If these
+files undergo processing, .z is appended
+.TP
+.B -k <file>
+Use the contents of the given file as encryption
+key for authenticating to the server, where the
+source or target cartridge is handled,
+respectively
+.TP
+.B -P <portnum>
+The list of port numbers for the backup servers
+either configured in the parameter file or supplied
+with the -h option. The port numbers in this list
+can be separated by whitespace and/or commas
+.TP
+.B -V <var-dir>
+The directory, where varying files are put
+.TP
+.B -v
+Verbose option, tell more about what is going on
+.TP
+.B -W <id>
+Identify as <id> to the server. This is needed
+by the server to tell the client the correct
+information about tapes, that are considered
+crucial for this client for restore
+.TP
+.B -z <z> <uz>
+The commands to use for process and unprocess. If
+a command comprises of several words, it must be
+put in quotes
+.TP
+.B -Z <level>
+If built-in compression should be used, the level
+can be supplied here. If commands to process and
+unprocess are also supplied with option -z, then
+data is first processed by the process command,
+then by built-in compression. During uncompress
+it works the other way round
+.SH FILES
+.IP @clientconfdir@/@clientconf@
+Client configuration file
+.IP @clientlogdir@
+The directory for logging the client backups
+.IP @clientvardir@
+Some internal state information of the client backups.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8),
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8),
+tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de)

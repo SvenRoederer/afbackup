@@ -1,0 +1,138 @@
+# 
+# SERVER SPECIFICATION
+# 
+# The identifier for the server
+#ServerIdentifier:		
+# 
+# DEVICE SPECIFICATION
+# 
+# The device name (No-Rewind-Version !)
+Backup-Device:		/var/backup/vol
+# 
+# The blocksize of the device
+Tape-Blocksize:		8192
+# 
+# Flag, whether the device is a robot / cartridge handling system (0 or 1)
+Cartridge-Handler:		1
+# 
+# Insert your number of cartridges, whether you have a robot or not
+Number Of Cartridges:		60
+# 
+# The specifiers of different cartridge sets, if requested.
+# Default is 1 set with cartridges ranging from 1 up to the
+# previous parameter. Specifiers of cartridge sets must be
+# separated by whitespace and may contain digits, commas and
+# dashes. Examples: 1-3 4,8-10 6,7
+#Cartridge-Sets:		
+# 
+# The maximum number of bytes per file on tape
+Max Bytes Per File:		5000000
+# 
+# The maximum number of bytes per tape
+Max Bytes Per Tape:		50000000
+# 
+# Append also to explicitly deselected cartridges
+Full Append Mode:		1
+# 
+# Write to any supplied cartridge, that has space
+Variable Append Mode:		1
+# 
+# Refuse to write to tapes, that do not have a valid label
+#Reject Unlabeled Tapes:		
+# 
+# Time to wait from the moment, a new cartridge has been inserted
+# until a new action is attempted on the tape device
+Cart-Insert-Gracetime:		0
+# 
+# Time to wait while the device is unavailable until a mail is
+# sent to the user in charge
+Device Unavail Send mail after min:		6
+# 
+# Time to wait while the device is unavailable until abort
+Device Unavail give up after min:		45
+# 
+# The interval in seconds for probing, if device is ready, when
+# inserting another cartridge is requested. 0 for no probing.
+Device-Probe Interval:		5
+# 
+# Configuration file for a media changer
+#Changer-Configuration-File:		%C/changer.conf
+# 
+# 
+# SHELL-COMMANDS FOR TAPE HANDLING
+# 
+# In these commands %d is replaced by the device name,
+# %n by the number, if within the command the count starts with 1,
+# %m by the number, if the count starts with 0.
+# 
+# Command to set the file # on tape
+SetFile-Command:		exit 0
+# 
+# Command to skip to the next %n-th file on tape
+SkipFiles-Command:		exit 0
+# 
+# If there is a command to set the cartridge directly, supply it here
+Set-Cart-Command:		/bin/rm -f %d ; mkdir -p %d.%n ; ln -s %d.%n %d ; exit 0
+# 
+# If the cartridges can only by changed successively, insert the
+# command to change them here. This is also the command, that unloads
+# the tape, if you have no cartridge handler.
+Change-Cart-Command:		exit 0
+# 
+# If the media must be prepared for access in some way,
+# the appropriate command can be supplied here.
+#Init-Media-Command:		
+# 
+# The command to erase the tape. This is necessary on some systems.
+Erase-Tape-Command:		/bin/rm -f %d/* ; exit 0
+# 
+# Command, that is called, when a tape is full.
+#Tape-Full-Command:		
+# 
+# 
+# CONFIGURATION FOR NON-EXISTING CARTRIDGE HANDLING SYSTEM
+# 
+# The user to inform, if a cartridge should be changed manually
+User To Inform:		root
+# 
+# The mail-program to use.
+# 
+# Insert %u for the position, where the username has to appear,
+# %U for the remote user, %H for the remote client host.
+Mail-Program:		mail -s "Backup Service Information" %u
+# 
+# 
+# FILES TO SAVE THE STATE AND LOGGINGS
+# 
+# Filename to save the current tape position
+Tape-Pos-File:		%V/tapepos
+# 
+# Filename for error loggings etc.
+Logging-file:		%V/server.backup.log
+# 
+# Filename to write the current server status to
+Status-file:		%V/status
+# 
+# Locking file to prevent several server starts
+Lock-file:		%V/server.lock
+# 
+# Lockfile for accessing a media changer
+Changer-Lockfile:		%V/changer.lock
+# 
+# The file with the authentication encryption key
+#Encryption-Key-File:		
+# 
+# 
+# CONFIGURATION FOR REMOTE_EXECUTION
+# 
+# Directory, where remotely started programs must reside
+Program-Directory:		%B/../rexec
+# 
+# 
+# SERVER-STARTUP AND SHUTDOWN ACTIONS
+# 
+# shell-command to perform, when the server starts
+#Init-Command:		
+# 
+# shell-command to perform, when the server exits
+#Exit-Command:		

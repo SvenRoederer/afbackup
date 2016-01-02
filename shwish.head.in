@@ -1,0 +1,157 @@
+#!/bin/sh
+################### Start of $RCSfile: shwish.head.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/shwish.head.in,v $
+# $Id: shwish.head.in,v 1.2 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+resolvepath(){
+  oldpath="$1"
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo "$oldpath"|sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      set oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  if [ _`echo "$oldpath"|cut -c1` = _"/" ] ; then
+    oldhead="/"`echo "$oldpath"|cut -c2-|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|cut -c2-|sed 's#^[^/]*/##'`
+  else
+    oldhead=`echo "$oldpath"|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|sed 's#^[^/]*/##'`
+  fi
+  if [ _"$oldpath" = _"$oldhead" ] ; then
+    oldtail=""
+  fi
+
+  while true ; do
+    if [ _"$oldhead" = _ ] ; then
+      oldhead="."
+    fi
+    if [ ! -f "$oldhead" -a ! -d "$oldhead" ] ; then
+      echo ""
+      return 0
+    fi
+
+    linkchar=`ls -ld "$oldhead"|cut -c1`
+    if [ $linkchar = 'l' ] ; then
+      points_to=`ls -ld "$oldhead"|sed 's#^.*->[ 	]*##g'`
+
+      if [ `echo "$points_to"|cut -c1` = '/' ] ; then
+        newpath="$points_to"/"$oldtail"
+      else
+        newpath=`dirname "$oldhead"`/"$points_to"/"$oldtail"
+      fi
+
+      echo `resolvepath "$newpath"`
+      return $?
+    fi
+
+    if [ _"$oldtail" = _ ] ; then
+      oldpath="$oldhead"
+      break
+    fi
+
+    oldhead="$oldhead"/`echo "$oldtail"|sed 's#/.*$##g'`
+    if [ `echo "$oldtail"|grep /|wc -l` -lt 1 ] ; then
+      oldtail=''
+    else
+      oldtail=`echo "$oldtail"|sed 's#^[^/]*/##g'`
+    fi
+  done
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo $oldpath|sed 's#[^/][^/]*/\.\./##g;s#[^/][^/]*/\.\.$##g;s#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  echo "$newpath"
+  return 0
+}
+
+if [ _"$BACKUP_HOME" = _ ] ; then
+  p="$0"
+  pnam=$p
+  pnam=`basename $pnam`
+  if [ "$pnam" = "$0" ] ; then
+    for dir in `echo $PATH | tr : " "` ; do
+      if [ -x $dir/$pnam ] ; then
+	p="$dir/$pnam"
+	break
+      fi
+    done
+  fi
+  if [ `echo "$p"|cut -c1` != "/" ] ; then
+    p="`pwd`/$p"
+  fi
+
+  BACKUP_HOME_DEFAULT=`resolvepath "$p"`
+  BACKUP_HOME_DEFAULT=`dirname "$BACKUP_HOME_DEFAULT"`
+  if [ `basename "$BACKUP_HOME_DEFAULT"` = bin -o `basename "$BACKUP_HOME_DEFAULT"` = sbin ] ; then
+    BACKUP_HOME_DEFAULT=`dirname "$BACKUP_HOME_DEFAULT"`
+  fi
+else
+  BACKUP_HOME_DEFAULT="$BACKUP_HOME"
+fi
+export BACKUP_HOME_DEFAULT
+
+
+WISH=""
+for dir in `echo $PATH | tr : ' '` ; do
+  if [ ! -d $dir ] ; then
+    continue
+  fi
+
+  progs=`/bin/ls -1 $dir | sort -r | egrep '^wish([0-9]+[.]?)*$'`
+  for prog in $progs ; do
+    if [ -x $dir/$prog ] ; then
+      WISH=$dir/$prog
+      break
+    fi
+  done
+
+  if [ _"$WISH" != _ ] ; then
+    break
+  fi
+done
+
+if [ _"$WISH" = _ ] ; then
+  echo "Error: window shell wish not found. Exiting." >&2
+  exit 1
+fi
+
+args=""
+sep=""
+for arg in "$@" ; do
+  narg=`echo "$arg" | sed 's/"/\\\\"/g'`
+  args="$args$sep"'"'"$narg"'"'
+  sep=" "
+done
+
+$WISH << END_OF_INPUT
+set argv [ list $args ]
+set argv0 "$0"
+set INTL_gettext_program "@GETTEXT@"
+if { ! [ file executable \$INTL_gettext_program ] } {
+  unset INTL_gettext_program
+}

@@ -1,0 +1,14 @@
+Source: @PACKAGE@-devel
+Section: unknown
+Priority: optional
+Maintainer: Albert Fluegel <af@muc.de>
+Build-Depends: debhelper (>= 7), autotools-dev, libssl-dev, mawk, gettext
+Standards-Version: 3.8.3
+Homepage: http://www.sourceforge.net/projects/@PACKAGE@
+
+Package: @PACKAGE@-devel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, gettext
+Description: Libraries containing miscellaneous utilities
+ A library containing many many utilities to make every day's live of a
+ C programmer easier (libx_utils)

@@ -1,0 +1,137 @@
+.TH AFVERIFY 8 "2001 April 1" "Debian Project"
+.SH NAME
+afverify \- verify of a previous backup
+.SH SYNOPSIS
+.B afverify 
+[ -lav ] [ -c <configuration-file> ]
+[ -<past-run-no>[.<past-backup-no>] ]
+[ -h <backuphosts> ] [ -P <backup-ports> ]
+[ -C <root-directory> ] [ -S <cartridge-set> ]
+[ -I <indexfile-part> ] [ -V <var-directory> ]
+[ -k <encryption-key-file> ]
+[ -z <process-cmd> <unprocess-cmd> ]
+[ -M <server-message-config> ]
+.SH DESCRIPTION
+Without any arguments, this program runs a verify over the
+previously written backup. This may either be a full or an
+incremental backup, only the contents of the very previous
+run are used. All found differences are reported.
+Though it is not considered to make too much sense, it is
+also provided, that files and directories saved during a run
+before the previous one can be checked. This can be done
+supplying the <past-backup-specifier>. If this is a simple
+number, it counts back from the previous full or incremental
+backup of the same total backup number (this number is increased
+each run of the full_backup-command, not by subsequent
+incremental backups). -1 means, that the backup before the
+previous one is checked and so on. If the contents of a previous
+total backup run should be checked, the following form
+may be used: -<previous-run>.<previous-total-backup>, where
+<previous-total-backup> counts back from the current total backup
+number and <previous-run> counts back from the last backup
+(incremental or full) run among the previous total. previous-run
+may be 0 here. E.g. verify -0.1 checks the files saved during
+the last run of the previous total backup. Run afverify with
+option -l, optionally -a or -<prev-total-backup> to get a list
+of backups available for verify.
+.PP
+.TP
+.B -a
+Together with -l list the available backups from
+all indexes and not only the most recent one
+.TP
+.B -C <rootdir>
+change to the given root-directory before verifying
+files instead of the one specified in the client
+side configuration file.
+.TP
+.B -c <configfile>
+Use the given file for configuration information
+.TP
+.B -h <hostnames>
+Use the given list of hosts as backup servers. This
+list is used only, if no hostname information can
+be found as associated with the current filesystem
+entry, that should be verified. The first host in
+this list is the default server, if no hostname
+information at all can be found. The hostnames in
+this list can be separated by whitespace and/or
+commas
+.TP
+.B -I <idx-prefix>
+The first part of the filename, the names of the
+stored files and directories are written to. The
+current total backup number is appended (that
+increments each start of a full backup). If these
+files undergo processing, .z is appended
+.TP
+.B -l
+Don't actually verify, but print summary information
+about available backups, that can be verified or
+restored from, prefixed with the arguments, that may
+be supplied as -<past-run-no>[.<past-backup-no>]
+.TP
+.B -M <server-message-config>
+The configuration to output messages from the server,
+that normally are sent only via mail to a maintainer.
+The first word consisting of the letters b r v and c
+tells, whether to output messages during backup,
+restore, verify and copy-tape, respecively. The next
+words must name the service name or port number of
+the single stream servers, related to the option -P .
+For each multi stream service configured with -P or
+in the configuration file, the respective single
+stream service must be given here
+.TP
+.B -k <file>
+Use the contents of the given file as encryption
+key for authenticating to the server
+.TP
+.B -P <portnos>
+The list of port numbers for the backup servers
+either configured in the parameter file or supplied
+with the -h option. This list is used only, if no
+port number information can be found as associated
+with the current filesystem entry, that should be
+verified. The port numbers supplied here are asso-
+ciated with the backup server names by position.
+The port numbers in this list can be separated by
+whitespace and/or commas
+.TP
+.B -V <var-dir>
+The directory, where varying files are put
+.TP
+.B -v
+Verbose mode: print information records on tape and
+the names of the checked files during operation
+.TP
+.B -z <proccmd> <unproccmd>
+The commands to use for process and unprocess. If
+a command comprises of several words, it must be
+put in quotes
+.PP
+In my opinion a verify makes only sense immediately following
+an incremental or full backup with the purpose to check, whether
+the files and directories did not get corrupt on the storage
+media. If you want to do this (via cron or however), keep in
+mind, that the verify takes at least the same time as the
+backup itself. If you have a huge amount of data to save, the
+additional verify might consume a lot of time.
+.SH FILES
+.IP @clientconfdir@/@clientconf@
+Client configuration file
+.IP @clientlogdir@
+The directory for logging the client backups
+.IP @clientvardir@
+Some internal state information of the client backups.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), update_indexes(8), 
+tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

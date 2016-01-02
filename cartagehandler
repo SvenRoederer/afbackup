@@ -1,0 +1,326 @@
+#!/bin/csh -f
+################### Start of $RCSfile: cartagehandler,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/cartagehandler,v $
+# $Id: cartagehandler,v 1.2 2004/07/08 20:34:42 alb Exp alb $
+# $Date: 2004/07/08 20:34:42 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+if ($#argv != 3) then
+  echo "Usage: `basename $0` <cartridge-number> <#-times-full> <configfile>"
+  exit 2
+endif
+
+set configfile="$3"
+set cartridge="$1"
+set num_uses="$2"
+
+set OSNAME=`uname -s|sed 's/[^a-zA-Z]//g'`
+
+alias gosub 'set stack=(\!:3 $stack); set __args=(\!:2) ; goto \!:1'
+alias return 'set __lab=$stack[1] ; set stack=($stack[2-]) ; goto $__lab'
+alias matches 'echo \!:1 |egrep -i \!:2|wc -l'
+set stack=()
+
+if (! $?BACKUP_HOME) then
+  set p=$0
+  set pnam=$p
+  set pnam=$pnam:t
+  if ($pnam == $0) then
+    foreach dir ($path)
+      if (-x $dir/$pnam) then
+	set p=$dir/$pnam
+	break
+      endif
+    end
+  endif
+  if (`echo $p|cut -c1` != "/") then
+    set p=`pwd`/$p
+  endif
+
+  set oldpath=$p
+
+ restart_resolv:
+  set newpath="$oldpath"_
+  while ("$newpath" != "$oldpath")
+    set newpath="$oldpath"
+
+    set oldpath=`echo "$oldpath"|sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if ("$oldpath" != '/') then
+      set oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    endif
+  end
+
+  if (`echo "$oldpath"|cut -c1` == "/") then
+    set oldhead="/"`echo "$oldpath"|cut -c2-|sed 's#/.*$##g'`
+    set oldtail=`echo "$oldpath"|cut -c2-|sed 's#^[^/]*/##'`
+  else
+    set oldhead=`echo "$oldpath"|sed 's#/.*$##g'`
+    set oldtail=`echo "$oldpath"|sed 's#^[^/]*/##'`
+  endif
+  if ("$oldpath" == "$oldhead") set oldtail=""
+
+  while (1)
+    if ("$oldhead" == "") set oldhead="."
+    if (! -f "$oldhead" && ! -d "$oldhead") then
+      set newpath=""
+      goto getout_1
+    endif
+
+    set linkchar=`ls -ld "$oldhead"|cut -c1`
+    if ($linkchar == 'l') then
+      set points_to=`ls -ld "$oldhead"|sed 's#^.*->[ 	]*##g'`
+
+      if (`echo "$points_to"|cut -c1` == '/') then
+        set newpath="$points_to"/"$oldtail"
+      else
+        set newpath=`dirname "$oldhead"`/"$points_to"/"$oldtail"
+      endif
+
+      set oldpath="$newpath"
+      goto restart_resolv
+    endif
+
+    if ("$oldtail" == "") then
+      set oldpath="$oldhead"
+      break
+    endif
+
+    set oldhead="$oldhead"/`echo "$oldtail"|sed 's#/.*$##g'`
+    if (`echo "$oldtail"|grep /|wc -l` < 1) then
+      set oldtail=''
+    else
+      set oldtail=`echo "$oldtail"|sed 's#^[^/]*/##g'`
+    endif
+  end
+
+  set newpath="$oldpath"_
+  while ("$newpath" != "$oldpath")
+    set newpath="$oldpath"
+
+    set oldpath=`echo $oldpath|sed 's#[^/][^/]*/\.\./##g;s#[^/][^/]*/\.\.$##g;s#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if ("$oldpath" != '/') then
+      set oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    endif
+  end
+
+ getout_1:
+
+  set p="$newpath"
+  set p=$p:h
+  set bindir="$p"
+  set sbindir="$p"
+
+  setenv BACKUP_HOME "$bindir"
+  if ($BACKUP_HOME:t == "bin" || $BACKUP_HOME:t == "sbin") then
+    setenv BACKUP_HOME $BACKUP_HOME:h
+  endif
+endif
+
+if (! $?bindir) then
+  set bindir="$BACKUP_HOME/bin"
+endif
+if (! $?sbindir) then
+  set sbindir="$BACKUP_HOME/sbin"
+endif
+
+set NUMSET="$bindir"/__numset
+if ( ! -x $NUMSET ) then
+  set NUMSET="$sbindir"/__numset
+  if ( ! -x $NUMSET ) then
+    echo "Error: No executable __numset found. Installation corrupt."
+  endif
+endif
+
+set path=($bindir $sbindir $path)
+rehash
+
+unsetenv AWK
+
+# the solaris awk is doin' dawn f...... BS
+foreach awk (nawk gawk awk)
+  foreach dir ($path)
+    if (-x $dir/$awk) then
+      setenv AWK $dir/$awk
+      break
+    endif
+  end
+  if ($?AWK) break
+end
+
+if (! $?AWK) then
+  echo 'No awk ? Is this really one of the wonderful UNIX-es ?'
+  echo 'Sorry. I have to exit.'
+  exit 1
+endif
+
+if (! -r $configfile) then
+  echo "Error: Cannot read configuration file $configfile. Exiting."
+  exit 3
+endif
+
+if (! -x $NUMSET) then
+  echo "Error: $NUMSET is not executable. Exiting"
+  exit 4
+endif
+
+alias getparam $AWK' '"'"'/^[ 	]*'"'"'\!:1'"'"'/{sub("'"'"'\!:1'"'"'[ 	]*",""); print}'"' $configfile"
+
+set cartsetpat='[Cc]artr?i?d?g?e?[-_ 	]*[Ss]ets:?'
+set numcartspat='[Nn]umb?e?r?[-_ 	]*[Oo]f[-_ 	]*[Cc]artr?i?d?g?e?s[-_ 	]*:?'
+set usertoinformpat='[Uu]ser[-_ 	]*[Tt]o[-_ 	]*[Ii]nfor?m?:?'
+set mailprogpat='[Mm]ail[-_ 	]*[Pp]rogram:?'
+
+set cartsets=(`getparam "$cartsetpat"`)
+set numcarts=(`getparam "$numcartspat"`)
+set usertoinform=(`getparam "$usertoinformpat"`)
+set mailprog=(`getparam "$mailprogpat"`)
+set mailprog=`echo $mailprog | sed 's/%u/'"$usertoinform/g"`
+
+
+#
+# User configured section
+#
+# The number of cartridge sets to operate on
+set num_cartsets=3
+#
+# End User configured section
+#
+
+# Default, if no cartridge sets configured
+if ($#cartsets == 0) then
+  set cartsets="1-$numcarts"
+endif
+
+# Fill up array to make the csh happy
+while ($#cartsets < $num_cartsets)
+  set cartsets=($cartsets "")
+end
+
+#
+# User implementable section
+#
+# available variables:
+#  num_cartsets: user configured above, the number of cartridge sets to modify
+#  cartsets():   array of cartridge set specifiers from config file
+#  cartridge:    number of the current cartridge
+#  num_uses:     times of the current cartridge having become full
+#  usertoinform: user to inform, if sth. goes wrong (from config file)
+#  mailprog:     mail program from config file (with %u substituted)
+#
+# Useful: the program $NUMSET (see docs)
+
+#
+# decide to which set to move the cartridge
+#
+set settomoveto=1
+
+if ($num_uses > 80) then
+
+  set settomoveto=2
+
+  if ($num_uses > 90) then
+    set settomoveto=3
+
+    if ($num_uses > 95) then
+      set settomoveto=0
+    endif
+  endif
+endif
+
+#
+# check, in which set the cartridge currently is
+#
+set actset=1		# (dummy)
+set i=1
+while ($i <= $num_cartsets)
+  set modset=`$NUMSET "$cartsets[$i]" - "$cartridge"`
+
+  if ("$modset" != "$cartsets[$i]") then
+    # Changed: number is in this set
+    set actset=$i
+
+    break
+  endif
+
+  @ i++
+end
+
+#
+# If the cartridge is already in a set equal to or higher than
+# the target set and a target set has been determined, there is
+# nothing to do (cartridges can only move "up")
+#
+if ($actset >= $settomoveto && $settomoveto > 0) then
+  exit 0
+endif
+
+#
+# remove cartridge from current set
+#
+# in two steps cause of C-shell bug workaround
+set cs=`$NUMSET "$cartsets[$actset]" - "$cartridge"`
+#
+# Check, if set became empty, what would lead to an error
+#
+if ("$cs" == "") then
+  set targetsetname="$settomoveto"
+  if ($targetsetname < 1) set targetsetname='"outdated"'
+  (eval "cut -c5- | $mailprog") << ENDOFMAIL
+>   Hello,
+>
+>   this is your program moving cartridges to other cartridge
+>   sets, when their number of uses exceeds certain limits.
+>   The cartridge $cartridge has $num_uses uses now, it should be moved
+>   to set $targetsetname.
+>   The problem is, that set $actset would then become empty.
+>   Therefore cartridge $cartridge remains in set $actset. Please provide
+>   more cartridges for set $actset and update the configuration
+>   file $configfile properly.
+>
+>   Kind regards,
+>
+>    Your automatic cartridge age handler
+>
+ENDOFMAIL
+  exit 0
+endif
+
+set cartsets[$actset]=$cs
+
+if ($settomoveto > 0) then
+  set cs=`$NUMSET "$cartsets[$settomoveto]" + "$cartridge"`
+  set cartsets[$settomoveto]=$cs
+endif
+
+#
+# End User implementable section
+#
+
+set EST=0
+
+set TMPFILE="$configfile".tmp.$$
+onintr cleanup
+/bin/rm -f $TMPFILE
+if ( -e $TMPFILE) then
+  EST=1
+  goto cleanup
+endif
+
+/bin/cp -p $configfile $TMPFILE
+
+$AWK '{if($0 ~ "^[ 	]*'"$cartsetpat"'") sub("^[ 	]*'"$cartsetpat"'.*$","Cartridge-Sets:	'"$cartsets"'"); print}' $TMPFILE >! $configfile
+
+
+cleanup:
+/bin/rm -f $TMPFILE
+exit $EST

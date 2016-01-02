@@ -1,0 +1,55 @@
+.TH BUFRATE 8 "2001 May 3" "Debian Project"
+.SH NAME
+bufrate \- limit throughput of a character stream
+.SH SYNOPSIS
+.B bufrate [ -b <blocksize> ] [ -a <num-blocks> ]
+{ [ -r <blocks per second> ] |
+[ -R <percentage of initial throughput> ]
+[ -m <num first blocks for measurement> ] }
+.SH DESCRIPTION
+bufrate reads stdin (file desciptor 0) and writes stdout (fd 1).
+The throughput is limited to either a given number of blocks
+per second or to a fraction of a value, that is measured initially
+without throughput limited.
+.TP
+.B -b <blocksize>
+the blocksize for read and write.
+Data type: 32 bit integer. Default: 1 KB
+.TP
+.B -a <number-of-blocks>
+normally the program tries to achieve an average maximum
+throughput over the entire runtime. That is, if data cannot
+be read or written during some time, the program will catch
+up piping the following data through as fast as possible to
+reach the average throughput again. It will continue to
+read/write slower, when the average maximum is reached again.
+If this behaviour is not desired, -a can be used to limit
+the undelayed data thorughput to the given number of blocks
+per second. The measurement interval will then start again
+each time, the given quantity of data has passed the program.
+Data type: floating point. Default: not set
+.TP
+.B -r <blocks-per-second>
+the maximum number of blocks per second to pass the program.
+Data type: floating point. Default: 8.0
+.TP
+.B -R <percentage of initial throughput>
+Instead of -r this option can be used. Then initially the
+program will pipe a number of blocks through without delay.
+The elapsed time is measured and the maximum throughput for
+the rest of the data is set to the measured value multiplied
+with the percentage given with -R.
+Data type: percent floating point. Default: not set
+.TP
+.B -m <blocks-for-measurement>
+The number of blocks piped through the program without delay
+ot measure the achiavable throughput. This argument is only
+evaluated, if option -R is given.
+Data type: 32 bit integer. Default: 10
+.SH EXAMPLE
+Running this is quite self-explaining:
+
+bufrate -b 1 -r 100 < /etc/hosts
+.SH AUTHOR
+.B bufrate 
+was written by Albert Fluegel (af@muc.de)

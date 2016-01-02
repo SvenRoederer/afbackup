@@ -1,0 +1,103 @@
+.TH LABEL_TAPE 8 "2001 April 1" "Debian Project"
+.SH NAME
+label_tape \- write label to tape for use by afbackup or display it
+.SH SYNOPSIS
+.B label_tape
+<label-number> [ -rfF ] [ -c <configfile> ]
+[ -S <sec-label-number ] [ -n <comment> ]
+[ -d <devicename> ] [ -b <blocksize> ]
+[ -s <set-file-cmd> ] [ -C <num-cartridges> ]
+.br
+.B label_tape
+-q [ -c <configfile> ]
+[ -d <devicename> ] [ -b <blocksize> ]
+[ -s <set-file-cmd> ]
+.SH DESCRIPTION
+The first form writes a label to the tape, the second form shows
+the label on the tape, that is currently loaded.
+The tape-label must be an integer number. This number is written
+to the tape currently in the drive and identifies it uniquely. It
+must be in the range from 1 to the number of cartridges given in
+the configuration file. This label is written at the beginning
+of the tape, so all data on tape will be lost. Due to that fact
+the user is always prompted, if he really wants to do this.
+.I <config-file>
+can be a different configuration file than the one
+the server process is started with. Normally it makes no sense
+to use this option, but in extremely pathological cases the
+program might not be able to find out the full path to the
+configuration file. Then is has to be supplied at the command
+line.
+.br
+The normal case is to use this command without options, but the
+settings in the serverside configuration file can be overridden,
+if necessary.
+.br
+If it is intended to label a tape, while a server is waiting for
+another cartridge being put into the drive, the -F option must
+be used to override the lock, that is held by the server process.
+The server will be kept from probing, whether a tape is in the
+drive, while the label_tape program is running. label_tape
+should be started, before the tape to be labeled is put into the
+drive. Otherwise the server might eject it at once after probing.
+label_tape will prompt for confirmation before performing any
+tape access (if started without -f option). Thus the tape should
+be loaded after starting the command and before confirming.
+.TP
+.B -b <blocksize>
+The blocksize of the device to use
+.TP
+.B -C <num-carts>
+The total number of handled cartridges
+.TP
+.B -c <configfile>
+A different configuration file to use
+.TP
+.B -d <devicename>
+The device to use
+.TP
+.B -F
+Continue regardless of a lock, probably set by other
+running applications, especially the server. This
+option may be used to label a tape, while the server
+is waiting for a cartridge to be put into the
+streamer device.
+.TP
+.B -f
+Force operation without further asking
+.TP
+.B -n <comment>
+A comment to include into the tape label
+(256 characters max)
+.TP
+.B -r
+Remove the cartridge in the drive from the
+cartridge handling database without further
+asking
+.TP
+.B -S <sec-label>
+The secondary label number, the server will
+accept, if the primary label number does
+not match
+.TP
+.B -s <setf-cmd>
+The command to reel the tape to a given
+file position
+.SH FILES
+.IP @serverlibdir@/@serverconf@
+Server configuration file
+.IP @serverlogdir@
+The directory for logging the server actions
+.IP @servervardir@
+Some internal state information of the server.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

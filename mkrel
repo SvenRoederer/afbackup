@@ -1,0 +1,138 @@
+#!/bin/sh
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/mkrel,v $
+# $Id: mkrel,v 1.1 2011/12/14 20:27:27 alb Exp alb $
+
+if [ $# -ne 2 ] ; then
+  echo 'Usage: '`basename "$0"`' <targetpath> <basedir>' >&2
+  exit 2
+fi
+
+#
+# remove all symlinks in path
+#
+resolvepath(){
+(
+  NEEDSNOTEXIST=no
+  SUBCMD="resolvepath"
+  if [ _"$1" = _-e ] ; then
+    NEEDSNOTEXIST=yes
+    SUBCMD="resolvepath -e"
+    shift
+  fi
+
+  oldpath="$1"
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo "$oldpath"|sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      set oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  if [ _`echo "$oldpath"|cut -c1` = _"/" ] ; then
+    oldhead="/"`echo "$oldpath"|cut -c2-|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|cut -c2-|sed 's#^[^/]*/##'`
+  else
+    oldhead=`echo "$oldpath"|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|sed 's#^[^/]*/##'`
+  fi
+  if [ _"$oldpath" = _"$oldhead" ] ; then
+    oldtail=""
+  fi
+
+  while true ; do
+    if [ _"$oldhead" = _ ] ; then
+      oldhead="."
+    fi
+    linkchar=`ls -ld "$oldhead" 2>/dev/null | cut -c1`
+    if [ _"$linkchar" != _l -a _"$linkchar" != _d -a _"$linkchar" != _- -a _"$linkchar" != _c -a _"$linkchar" != _b ] ; then
+      if [ $NEEDSNOTEXIST = yes ] ; then
+	echo "$oldhead"
+      else
+	echo ""
+      fi
+      return 0
+    fi
+
+    linkchar=`ls -ld "$oldhead"|cut -c1`
+    if [ $linkchar = 'l' ] ; then
+      points_to=`ls -ld "$oldhead"|sed 's#^.*->[ 	]*##g'`
+
+      if [ `echo "$points_to"|cut -c1` = '/' ] ; then
+        newpath="$points_to"/"$oldtail"
+      else
+        newpath=`dirname "$oldhead"`/"$points_to"/"$oldtail"
+      fi
+
+      echo `$SUBCMD "$newpath"`
+      return $?
+    fi
+
+    if [ _"$oldtail" = _ ] ; then
+      oldpath="$oldhead"
+      break
+    fi
+
+    oldhead="$oldhead"/`echo "$oldtail"|sed 's#/.*$##g'`
+    if [ `echo "$oldtail"|grep /|wc -l` -lt 1 ] ; then
+      oldtail=''
+    else
+      oldtail=`echo "$oldtail"|sed 's#^[^/]*/##g'`
+    fi
+  done
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo $oldpath|sed 's#[^/][^/]*/\.\./##g;s#[^/][^/]*/\.\.$##g;s#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  echo "$newpath"
+  return 0
+)
+}
+
+TARGET=`resolvepath -e "$1"`
+SOURCE=`resolvepath -e "$2"`
+
+echo "$TARGET" | grep '^/' >/dev/null \
+ && echo "$SOURCE" | grep '^/' >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "ERROR: Both arguments must be absolute paths." >&2
+  exit 3
+fi
+
+SOURCEDEPTH=`echo "$SOURCE" | awk -F/ '{print NF}'`
+TARGETDEPTH=`echo "$TARGET" | awk -F/ '{print NF}'`
+
+PREFIX="."
+SUFFIX=""
+while [ $SOURCEDEPTH -gt $TARGETDEPTH ] ; do
+  PREFIX="$PREFIX"/..
+  SOURCEDEPTH=`expr $SOURCEDEPTH - 1`
+  SOURCE=`dirname "$SOURCE"`
+done
+while [ $TARGETDEPTH -gt $SOURCEDEPTH ] ; do
+  SUFFIX=/`basename "$TARGET"`"$SUFFIX"
+  TARGET=`dirname "$TARGET"`
+  TARGETDEPTH=`expr $TARGETDEPTH - 1`
+done
+
+while [ "$SOURCE" != "$TARGET" ] ; do
+  PREFIX="$PREFIX"/..
+  SUFFIX=/`basename "$TARGET"`"$SUFFIX"
+  TARGET=`dirname "$TARGET"`
+  SOURCE=`dirname "$SOURCE"`
+done
+
+echo "$PREFIX""$SUFFIX" | sed 's#^[.]/##g'

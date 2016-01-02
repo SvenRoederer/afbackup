@@ -1,0 +1,1653 @@
+                AF's Backup FAQ
+                ===============
+
+Index
+-----
+
+Q1: How do I tell how much space is left on the tape?
+
+Q2: Why is the mtime used for deciding what files to save during incremental
+    backup and not the ctime or both ?
+
+Q3: Do my current configurations get overwritten during an upgrade ?
+
+Q4: Why should I and how do I use sets of cartridges ?
+
+Q5: How many cartridges should I use ?
+
+Q6: I have a robot with n cartridges. Can i use more than n tapes ?
+
+Q7: Can ordinary users restore their own files and directories ?
+
+Q8: Why does afbackup not have a GUI ?
+
+Q9: What does the warning mean: "Filelist without user-ID information ..." ?
+
+Q10: The whole backup systems hangs in the middle of a backup, what's up ?
+
+Q11: Tape reels back and forth, mail sent "tape not ready ...", what's up ?
+
+Q12: The server seems to have a wrong tape file count, what's wrong ?
+
+Q13: When using crond, the client seems not to start correctly ... ?
+
+Q14: What does AF mean ?
+
+Q15: Though client backup works, remote start does not. Why ?
+
+Q16: My server does not work, tape operates, but nothing seems to be written ?
+
+Q17: I have a ADIC 1200G autoloading DAT and no docs. Can i use it with HPUX ?
+
+Q18: What is a storage unit and how and why should i use it ?
+
+Q19: Why should i limit the number of bytes per tape ?
+
+Q20: What are backup levels and why should i use them ?
+
+Q21: What do all the files in the var-directories mean ?
+
+Q22: Help ! My (multi stream server's) client receives no data, why ?
+
+Q23: My DLT writes terribly slowly and changes cartridge too early, why ?
+
+Q24: When should i use the multi stream server and when not ?
+
+Q25: Why is my 2 GB capacity DAT tape full having written about 1.3 GB ?
+
+Q26: Tape handling seems not to work at all, what's wrong ?
+
+Q27: How can i change the compression configuration ?
+
+Q28: Why does my Linux kernel Oops during afbackup operation ?
+
+Q29: Why does afbackup not use tar as packing format ?
+
+Q30: How to recover directly from tape without client/server ?
+
+Q31: Why do files truncated to multiples of 8192 during restore ?
+
+Q32: What is the difference between total and real compression factor ?
+
+Q33: How does afbackup compare to amanda ?
+
+Q34: How to contribute to I18N/L10N ?
+
+Q35: Why does I18N not work in my environment ?
+
+Q36: Is there a mailing list or a home page for afbackup ?
+
+Q37: I have trouble using the multi stream server. What can i do ?
+
+Q38: On AIX i get the warning: decimal constant is so large ... what's that ?
+
+Q39: What about security ? How does this authentication stuff work ?
+
+Q40: Why does remote start of backups not work, while local start does ?
+
+Q41: What is the architecture of afbackup ?
+
+Q42: Why are new files with an old timestamp not saved during incr_backup ?
+
+Q43: What do the fields in the minimum restore info mean ?
+
+Q44: What are those files like /tmp/afbsp_XXXXXXX ? Can i remove them ?
+
+Q45: On a client starting remotely i see a warning about no start cartridge
+     found in the server log. What does it mean and can i suppress that ?
+
+
+
+Questions and Answers
+=====================
+
+Q1: How do I tell how much space is left on the tape?
+
+A1: This is hard to tell due to the problem to determine exactly, how many
+    bytes can be written to a certain physical tape. Since version 3.1 the
+    server counts the bytes written to each tape. The sums are written into
+    the file /path/to/server/var/bytes_on_tape , one entry per line in the
+    format cartridge-number colon number-of-bytes-on-tape . If a tape is
+    full and the next one is automatically inserted, the number tells you
+    the number of bytes, the server was able to write to tape, but here the
+    streamer device might have applied compression, so the real number of
+    bytes on tape may be smaller. If clientside compression is turned on,
+    it is quite unlikely, that the streamer was able to even further pack
+    the data, so in this case the number logged to the file should be close
+    to reality.
+     One method to find out the tape capacity is as follows:
+    - tape a gzip-ped file (with -9), that is larger than 1 MB compressed
+    - put an empty and unused tape into the streamer device, all data on
+      it will be lost during this test
+    - in a csh run the command:
+        repeat 100000 cat filename | dd of=/dev/st0 obs=1048576
+      (replace filename and /dev/st0 appropriately with the name of the
+       gzip-ped file and the real streamer device)
+    - the command will write the tape until end of media is reached and
+        will output something like:
+           4036+1 records in
+           4036+1 records out
+        This tells you, that 4036 * 1048576 i.e. 4036 MB were successfully
+        written to tape.
+    It must be kept in mind, that this test does not consider the space
+    between tape files. Each time, a new tape file starts, a file space
+    is written to tape, that wastes tape capacity of about 2 MB each. Refer
+    to the documentation of your streamer device.
+
+
+Q2: Why is the mtime used for deciding what files to save during incremental
+    backup and not the ctime ?
+
+A2: First: The ctime changes any time a chmod, a chown, or other operations
+      modifying the inode are performed. A change like this is not worth
+      selecting this file for backup, cause the file itself did not change.
+      BTW the ctime can be evaluated additionally to the mtime setting the
+      client side parameter UseCTime . But then the access time (atime) is
+      not restored to the previous value after backup.
+    Second: After backup of a file, afbackup restores the atime, because
+      i found the atime a quite worth information. A restore of the atime
+      changes the ctime, no way around this. If the ctime was evaluated
+      for choosing the files for incremental backup, a file stored once
+      would be saved again all the following backups, cause at any
+      backup time the ctime changes. Incremental backup would be senseless,
+      cause all files would be saved all the time a backup runs.
+
+
+Q3: Do my current configurations get overwritten during an upgrade ?
+
+A3: No. Nothing gets overwritten or lost. Newly introduced parameters have
+    the old non-configurable behaviour as default. The defaults are applied,
+    if the appropriate parameters are not given explicitly in the
+    configuration files.
+
+
+Q4: Why should I and how do I use sets of cartridges ?
+
+A4: The question, why, is not that easy to answer. Maybe you have groups
+      of hosts you would like to save to distinguished cartridges, maybe
+      you would like to make the full backups to other cartridges than the
+      incremental backup. Maybe you have the requirement, that you want to
+      use an infinite number of cartridges for the full backup and reuse
+      the ones for the incremental backup each time another full backup
+      has finished. Or you might want to restrict the access to sets of
+      cartridges to certain machines. Then you can configure access lists.
+      Maybe you have more exotic requirements ...
+    The answer to the how is easy: Set the serverside parameter
+      Cartridge-Sets. The specifiers for the sets must be separated by
+      whitespace and each may consist of digits, commas and dashes, e.g.
+      3,6-9 . A set may be a single cartridge, but i do not recommend
+      this, cause writing to the beginning of that cartridge destroys the
+      rest stored on it and making these data unaccessible. The last
+      number is usually the number of cartridges you have, but not
+      necessarily. Cartridges at the upper end of the numbers might be
+      omitted. If the last number is not equal to the number of cartridges,
+      this number is NOT automatically added. The many numbers are given
+      with this parameter, the many cartridge sets you have. The default,
+      if this parameter is not present, is one cartridge set with all
+      available cartridges. Enter man afserver.conf for details, how to
+      configure client access restrictions for each set individually.
+
+
+Q5: How many cartridges should I use ?
+
+A5: The cartridges should be have enough capacity for at least two times
+    a full backup including subsequent incremental backups. Otherwise
+    files could get lost due to an unsuccessful backup overwriting
+    previously stored data.
+
+
+Q6: I have a robot with n cartridges. Can i use more than n tapes ?
+
+A6: Yes, you can use any number of tapes. When tapes are needed, that
+    are currently not available in the robot, the operator is asked
+    for manual interaction to insert the needed tape(s) into slots of
+    the robot, probably by using available load ports.
+    If barcode labels are applied, the automatical detection of what
+    cartridge is in what place, can be initiated by running a command.
+    Please see the documentation of the cart_ctl command and the
+    HOWTO questions 26 and 38 for more details.
+
+
+Q7: Can ordinary users restore their own files and directories ?
+
+A7: Yes, they can, but this feature must be enabled. The restore-
+    utility must be installed executable for all users and setuid
+    root. Also some more stuff must be readable. This all can be
+    achieved by answering the respective question of the Install
+    script with yes, running make install.userrestore in the end
+    or doing it manually after installation by entering as the
+    administrator root:
+
+    rm -f $BASEDIR/client/bin/afrestore
+    cp $BASEDIR/client/bin/full_backup $BASEDIR/client/bin/afrestore
+    chmod 4755 $BASEDIR/client/bin/afrestore
+    chmod 755 $BASEDIR/client/lib $BASEDIR/client/bin
+    chmod 755 $BASEDIR/client/bin/__packpats
+    chmod 644 $BASEDIR/client/lib/aftcllib.tcl
+
+    Also the configuration file (wherever this resides) must be
+    readable for the user who wants to restore stuff.
+    Thus ordinary users can run this program. Built-in safety checks
+    provide, that they can only restore or list their own files and
+    directories. Changing the restore-directory using the option -C
+    allows them only to restore to directories owned by themselves.
+
+
+Q8: Why does afbackup not have a GUI ?
+
+A8: My ideal imagination of a backup system is, that i do not have
+    to care about it at all, once it is installed and configured
+    properly. It should do it's job in the background, only noticing
+    me, if something goes wrong. Thus i would not want any icons,
+    clocks or meters pop up on my workspace plugging me up with
+    unnecessary and unimportant stuff. The installation procedure
+    is simple enough and would not get better having a graphical
+    frontend. My opinion.
+     BTW there is a GUI frontend for the restore utility. Don't
+    use it, it's terrible.
+
+
+Q9: What does the warning mean: "Filelist without user-ID information ..." ?
+
+A9: You are running restore with the list-option as non-root and
+    the filelists are of the pre-version-2.9-format. Thus they do
+    not contain the user-ID of the owners of the files. The program
+    does not know, whether it is permittable to show you the names
+    of the files. For security reasons it is hardcoded not to show
+    them. With the new format containing the user-IDs, you will see
+    the matching names of the files owned by you.
+
+
+Q10: The whole backup systems hangs in the middle of a backup, what's up ?
+
+A10: This phenomenon has been reported only on Linux, Kernel Version
+     2.0.30 and seems to be the result of a bug in this kernel. I
+     never experienced this problem on my 2.0.29 Kernel or on other
+     platforms.
+      Rumors told me, that the 2.0.30 kicks out about every 10000th
+     to 20000th Process, i.e. the process is started, appears in the
+     process list, but does not do anything and never terminates.
+     Thus parent processes wait forever, when this happens. Afbackup
+     compresses each saved file separately i.e. starts the
+     configured compression program for each file. When the problem
+     described above arises, this compression program hangs and
+     thus the whole chain up to the server process, that waits for
+     requests until eternity.
+
+     Solutions: (i'm aware, these are no real solutions)
+      - switch off compression for the saved files or
+      - change your Linux Kernel
+
+
+Q11: Tape reels back and forth, mail sent "tape not ready ...", what's up ?
+
+A11: The current state of investigations is, that this is probably
+     a problem of a dirty read-write head. This may sound weird,
+     but i'll try to explain.
+      I experienced this problem without any warning. One day when
+     starting a new backup i watched the tape reeling back and forth,
+     later sending an email to the person in charge telling, that
+     the device is not ready for use, and requesting to correct this
+     problem. Compiling everything with debugging turned on i caught
+     the server process during the initiliazation phase and found
+     the Set-File-Command (mt -f ... fsf ...) failing. Then i found
+     out, that there were fewer files on tape than the backup system
+     expected (1 too few) and thus the mt failed. I had no idea, how
+     this could happen. I corrected everything manually by decrementing
+     the writing position on tape. The next backup, that i started,
+     worked fine and another one immediately following, too. A verify
+     also succeeded. So i took out the tape and decided to ignore the
+     fault for the moment. Before i ran the next backup, i started a
+     verify to see, what has changed within the meantime, but now
+     again: tape reels back and forth endlessly. Looking onto the
+     tape manually using mt and dd once again: too few files on tape.
+     Seemed like some file (not the last one on tape !) was lost.
+     Strange. The only thing i could imagine causing all the trouble
+     was an error of the tape drive, e.g. a dirty read-write-head.
+     So i put in the next tape and started all over at the beginning
+     of the new tape. Everything worked perfectly from now on. The
+     phenomenon has been reported to me on Linux with DAT-streamers
+     from HP. This could mean a correlation and/or a problem of a
+     Linux driver, but the reported number of 2 is in my opinion too
+     small for a conclusion like this. Furthermore i guess, the com-
+     bination Linux + HP-DAT-drive is very common, so the probability,
+     that problems might arise in such an environment is quite high
+     simply due to the number of installations of this kind.
+     Admittedly i had been too lazy for a notable while to use any
+     cleaning cartridge, so i guess this had been the problem.
+     A similar phenomenon has been reported to me on Solaris on a
+     Sun with a 'Sun' DLT drive (AFAIK the drives labeled as Sun
+     products are often Quantum), but there the cause was a damaged
+     read/write head.
+
+     Solution (to get out of the temporary inconvenience):
+      - Use a new cartridge and tell the backup system to use it with
+        the serverside command
+                    /path/to/cartis -i <nexttape> 1
+        where <nexttape> is the number of the next cartridge
+
+     Conclusion:
+      - Feel urged to use cleaning cartridges regularly
+
+     Reportedly another problem may be heat. When the device and/or
+     the media temperature is too high, it seems the streamer can't
+     read/write the tape correctly anymore. In the reported case
+     cooling down all the stuff recovered proper operation, but i
+     wouldn't expect this generally.
+     In any case: if the tape temperature gets too high, the magnetic
+     patterns on the media might weaken irreversably and thus data
+     can't be read anymore. Avoid to let your cartridges to become
+     too hot !!!
+
+     See also Q25
+
+
+Q12: The server seems to have a wrong tape file count, what's wrong ?
+
+A12: Probably you experienced the following: The last filename in
+     the filename log is preceded by a different pair of cartridge
+     number / tape file number than the pair named in the report
+     email, written to the tape-position file on the server or
+     queried with the client-program option -Q.
+      This is perfectly possible. The last saved file can make the
+     tape file exceed the configured maximum length. Then one or
+     more further tape files are opened appropriately.
+
+
+Q13: When using crond, the client seems not to start correctly ... ?
+
+A13: You probably get the message "Connection to client lost ..."
+     in the clientside logfile. This is a weird problem i only
+     experienced on IRIX. The program gets a SIGPIPE and i have no
+     clue, why. You might start full_backup or incr_backup with the
+     option -d, which causes the program to detach from the terminal
+     and to wait for 30 Seconds before continuing. Maybe this solves
+     your problem.
+
+
+Q14: What does AF mean ?
+
+A14: Another F......
+
+
+Q15: Though client backup works, remote start does not. Why ?
+
+A15: The problem is in most cases, that during the remote start
+     the configured (un)compression programs, usually gzip and the
+     corresponding gunzip, are not found in the search path. Cause
+     the remotely started backup is some child of the inetd, it
+     gets of course the inetd's command search path. If this does
+     not contain the path to gzip, the start fails.
+
+
+Q16: My server does not work, tape operates, but nothing seems to be written ?
+
+A16: There seems to be a problem on some platforms. Try to start the
+     server with the -b option: Edit /etc/inetd.conf and add -b before
+     the last argument of afserver in the line starting with afbackup.
+     Then send a hangup signal to the inetd (ps ... |grep inetd -> PID,
+     kill -HUP <PID>). Then try again. If it works, be happy, but be
+     aware, that the performance is reduced in this mode. This problem
+     is worked on.
+
+
+Q17: I have a ADIC 1200G autoloading DAT and no docs. Can I use it with HPUX ?
+
+A17: Thanks to Gian-Piero Puccioni (gip@ino.it) you can. You will find
+     the mtx.c program he wrote helpful. Check out this file how to
+     build and use his mtx command. It enables you to load/unload/handle
+     certain cartridges.
+
+
+Q18: What is a storage unit and how and why should i use it ?
+
+A18: See in the HOWTO, Q9
+
+
+Q19: Why should i limit the number of bytes per tape ?
+
+A19: This is particularly useful, if you first write the backup into a
+     filesystem and then copy that `disk cartridge' to a real tape with
+     the copy_tape command or the autocptapes script. In this case the
+     space used in the filesystem must be limited to the capacity of the
+     appropriate tape, otherwise loss of data may occur as the data is
+     copied 1:1 to tape and auto-continuation to the next tape does not
+     make sense. Also see FAQ Q1, how to determine the capacity of a
+     tape.
+
+
+Q20: What are backup levels and why should i use them ?
+
+A20: Backup levels allow backups, that store more than an incremental
+     backup, but fewer than a full backup. How is this achieved ?
+     More than one timestamp is used, each associated with a certain
+     "level". A good way to explain levels is to explain a certain
+     scenario. A level is first of all just a number. When an incre-
+     mental backup is started with a given level (option -Q), all
+     files will be saved, that have not been saved since the most
+     previous backup with the same or higher associated level. The
+     highest level is owned by the full backup. A "picture" for
+     clarifying:
+
+      T full backup
+      |
+      |
+      | - - - - - - - - - - -T level 3
+      | - - - - -T level 2   | - - - - -T level 2 - T level 2
+      |          |           |          |           |
+      |          |           |          |           |
+     -+----------+-----------+----------+-----------+---------> time
+      T1         T2          T3         T4          T5
+
+     At the date T2 anything not saved since T1 is saved. This is
+     basically an incremental backup compared to the full backup.
+     At date T3 also anything not saved since T1 is saved, because
+     the associated backup level is higher. At date T4 anything
+     not saved since T3 is saved again, cause now the level is
+     lower then at T3. At T5 everything not saved since T4 is
+     again saved. If only one backup level is used, this has the
+     same effect as simply incremental backups. Note, that not
+     every level must really be used, the numbers are only compared
+     with each other to decide, what timestamp will apply.
+     With afbackup the incremental backup without a certain level
+     has the implicit level 0, the full backup has level MAXINT
+     (the value of this macro depends on the machine, where it has
+     been compiled, on most Unix-machines MAXINT has a value of
+     2147483647). With option -Q any value inbetween can be used.
+     The timestamps are stored in the file
+     /path/to/client/var/level_timestamps and can be read as clear
+     text (just in case you used that many levels, that you get
+     confused and don't know any more, what levels you used and
+     which are still unused ... ;-) )
+
+
+Q21: What do all the files in the var-directories mean ?
+
+A21: Serverside:
+
+     status        This file is updated, whenever a notable server
+                   status change occurs. The file is always removed
+                   and created again as status changes occur often
+                   and they are not worth keeping. This file only
+                   serves the purpose to get an information about
+                   what is currently going on. While reading or
+                   writing the current throughput is reported here
+                   about every 5 seconds. Logging of errors or
+                   warnings goes to the configured logfile.
+
+     pref_client   This file is maintained to prevent colliding
+                   client accesses. The clients should have
+                   a chance to get the server always again, when
+                   querying several times within a certain interval.
+                   The previously served client and a timestamp is
+                   saved here to grant this client preferred service
+                   within a certain interval. Actually since version
+                   3.3.5 this file is obsolete
+
+     bytes_on_tape The persistent counters of the server side. A
+                   maximum number of bytes per tape can be configured
+                   and the server must remember, how much he had
+                   written to all of the tapes. It makes no sense to
+                   count them all each time a cartridge is loaded.
+                   The format of each line is (backslash indicates
+                   a continuation line and is no syntax element):
+                    <cartridge-number>: <number-of-bytes-on-tape> \
+                            <number-of-files-on-tape> <tape-full-flag> \
+                            <last-writing-timestamp>
+
+     tapepos       The name of this file can be configured in the
+                   serverside configuration file, but i think, noone
+                   will ever change it. This file contains entries,
+                   that specify tape positions in different contexts.
+                   Lines starting with a number followed by a colon
+                   specify the writing position for the cartridge set
+                   specified by the leading number. Lines starting
+                   with a device name field indicate, what tape in
+                   which position is currently in that drive. Each
+                   pair of numbers specifying a position consists of
+                   a cartridge number and a file number.
+
+     precious_tapes  This file contains a line for each client, listing
+                     which cartridges the client needs for restoring
+                    everything it saved and it wants access to. All
+                   cartridges listed here are considered read-only, if
+                   they have no more space on tape to write to. If they
+                   have free space, new data is appended at the end of
+                   the last file on tape during write
+
+     readonly_tapes  This file contains lists of cartridge numbers,
+                     that should not be written to anymore. This file
+                    can be edited or modified sending an appropriate
+                   server message (See: afclient, option -M). The
+                   format of this file is simply numbers, ranges or
+                   comma-separated numbers of cartridges. A range can
+                   be given as [<start-number>]-[<end-number>], e.g.
+                   2-4, -2 or 8-. In the last example the number of
+                   cartridges configured in the server configuration
+                   file will apply for the end of the list.
+
+     cartridge_order  The server must remind, what tape follows which
+                      other one, because their order no longer follows
+                     the number of the cartridge and the server no
+                    longer starts writing the first one after the last
+                   one is full. Tapes can be set read-only or marked
+                   crucial for restoring some client. So it may occur,
+                   that the server must skip one or more tapes to find
+                   a writable one. Also in full append mode it might
+                   happen, that it is not the first file on tape, who
+                   follows the last one on a full tape. In this file
+                   the order is saved, what file on which tape must be
+                   read, when a certain tape is exhausted. Behind the
+                   number of the cartridge in the first column and the
+                   arrow characters -> the following numbers name the
+                   tape and file to be read next. This file should be
+                   saved to some other location, because it is crucial
+                   for restore.
+
+     tape_uses     This file contains a list of cartridge numbers in
+                   the first column, followed by a colon : . The second
+                   column contains a number indicating, how often this
+                   tape has become full up to now. This number is supplied
+                   to the configured Tape-Full-Command , whenever a tape
+                   becomes full.
+
+     cartridge_locations  This file contains the database, where the
+                          cartridges currently can be found. The first
+                         column is the cartridge number, followed by a
+                        colon. A space follows and the rest of the
+                       line either contains three fields: the device
+                      name of the media changer, a word to specify the
+                     location class (drive, slot or loadport), and a
+                    number counting instances of location classes, e.g.
+                     /dev/rmt/stctl0 slot 6
+                   If the rest of the line is not of this form, it is
+                   considered to be a freetext description.
+
+     ever_used_blocksizes  This file contains a list of all the tape
+                          blocksizes, that have ever been used on the
+                         the server. The list is used to quickly find
+                        the correct blocksize for reading, when the
+                       tape cannot be read with the configured one. If
+                      tapes are used, that come from another server and
+                     have a tape blocksize, that this server has never
+                    seen, the unknown blocksize should be added to this
+                   file manually, one per line.
+
+     cartridge_names  This file contains an entry for each cartridge,
+                     that has a barcode label assigned, determined by
+                    reading data from a changer device, and/or the
+                   freetext description (or comment, if this term is
+                   preferred), set using the option -N of the cart_ctl
+                   command. The number of the cartrige is in the first
+                   column, followed by a colon. The next word can be
+                   an assigned barcode, if recognized from the hardware.
+                   If the barcode is containing whitespace or is empty,
+                   it is put into double quotes. The rest of the line
+                   starting with the first non-whitespace character is
+                   the optionally assignable freetext comment
+
+
+     Clientside:
+
+     num           Here the current total number of backups is stored.
+                   The total number of backups is incremented each time
+                   a full backup finishes successfully, if not the append
+                   mode (option -a) is selected or files and directories
+                   are explicitly supplied as arguments. This case is
+                   considered an exceptional storing of files, that should
+                   not affect counters or timestamps
+
+     part          If present, it contains the number of the backup part
+                   that has recently started. Full backups can be split
+                   in pieces if a complete run would take too much time.
+                   This can be configured with the parameters
+                   NumBackupParts, DirsToBackup1, ...
+
+     oldmark       The Modification time of this empty file serves as
+                   memory for the timestamp, when any full or incremental
+                   backup has started before. This should be handled in
+                   the file explained next, but due to backward compati-
+                   bility issues i will not change this (historical error
+                   coming from the earlier used scripts for backup and
+                   the use of the find-command with option -newer)
+
+     newmark       During backup a file holding the timestamp of the
+                   backup starting time. The reason, why this timestamp
+                   is kept in the filesystem is safety against program
+                   crashes
+
+     progress      This file is updated during backup, if indication of
+                   the progress is requested. The first number in this
+                   file is the sum of file sizes currently written to
+                   backup plus an estimate for the packer overhead. The
+                   second number is the total sum of file sizes to be
+                   written to backup plus estimated overhead, determined
+                   in advance before doing the real backup. The third
+                   number is the percentage of backup volume written up
+                   to now. All the numbers do NOT include the volume of
+                   any command output to be written to backup, because it
+                   would be necessary to run the command(s) twice then,
+                   what is normally not desired.
+
+     level_timestamps  This file contains the timestamps for the backup
+                       levels. Each line has the following format:
+                    <backup-level>: <incr-backup-starting-time>
+                   For each used backup level and the full backup a line
+                   will be maintained in this file
+
+     save_entries  This file holds the patterns of all configuration
+                   entries in DirsToBackup, DirsToBackup1, ...
+                   for use in subsequent backups. If new entries will be
+                   configured, this file allows to automatically switch
+                   to full backup from incremental backup, when a new
+                   entry in the configuration file is found
+
+     needed_tapes  This file contains a list of tapes needed for full
+                   restore of all files listed in existing filename list
+                   files (i.e. index). The number of these files depends
+                   on the clientside parameter NumIndexesToStore. After
+                   each backup (full or incremental or level-N) a line
+                   is added to this file or an existing one is extended
+                   to contain the current backup counter and a list of
+                   backup levels, each associated with the cartridge
+                   numbers used during write to the server with the
+                   named ID. The format is:
+                    <backup-counter>: <backup-level>><tape-list>@<serverid> \
+                           [ <backup-level>><tape-list>@<serverid> ... ]
+                   When running an incremental or differential backup
+                   supplying the option -H, entries with a level lower
+                   than the current one (or in differential mode equal
+                   to the previous) are removed from this list. Thus the
+                   tapes from these entries are permitted to be written
+                   again (often called "recycled"). After each update of
+                   this file, the list of all required tapes residing at
+                   the current server is sent to this server and there
+                   stored in the file precious_tapes (see above). When
+                   tapes are removed from the file precious_tapes on the
+                   server, the client updates his needed_tapes file and
+                   the index contents accordingly.
+
+     start_positions  Here for each full or incremental backup within the
+                      range required by the parameter NumIndexesToStore
+                    the information to retrieve all the data is stored.
+                   Each line has the format
+                    <backup-counter>: <backup-server> <backup-service> \
+                               <cartridge-number> <file-number>
+                   Having this information everything can be restored in
+                   case all other data is lost
+
+     server_ids    The information, which server network address has which
+                   server-ID assiciated. The first two columns contain the
+                   hostname and port number, the third the server-ID
+
+     index_ages    For each existing index file, this file contains a
+                   line with the index number in the beginning, followed
+                   by a colon and the timestamp of the last modification
+                   of that index in seconds since epoch (1.1.1970 0:00).
+                   This file is evaluated, if the client side parameter
+                   DaysToStoreIndexes is set.
+
+
+Q22: Help ! My (multi stream server's) client receives no data, why ?
+
+A22: Most likely the client's official hostname has changed. The server
+     does not recognize any more, what data on tape should be dispatched
+     to this client. Use option -W to supply the client's old official
+     hostname or configure that name using the configuration parameter
+     ClientIdentifier in the client side configuration file.
+
+
+Q23: My DLT writes terribly slowly and changes cartridge too early, why ?
+
+A23: The reasons for the too early rewind are admittedly unknown.
+     It has been reported, that EIO is returned during a write without
+     any obvious reason. It seems, that this can be avoided and a much
+     better throughput be achieved configuring a relatively large tape
+     blocksize. For a DLT 32768 seems to be a good value.
+
+
+Q24: When should i use the multi stream server and when not ?
+
+A24: Basically for restore or verify you don't have to choose. The same
+     port (what finally means: the same server) like during backup is
+     set automatically. You do not have to care about that. For backups
+     i'd suggest the following:
+
+     Use multi stream server
+
+      * For incremental backup of several machines in parallel. In this
+        situation the multi stream feature can be a real time saver
+
+      * For full and/or incremental backup of several machines connected
+        to the backup server over slow links, where the machines must
+        have separate lines each. The following scheme shows a configu-
+        ration, where exploiting the multi-stream feature makes sense
+        also for full backups:
+
+                   --------
+                  | server |
+                   --------
+                       |
+                       | (fast link(s))
+                       |
+               --------------------------
+              | switch/bridge/hub/router |
+               --------------------------
+                 /         |          \
+                /          |           \     (slow links)
+            --------    --------    --------
+           | client |  | client |  | client |
+            --------    --------    --------
+
+     Use single stream server
+
+      * For full backups over fast lines, where the streamer device is
+        the bottleneck. Here the additional overhead of the multiplexing
+        server might become the bottleneck on slower machines
+
+      * For messages to the server (option -M of the afclient program)
+        (mandatory !)
+
+      * For trivial operations in combination with the afclient program
+        (e.g. options -q, -Q, -w)
+
+      * For copying tapes (copy_tape)
+
+      * For emergency recovery with option -E
+
+     Summarizing it i'd suggest to configure the single stream server as
+     default and override the default with the appropriate options, when
+     desired. The option for the afclient program is -p, for the others
+     (full_backup, incr_backup, restore, verify, copy_tape) -P .
+
+
+Q25: Why is my 2 GB capacity DAT tape full having written about 1.5 GB ?
+
+A25: The following statements i collected as experience from different
+     users. I pass them on here without any comment.
+
+     Thanks to Mr. Andreas Wehler at CAD/CAM Straessle GmbH in Düsseldorf/
+     Germany the following statements have been collected from HP and
+     others:
+
+      - With not compressable data DAT tapes have a real capacity of
+        between 75 and 84 % of the capacity specified on the cover
+
+      - The capacity decreases during lifetime cause of increasing
+        defect density as a result of wearing out
+
+      - No user will get notified of the current media capacity status
+
+     DAT specs say:
+
+        60m      DDS,    1.3GB uncompressed
+        90m      DDS,    2.0GB uncompressed
+       120mm     DDS-2,  4.0GB uncompressed
+
+     Capacities achieved with new tapes in reality:
+
+      Experience of User A:
+
+        60m:  1.1GB
+        90m:  1.6GB
+       200m:  3.3GB
+
+      Experience of User B:
+
+        60m:  1.1GB
+        90m:  1.5GB
+       200m:  3.3GB
+
+     Technical aspects:
+
+      HP writes data in 22 frames of 128 KB each to a 90 m tape,
+      what should make a capacity of 2.8 GB
+
+      Tapes are not written completely, trailers remain free for
+      possible later error correction
+
+      The specified capacity is a theoretical value for advertising.
+      They assume raw/unformatted writing to tape and do not take
+      the normal format overhead into account. It is known, that the
+      named values can never be reached. The discrepancy of 25 % to
+      the specifications is relatively high, but "tape experts" are
+      considering this to be normal.
+
+      When a not correctable write error occurs the complete frame
+      is invalidated and rewritten to the next piece of tape able to
+      keep it. Thus the usable capacity decreases continuously and
+      according to HP officials this is a normal side effect of the
+      DAT technology.
+
+      The device can evaluate certain hints pointing to dirty read/
+      write-heads. Then a message can be transmitted to the device
+      driver and this way up to some user, who should then insert a
+      cleaning tape. But when the device detects a dirty head and
+      transmits the notification, it is regularly and usually much
+      too late. Read and write errors might have produced unusable
+      data on tape or lead to wrong tape file mark counting as stated
+      in FAQ Q11.
+
+      I'd like to summarize this under the normal bullshitting, that
+      is established today in the computer business (and others).
+      Special thanks to Micro$oft, whose one and only incredible
+      great feat is IMHO to have driven the users' pain threshold
+      to heights never reached before. Does anyone believe a single
+      word from them any more ?
+
+     Other sources say about DDS2-4:
+
+      DDS2 conformant drives (and higher) must be able to perform
+      hardware compression. Having written an already compressed
+      file to a DDS4 tape the mt tool of the dds2tar package
+      reports, that indeed 20 GB data have been put on the tape.
+      So here (at least with new tapes, i (af) guess), the specs
+      are fulfilled.
+
+
+Q26: Tape handling seems not to work at all, what's wrong ?
+
+A26: Nothing seems to work, you get error messages, you don't
+     understand, in the serverside log there are messages like:
+
+     Tue May 25 15:46:55 1999, Error: Input/output error, only -1 bytes read, trying to continue.
+     Tue May 25 16:47:31 1999, Warning: Expected cartridge 3 in drive, but have 2.
+     Tue May 25 16:58:31 1999, Error: Input/output error, only -1 bytes read, trying to continue.
+     Tue May 25 17:20:12 1999, Internal error: Device should be open, fd = -10.
+     Tue May 25 17:21:24 1999, Error: Input/output error, only -1 bytes read, trying to continue.
+
+     This means probably, that the program configured for setting a
+     tape file (SetFile-Command:) does not work. Either you have
+     supplied something syntactical incorrect, or you are using
+     RedHat Linux-5.2 . The mt command of this distribution and
+     version is broken. Solution: Update to a newer version of mt,
+     0.5b reportedly works.
+
+
+Q27: How can i change the compression configuration ?
+
+A27: Basically the compression level can be changed at any time,
+     but with the algorithm and afbackup version 3.2.6 or older
+     it is different story.
+
+     The only problem here is, that the filename logfiles (in other
+     words: the index files) are compressed and changing the uncompress
+     algorithm makes them unreadable. With afbackup 3.2.7 or higher
+     for each index file the appropriate unprocess command is saved
+     into a file with the same name like the index file, except that
+     it has a leading dot (thus hidden). A problem arises with indexes
+     without a related hidden file. The solution is to uncompress
+     them with the old algorithm into files, that do not have the
+     trailing .z . The existing .z files must be removed or moved out
+     of the way. When running the next backup the current file will
+     automatically be compressed. Of course the uncompressed files
+     can then be compressed into new .z files with the new compression
+     algorithm. In this case the files without the trailing .z must
+     be removed.
+
+     When using built-in compression, there is a little problem here.
+     A program is needed, that performs the same algorithm like the
+     built-in compression. Such a program comes with the distribution
+     and is installed as helper program __z into the client side
+     .../client/bin directory. The synopsis of this program is:
+
+      __z [ -{123456789|d} ]
+
+     __z [ -123456789 ]  compresses standard input to standard out
+                         using the given compression level
+
+     __z -d              uncompresses standard in to standard out
+
+     Having configured built-in compression AND a compress and
+     uncompress command, a pipe must be typed to get the desired
+     result. Keep in mind, that during compression first the command
+     processes the data and then the built-in compression (or the __z
+     program) is applied. To uncompress the index files e.g. the
+     following command is necessary:
+
+      /path/to/client/bin/__z -d < backup_log.135.z | \
+             /path/to/client/bin/__descrpt -d > backup_log.135
+
+     It is a good idea to check the contents of the uncompressed
+     file before removing the compressed version.
+
+     For the files saved in backups a change of the compression
+     algorithm is irrelevant, cause the name of the program to
+     perform the appropriate uncompression (or built-in uncompress)
+     is written with the file into the backup.
+
+
+Q28: Why does my Linux kernel Oops during afbackup operation ?
+
+A28: Reportedly on some machines/OS versions the scientific
+     functions in the trivial (not DES) authentication code are
+     causing the problems. Thus, when compiled with DES encryption
+     enabled, the problems are gone. The libm should not be the
+     problem, it operates at process/application level. A better
+     candidate is kernel math emulation.
+
+     Solutions: * Recompile the kernel with math emulation disabled.
+                  This should be possible with all non-stone-age-
+                  processors (Intel chips >= 486, any PPC, MIPS >=
+                  R3000, any sparc sun4, Motorola >= 68030 ...)
+                * Get the current libdes and link it in on all
+                  servers and clients. This also enhances security
+
+
+Q29: Why does afbackup not use tar as packing format ?
+
+A29: tar is a format, that i don't have control of, and that lacks
+     several features, i and other users need to have. Examples:
+
+      - per-file compression
+      - arbitrary per-file preprocessing
+      - file contents saving
+      - saving ACLs
+      - saving command output (for database support)
+
+     I (too) often read: In emergency cases i want to restore with
+     a common command like tar or cpio, cause then afbackup won't
+     help me / be available / no argumentation. This is nonsense.
+     In emergency cases afbackup is still available. The clientside
+     program afclient can be used very similarly like tar. Thus
+     when using the single stream server you can recover from tape
+     without the afserver trying something like this (replace with
+     configured blocksize after bs= and get the tape file number,
+     where the desired files can be found, from the index file, it
+     is prefixed with hostname%port!cartridgenumber.tapefilenumber):
+
+      cd /where/to/restore
+      mt -f /dev/nst0 fsf <tapefilenumber>
+      sh -c 'while true ; do dd if=/dev/nst0 bs=<blocksize> ; done' \
+           | /path/to/client/bin/afclient -xarvg -f-
+
+     RTFM about afclient (e.g. /path/to/client/bin/afclient -h)
+     and dd. Don't mistype if= as of= or for safety take away the
+     write permission from the tape device or use the cartridge's
+     hardware mechanism to prevent overwriting.
+     When using the multi-stream server, the tape format must be
+     multiplexed, so it will never be the raw packer's format.
+     Then it won't help in any way, if it was tar or cpio or what
+     ever, you need to go through the multi stream server to get
+     back to the original format.
+
+
+Q30: How to recover directly from tape without afclient/afserver ?
+
+A30: See Q29.
+
+
+Q31: Why do files truncated to multiples of 8192 during restore ?
+
+A31: This happens only on Linux with the zlib shipped with recent 
+     (late 1999) distributions (Debian or RedHat reportedly) linked
+     in. I was unable to reproduce the problem on my Linux boxes
+     (SuSE 5.2 and 6.2) or on any other platform, where i always
+     built the zlib myself (1.0.4, 1.1.2 or 1.1.3). I have the
+     suspicion, that the shipped header zlib.h does not fit the
+     data representation expected in calls to functions in the
+     delivered libz.a or libz.so . Thus programs built with the
+     right header and appropriate libz do work, but programs built
+     with the wrong header linked to libz do not. Don't blame that
+     on me, i have a debugging output here sent to me by a user,
+     that proves, that libz does not behave like documented and
+     expected.
+
+
+Q32: What is the difference between total and real compression factor ?
+
+A32: The total compression factor is the sum of all the sizes of all
+     files, divided by the sum of the sizes of the files not compressed
+     and the number of bytes resulting from compressing files, what
+     makes the sum of all bytes saved as file contents, either being
+     compressed or not.
+     The real compression factor only takes those files into account,
+     that have been compressed and not those left uncompressed. This
+     factor is the sum of the sizes of the files having been compressed,
+     divided by the sum of bytes resulting from compressing those files.
+     Both factors are equal, if compression is applied to all files,
+     e.g. if the parameter DoNotCompress is not set or no files
+     matching the patterns supplied here are saved.
+
+
+Q33: How does afbackup compare to amanda ?
+
+A33: Admittedly i don't know much about amanda. Here's what i extracted
+     from an E-Mail-talk with someone, who had to report a comparison
+     between them (partially it's not very fair from both sides, but i
+     think everyone can take some clues from it and be motivated to ask
+     further questions), it starts with the issues from an amanda user's
+     view (> prefixes my comments on the items):
+
+
+DESCRIPTION                                                 Amanda  afbackup
+
+Central scheduler which attempts to smooth the daily
+backups depending on set constraints, can be interrogated.  YES     NO
+> (afbackup does not implement any scheduler, backups can be
+> started from a central place, afbackup does NOT force the
+> types of a backup, e.g. make incremental backup, if there
+> is not much space on tapes left)
+
+Sends mail when a tape is missing or on error,
+while in backup.                                            YES     YES
+
+Pre-warns of a possible error condition (host not
+responding, tape not present, disk full) before backup.     YES     PARTIALLY
+> (afbackup implements a connection timeout for remote
+> starts, an init-command for server startup and an
+> init-media-command, that is called, whenever a media
+> should be loaded, can be configured, that may test for
+> problems in advance)
+
+If no tape available, can dump to spool only.               YES     NO
+> (No (disk) spool area is maintained. Backup media can
+> be filesystems, thus also removable disks. It is
+> possible to configure a buffer file on disk, but it's
+> size should not be too big, to be safe: << 2 GB)
+
+Normally dumps in parallel to a spool disk, then to tape,
+for efficiency.                                             YES     N/A
+> (afbackup can dump in parallel to server, clientside
+> protocol optimizer for efficiency, no spool area s.a.)
+
+Supports autochanger in a simple way (can browse for a
+tape, but will not remember the pack's content, this can
+be a feature)                                               YES     YES
+> (Don't know, what is meant here. Autochanger is supported
+> in a simple way before 3.3, enhanced in 3.3, including a
+> media database)
+
+When using tar backups, indexes are generated which can be
+used to get back the data.                                  YES     YES
+> tar is not used (see below), indexes are maintained
+
+An history of the backups is available, Amanda can decide
+the restore sequence, e.g. if the last full dump is
+not available, go back in history, using incremental
+backups.                                                    YES     Y/N
+> (A before-date can be supplied, but no automatic
+> walk-back in history)
+
+Backup format can be simple tar.                            YES     YES(discouraged!)
+> I decided not to use the tar packing format as it lacks
+> several features, that i consider absolutely necessary,
+> most notably
+> - per-file compression/preprocessing
+> - command output packing
+> - extended include/exclude
+
+Amanda will interrogate the client and tell him to do a 0,
+1 or other level backup, depending on spool size, backup
+size, etc.                                                  YES     manual
+
+Can print tape's content labels.                            YES     N/A
+> The label of an afbackup tape does not contain tape
+> contents. These are located in the index file(s). Those
+> can be printed easily, also only a certain end user's
+> files. This feature of amanda has in my opinion one of
+> the heaviest limitations of amanda (filesystem size
+> <= tape capacity) as consequence
+
+Can print weekly tape content summary.                      YES     N/A
+
+Can print graphical summary of backup time.                 YES     NO
+
+Restorer through an intelligent command line.               YES     YES, also GUI
+
+Backups can be stored and/or transmitted compressed.        YES     YES
+> clientside compression is one of afbackup features.
+> Thus transmitted data is already compressed.
+
+Backups can be encrypted during transport or on disk.       NO(1)   BOTH
+> ssh may be used to tunnel the connection, the contents
+> of the stored files can be preprocessed in any arbitrary
+> way, also encrypted
+
+Can backup file system whose size is bigger than a tape.    NO(2)   YES
+> Why not ?
+
+Backups file system to tape if bigger than spool, or to
+spool, or no backup.                                        TAPE(3) N/A
+> No spool area is maintained. To achieve good performance,
+> ring buffers are created on client and server, client-/
+> server-protocol tries to optimize throughput.
+
+Can append to tape.                                         NO(4)   YES
+> Normal append is supported since ever. As of version
+> 3.2.6 full append mode is implemented, i.e. also, if
+> an administrator has requested to write to another
+> tape now, the current one will be appended to, if there
+> is no space left on any available tape. Since 3.2.7
+> there is also a variable append mode making the server
+> append to any supplied tape having remaining space
+> and not being in read-only state
+
+Supports a tape verify option (just verifying the tape)     YES     NO
+> Don't see the use of this.
+
+Supports a data verify option (compare with fs).            NO(5)   YES
+> (very pedantic)
+
+Graphical, web or menu-based configuration.                 NO      GUI,CL
+> CL means: command line program
+
+Graphical, web, menu-based or command line restore.         CMD     GUI,CL
+
+Can restore individual file automatically to most recent.   YES     YES
+
+Can restore individual file to specified date.              ???     YES
+
+Protects a client host from others reading its data.        NO      YES
+> Client access can be restricted on cartridge set base
+
+Supports disaster recovery.                                 NO      YES
+
+mt and tar commands are easy to use to recover by hand,
+with the printed weekly summary.                            YES     YES
+> No weekly summary, minimum restore info posted to admin.
+> Manual recover is possible, explained in FAQ
+
+License.                                                    BSD     GPL
+
+Can backup MS-WINDOWS data ?                                YES     via SMB-mount
+
+
+Now for the items from an afbackup preferring user's view (> prefixing
+the comments of an amanda user, >> prefixing my thoughts on the comment):
+
+End User Restore                                            NO      YES
+> Amanda doesn't support end user restore
+
+Data safety (client/server authentication through a
+challenge-response, secret key required, real client-
+server system, only server can access tape devices)         NO      YES
+> Amanda does NOT have it, which makes it a problem.
+> There ARE extensions, for example for using Kerberos
+> (export problems), or ssh (other class of problems).
+
+Database backup support (by saving arbitrary dump
+command output)                                             NO      YES
+> No, Amanda requests it to be sent to a file, first.
+>> So e.g. for an online database backup a huge
+>> temporary disk space is required
+
+Raw device contents backup                                  NO      YES
+
+Using full tape capacity                                    NO      YES
+> No, Amanda insists on changing tape everyday (which
+> makes sense for tape's security reason, but doesn't make
+> too much sense if you waste a lot of precious storage
+> --- Amanda counter-balances this with its intelligent
+> scheduling algorithm).
+
+Multi-Stream (several clients backup to a server in
+parallel) optional                                          YES?    YES
+> Multiple clients can backup to the spool, and then to
+> tape. There is no tape multiplexing or anything like
+> this.
+
+Several servers per client can be configured, selected
+by availability and load, transparent during restore        NO      YES
+
+Per file preprocessing (for safety, if the whole stream
+is e.g. compressed and a single bit is wrong during restore
+all the rest is lost)                                       NO      YES
+> Amanda compresses the whole backup if requested.
+>> (AF's comment: crazy in my opinion)
+
+Secure remote start option (not requiring trusted
+superuser remote access)                                    NO      YES
+> Backups are always started centrally. You can decide at
+> which time the *whole* thing starts.
+>> (AF's comment: also possible with afbackup, in a
+>>  secure fashion)
+
+End user restore (already mentioned above) only of his
+own files                                                   NO      YES, also GRAPHICAL
+
+Server and client can easily change (e.g. move tape to
+other machine or restore to different client)               Y/N     YES
+> Amanda stores the indexes on the server, so the client
+> can easily change. However, the server can only change
+> provided you restore the indexes.
+
+Duplicate tapes (make clones) (also automatically)          NO      YES
+> Not supported (you can make copies, but they won't be
+> considered as though).
+
+Store in filesystems, maybe removable disks                 NO      YES
+(may call it virtual cartridges)
+
+Cartridges can be set to read-only mode                     ???     YES
+> Probably no.
+
+Maintain arbitrary cartridge sets (e.g. to switch daily,
+weekly or for type or backup)                               YES     YES
+> Yes. Amanda's scheduler is probably better than afbackup's.
+>> (AF's comment: i didn't speak of the scheduler here,
+>>  but of the option to combine tapes to sets with
+>>  common properties, e.g. access restrictions)
+
+
+
+1.2 Amanda issues
+
+(1) Support for security is low (a this time mainly based on host name
+    security, without encryption). Kerberos or ssh encryption are possible,
+    but not easy to set up/well tested, and have some exportation or
+    patent issues.
+
+(2) Cannot backup a file system whose size is bigger than a tape, without
+    splitting the fs with regexps.
+
+(3) Backups bigger than the spool size are dumped to tape, which is slower
+    and may cause tape trashing.
+
+(4) Only if the tape is disabled, in that case the system dumps to spool,
+    and then a flush can be done. But cannot really *append* to a tape.
+    Authors say it's a feature: the tape is not used for more than one day,
+    this guarantees medium integrity, and the scheduler makes this
+    worthwhile.
+
+(5) Verify option would have to be implemented.
+
+
+1.2 afbackup issues
+
+To be implemented in the next versions:
+
+(1) Jukebox support (several tape devices sharing a set of tapes), coming
+    not too soon, depends on the time and support i get for ongoing
+    development by my employer and customers.
+
+
+Not planned to be implemented:
+
+- Maintaining a spool area on disk
+- Distinguished scheduler for the backup system (crond is in place, so ...)
+
+
+Q34: How to contribute to I18N/L10N ?
+
+     Ask to get a pattern file for your language. It will be sent to you
+     containing pairs of msgid and msgstr entries. For a first attempt
+     the file afbackup.pot in the subdirectory ./po can be used, copied
+     to X.po with X replaced as explained below. But then it might be,
+     that someone else is already working on the translations for your
+     language, so better ask first.
+     You have to fill in the msgstr parts. If the msgstr part will be
+     longer than one line, put an empty string behind msgstr and continue
+     to write in the next lines. Example:
+
+msgid "some long English stuff"
+msgstr ""
+"The multiline\n"
+"equivalent in some\n"
+"other language."
+
+     There are already multiline sections in the msgid fields. Please try
+     to keep the output clearly arranged.
+
+     To test your translations, put your X.po file into the subdirectory
+     ./po of the distribution. Change to it and type the following line
+     (X replaced with your language setting of LANG):
+
+      msgfmt -o X.mo X.po
+
+     The X.mo file will be created.
+     Now make a directory under the installation directory
+     /.../common/share/locale (again X replaced):
+
+      mkdir -p /.../common/share/locale/X/LC_MESSAGES
+
+     now copy the X.mo file to that directory renaming it to afbackup.mo:
+
+      cp X.mo /.../common/share/locale/X/LC_MESSAGES/afbackup.mo
+
+     When you now set the environment variable LANG to the setting
+     you use for other programs, afbackup should speak your language.
+     Please send the X.po file with your add-ons to the author (please
+     gzip -9 or bzip2 -9 before sending !!!)
+
+     Thanks a lot !
+
+
+Q35: Why does I18N not work in my environment ?
+
+A35: A common problem is, that the programs are linked with a libintl.X,
+     that does not understand the format of the .mo file. Either GNU
+     msgfmt is used to create the .mo file and the vendor's lib is
+     linked to your binary or the other way round. This may happen,
+     though i tried to make autoconfig do it's best to find out, which
+     program and which function is what sort of. To use the vendor's
+     /usr/bin/msgfmt and /lib/libintl.XY, you can change to the po
+     directory and run  msgfmt -o XY.mo XY.po with XY replaced with
+     your language abbreviation, then  make install  again.
+
+     If you get a warning during build, that no msgfmt program could
+     be found, either add the path to GNU msgfmt to your command path
+     and build again, or if no msgfmt can be found, install GNU gettext
+     and start over. If GNU msgfmt is available on another architecture,
+     you can simply copy the *.gmo files into the po directory and build
+     again without the  make distclean  before.
+
+     If all this does not help, the problems are elsewhere. It has been
+     experienced, that afbackup I18N does not work on Solaris-2.6 while
+     it does on Solaris-2.5.1 and Solaris-2.7. Strange, isn't it ?
+     Any help concerning these topics is appreciated.
+
+
+Q36: Is there a mailing list or a home page for afbackup ?
+
+A36: Yes. The Homepage is http://www.sourceforge.net/projects/afbackup
+
+     The alias http://www.afbackup.org is redirected to this URL and
+     might go out of service silently.
+
+     If you want to be informed about important changes or bugfixes,
+     monitor the desired releases on the afbackup homepage.
+
+
+Q37: I have trouble using the multi stream server. What can i do ?
+
+A37: Trouble with the multi stream server are supposed to be related to
+     the inetd, especially when using xinetd. In these cases the afmserver
+     can be started as daemon not using (x)inetd. For this purpose there
+     are the options -d and -p <port>. Please note, that this mode to run
+     the afmserver requires a more tolerant and robust client behaviour
+     first implemented in version 3.2.7. Older clients may have problems.
+
+     The afmserver can e.g. be started at system boot time using the line
+     below. As it should run usually under a different user ID than 0,
+     which is root's, an su to this ID must be preceded (see column 5 of
+     the single stream server's entry in /etc/inetd.conf for the name of
+     the user). Then the line might look something like this:
+
+      su backup -c "/usr/local/afbackup/server/bin/afmserver -d -p afmbackup /usr/local/afbackup/server/lib/backup.conf"
+
+     The program goes into the background, so no & is required. The
+     daemon can be killed normally, when not needed any more.
+
+     A typical init-script might look like the generated init.afbackup
+     script, installed as $SERVERBASE/etc/init.d/afbackup (check, if the
+     configuration file is correct as $BASEDIR/etc/backup.conf and modify,
+     if not).
+
+
+Q38: On AIX i get the warning: decimal constant is so large ... what's that ?
+
+A38: It has definitely been proven by writing, running, and tracing test
+     programs, that this warning is bogus. The definition for MAXINT looks
+     something like this (reduced to the beef):
+
+      #define MAXINT (int)((unsigned)(1 << (sizeof(int) * 8 - 1)) - 1)
+
+     The part 1 << (sizeof(int) * 8 - 1) evaluates to 2^31 or hex 0x80000000.
+     If evaluated as two's complement (int type), is is -2^31, i.e. it is
+     negative. To be positive it may not be considered two's complement,
+     but unsigned. This is, what the warning says (i think). Anyway, when
+     decrementing it by one, it results in hex 0x7fffffff, what is the
+     correct value, whether considering 0x80000000 being unsigned positive
+     or two's complement. In the latter case some overflow bit will be set,
+     put the result is the same (and correct).
+
+
+Q39: What about security ? How does this authentication stuff work ?
+
+A39: The server does not serve clients, that haven't authenticated. This is
+     to prevent arbitrary people connecting the server port and operating
+     the protocol, so they have full access to all tape operations.
+
+     Authentication is of the challenge-response type. That is, the server
+     sends some (random) data (called 'the challenge') to the client and
+     expects it to process the data in a proper way and to send the result
+     (called 'the response') back to the server. If the client comes to the
+     same result like the server, the client has thus proven, that he knows
+     the authentication key, that is necessary to find the correct result.
+
+     The algorithm to calculate the response from the challenge depends on
+     configuring DES encryption. If DES is configured, the algorithm is 128
+     Bit 3DES (effectively 120 Bit). 128 Bits from the key are used and both
+     challange and response consist of 16 bytes. If DES is not configured,
+     the algorithm is a simple one using only 32 Bits. If ever possible, use
+     the DES encryption.
+
+     The key is generated from the entered key string or from the configured
+     key file. Only the 6 least significant bits (0-5) are used from each
+     character to make sure, that a key, that is composed only of printable
+     characters, is fully significant. To make 128 bits, it is thus required
+     to enter 22 characters, what makes 132 Bits. More characters will not
+     be used i.e. they are ignored.
+
+     With afbackup version 3.3.1 and higher, also the client requests the
+     server to authenticate sending it a challenge and evaluating it's
+     response. This is to make sure, that the client has connected a real
+     server, that is really knowing the key. What otherwise might happen,
+     is the following scenario: Some malicious guy wants to gain access to
+     the tape data. Maybe he knows some computer, that clients try to
+     connect, but where no afbackup service is running. Remember: the port
+     number used by default is a non-privileged one. So he establishes a
+     fake server on that port as normal user, listening for clients to
+     connect. Now he connects a real afserver himself, receiving the
+     challenge bytes from that server. He sends these bytes to the client,
+     that has connected to himself and receives the correct response, cause
+     this client is a proper one knowing the key. Instead of continuing to
+     serve the client he uses the response from that client to successfully
+     authenticate to the real afbackup server and to gain unauthorized
+     access. This cannot be prevented with the mechanism, that the client
+     requests the server to authenticate, it is just made a little more
+     difficult. The malicious guy can go ahead and forward the client's
+     challange to the connected server, receive it's response and pass it
+     to the client again. If he don't do so, the client will complain and
+     point out the possible security problem. So does the server, whenever
+     authentication fails.
+     So this kind of 'man in the middle attack' is not made impossible, but
+     it must be performed perfectly to remain undetected. To avoid such an
+     attack, the maintainer might choose to use a privileged port (with a
+     number < 1024) for afbackup. Then the intruder must already have root
+     access to spoof the port. Another option is to prevent normal users
+     from login to the backup server(s) or to supervise, that the afbackup
+     service is continuously available on the provided port(s). If it is
+     not, some kind of alarm might be issued.
+
+
+Q40: Why does remote start of backups not work, while local start does ?
+
+A40: The most common problem is, that, when starting locally, the command
+     search path is different from the one, that is used, when programs
+     are started remotely. Thus it might happen, that configured commands
+     cannot be found. The solution is (BTW anyway recommended for security
+     reasons) to configure the commands with full directory path in the
+     clientside configuration file, e.g. the IndexProcessCmd and it's
+     counterpart to be /usr/local/bin/gzip and /usr/local/bin/gunzip .
+     Commands started remotely are subprocesses of the inetd. The inetd
+     usually has only /usr/bin and /usr/sbin in it's path, sometimes also
+     /bin and /sbin . It is not implemented (and will not be) in afbackup,
+     that the search path is transferred to the remote host to find the
+     programs in additional directories. Configuring the full paths is
+     the better way.
+
+
+Q41: What is the architecture of afbackup ?
+
+A41: Not attempting to discuss, what architecture means, i hope, the
+     following explanations will give some clues:
+
+The software architecture is about as follows:
+
+
+            programs (afserver, afclient, full_backup, ...)  | use
+----------------------------------------------------         V
+                | libafbackup.a (special procedures |
+libx_utils.a     --------------    used in several  |            ^
+(general purpose library)      | afbackup programs) |            |afbackup
+---------------------------------------------------------------------------
+              | libintl.a (L10N), GNU regex, libz, libdes |      |3rd party
+               -------------------------------------------       V
+        libc, POSIX system interface and libpthread (afb.3.3.3)
+
+Notes:
+* GNU regex comes with afbackup, if not detected by autoconf
+* libintl is included and compiled, if no usable system libintl found
+* programs are in fact fewer programs with functionality depending on
+  called binary name i.e. argv[0]
+
+
+The runtime architecture is about like that:
+
+           client side            |              server side
+                                  |
+  xafrestore                      |
+      |                           |
+      |(invokes)                  |
+      |                           |
+      V   full/incr_backup/       |             
+     afrestore/afverify/...       |
+            | (invokes/uses)      |  (network communication)
+            V                     |    /
+        afclient------------>-----+------------>--afmserver
+                       (requests) |     (or)|         | uses
+                                  |         |         V
+                                  |          -->--afserver
+                                  |                |     |
+                                  |     (operates) V     V (uses)
+                                  |                |   mt,mtx,...
+                                  |                |     |
+                                  |                |     V(operates)
+                                  |                 ---->|
+                                  |                      V
+                                  |               [storage device]
+
+Notes:
+* afclient on the client side is the workhorse program including
+  packer and server communication.
+* high level functionality including index maintaining and so on
+  is implemented in full_backup etc. These are mainly to be used
+* afmserver is the multi stream server, in fact just a multiplexing
+  frontend for the single stream afserver. Which one is used, can
+  by chosen by the target TCP port i.e. the service name
+* Functionality to operate streamer devices or changers is not
+  included in afbackup. System or thirdparty tools are used
+* Generally afbackup duplicates as few as possible functionality,
+  that already exists
+* the runtime structure is divided into several programs and the
+  build structure into programs and libraries to be able to modify
+  and test certain functionality separately from the rest of the
+  system. E.g. the packer functionality is completely in libx_utils
+  and can be considered an own subsystem. If fact afclient can be
+  used just like tar
+
+
+Q42: Why are new files with an old timestamp not saved during incr_backup ?
+
+A42: To recognize, that a file is new would require to compare all
+     entries of the filesystem against the index contents. Such a
+     comparison would, with the current very compact structure of
+     the index (simply a compressed file list with some additional
+     information), take at least several seconds per entry, if the
+     backup volume contains a really large number of files, even
+     longer. An incremental backup would then take hours instead
+     of minutes, days instead of hours.
+     To have faster index lookup the index must be either kept in
+     memory in a sorted fashion (normally not realistic even with
+     current memory capabilities), or it has to be implemented
+     completely different. Commercial products do this. Networker
+     or Veritas Netbackup for example implement a kind of database
+     containing entries for all saved instances of the filesystem
+     entries. Implementing such a database is not very different
+     from implementing another filesystem, that contains additional
+     attributes like backup time, physical position on tape, server
+     identification and so on. Besides the fact, that such an index
+     may become really huge, especially if there are many symlinks,
+     directories or tiny files in the saved original filesystem, it
+     requires regular consistency checks like a filesystem. With
+     networker i experienced index checks taking more than 20 hours
+     for about a terabyte saved filesystem data. During this time
+     no backup or easy restore is possible. If anything disturbs
+     the check, it will start from the beginning.
+     Instead of implementing such yet another filesystem an existing
+     one might be used. This is, what Arcserve does. For each saved
+     filesystem entry another one is created in a special directory,
+     that is maintained by the backup software. I don't know, how
+     the attributes named above (backup timestamp etc.) are coded
+     in that directory, but it is populated with numerous of tiny
+     files. So for each entry in the filesystem to backup another
+     one is needed in that directory. Such a directory has the side
+     effect, that permission checks can easily be burdened on the
+     system's filesystem implementation. If e.g. users should be
+     able to see/restore only the files, they had write access to,
+     this test can easily be achieved attempting the appropriate
+     operation to this special directory. But to implement things
+     this way makes incredibly inefficient use of the filesystems
+     on disk. A huge number of entries is created containing only
+     few data each. Some filesystems apply a smaller fragment size
+     here, but anyway, the basic structure of such implementations
+     is in my opinion questionable.
+     In any case the necessary implementation effort is huge. On
+     the other side, to explain the users, that new files with an
+     old timestamp - typically from some unpacked tar or similar
+     archive - are only in backup, when explicitely touch(1)ed, is
+     a pretty tiny excercise. Furthermore it is often not necessary
+     to have unpacked tar/cpio/... archives in incremental backup.
+     These data can usually be obtained again from where they came
+     before.
+
+     A filesystem-like index will not be implemented in afbackup
+     any time soon.
+
+
+Q43: What do the fields in the minimum restore info mean ?
+
+A43: Here is a typical example:
+
+     @@@===--->>> hydra orion 2989 6 303 /tmp/afbsp_6S6_3Of_mNAPV_UA01
+
+     The first part makes the string recognizable within other data,
+     e.g. mailbox contents. The next word `hydra' is the identifier
+     of the client itself. It will be passed to the server to get
+     the right data. The next word `orion' is the hostname of the
+     server, the following number the port at the server to contact.
+     The next number (6) is a cartridge number, followed by a tape
+     file number (303). The last field is the name of a file, that
+     contains the positions of all pieces of backup necessary to
+     restore all data since the (first part (if configured) of) the
+     last full backup. This file will be restored first before doing
+     anything else from the position indicated by the previous fields.
+     It had been written to backup as a temporary copy of the file
+     start_positions in the client's var-directory (see FAQ Q21 for
+     more details about this file). The temporary copy is saved in
+     backup, because during disaster recovery it is disadvantageous,
+     if this file that is recovered first overwrites an existing one
+     or becomes overwritten, so the contents cannot be checked later,
+     if desired.
+
+
+Q44: What are those files like /tmp/afbsp_XXXXXXX ? Can i remove them ?
+
+A44: They can be removed, but then a successive afverify will complain.
+     See Q43 about the contents of such a file.
+     A file like this is kept until the next backup to shut verify
+     up. Otherwise it would complain about that file, if it's not
+     there. But it needs no longer be there. It is only important,
+     that it is in backup and if backup succeeds, it IS in backup.
+     But because it is in backup, it will be verified during the next
+     verify and when it's missing, afverify complains. This is not
+     really necessary, but will confuse people. So the file is kept
+     until next backup, so afverify will not complain. It will be
+     automatically removed during next backup. If there are several
+     files of this sort, backup has probably failed sometimes. This
+     might indicate some kind of error or forced terminations by an
+     administrator. Or tests like debugging or whatever uncontrolled
+     termination.
+     Basically: Yes, they can be safely removed without any risk.
+
+
+Q45: On a client starting remotely i see a warning about no start cartridge
+     found in the server log. What does it mean and can i suppress that ?
+
+A45: It means just, that this server is trying to initialize it's
+     status information for acting as a real server using a real
+     device for backup. If this is not desired and the server should
+     act solely as remote starter, a dash can be configured as device.
+     Then the warning will be suppressed.

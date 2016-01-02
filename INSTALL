@@ -1,0 +1,624 @@
+
+Installation of AF's backup system
+==================================
+
+
+Super easy installation for nervous people
+------------------------------------------
+
+Run my very cool interactive installation script "Install"
+and answer the questions properly. This tool has sufficient
+configuration capabilities for the vast majority of installations.
+
+Afterwards you may run the following programs to
+configure the backup system ($BASEDIR is the
+installation directory for each $BASEDIR the
+configuration file may be supplied as an argument):
+
+$BASEDIR/server/bin/serverconfig    to configure the server side
+$BASEDIR/client/bin/clientconfig    to configure the client side
+
+If you are running X, you may use the following instead:
+
+$BASEDIR/server/bin/xserverconfig    to configure the server side
+$BASEDIR/client/bin/xclientconfig    to configure the client side
+
+(For the latter two Tcl/Tk must be installed and some version of
+ the "wish" program must be in the command search path)
+
+
+Detailed installation procedure
+-------------------------------
+
+There are three types of hosts that can be configured.
+A host may be of one or more of the following three types.
+I will define them as follows:
+
+backup server         a host with a streamer device connected,
+                      that all backup data is written to
+backup client         a host that desires to backup it's data
+                      to a server
+remote start client   a host that can start a backup on another
+                      host by issuing a request to that host
+                      who in turn is basically a backup client.
+                      This is used to simplify the administration
+                      by starting backups on several clients
+                      from one central point.
+
+What you have to do depends on the type of host that you 
+want to configure. For a backup server, install and configure
+the server side (see below). For a client, install and configure
+the client side (see below). For a remote start client, install the
+client side (see below). Special configuration should not be necessary.
+For a backup client that offers the possibility to be triggered
+remotely (by a remote start client), also install the server side 
+and the remote start server side (see below). Further
+configuration is not necessary. A host like this 
+requires the installation of all three basic functionalities
+described above.
+
+After successfully building the programs, if software packages of
+whatever kind are desired to be built from a directory differing
+from the final installation location (i.e. the "make install"
+target), the script build_local_inst, called with the desired target
+directory as argument, can be useful. See also HOWTO question 36.
+
+
+Client Side
+-----------
+
+1) If you want DES encryption (128 Bit key) for authenticating
+   the client to the server get Eric Young's DES-library or the
+   openssl software. They be obtained from many web sites, e.g.
+   www.openssl.org. If you can't find it, ask google for them.
+   The current version of libdes by the time of this writing is
+   4.04b, openssl is 1.0.0a.
+
+   By default the libdes is expected in a directory named 'libdes'
+   parallel to the unpacked afbackup sources directory. An ls in
+   the parent directory should show at least the two subdirectories
+   afbackup-X.Y and libdes. The DES-library can be easily compiled:
+   A simple make in this directory should suffice in most cases.
+   For openssl run the Configure script and check the offered list
+   of operating system version - compiler combinations and supply
+   the most appropriate one. The option -prefix tells the script
+   about the desired installation directory Then run make and
+   make install.
+
+   If openssl is used, configure should be called as follows:
+   --with-des-header=openssl/des.h for the name of the header file,
+   --with-des-ldflag=-lcrypto for the library to be linked and if
+   libcrypto.* cannot be found in a standard location, specify
+   --with-des-libdir=$OPENSSL/lib for the library path ($OPENSSL
+   is assumed the base directory where lib/libcrypto can be found).
+   Warnings about incompatible pointer types can be ignored.
+
+
+2) Build the distribution.
+   For Solaris, it is strongly recommended to use gcc. Sun compilers
+   break autoconf checks for header availability, so first set the
+   environment variable CC to gcc. Now enter (on SunOS-4 preceded
+   with bash - get one if you don't have it):
+
+        ./configure [ -prefix=/my/desired/install/path ]
+
+   As usual, stuff typed in square brackets is optional.
+   Default installation path is /usr/local. To this install path
+   /backup is always appended as well as /client for the client
+   side. For the pre-2.11.5-defaults, type /usr as install
+   path. For Debian the default changed to /usr/local, but in
+   these cases, where /usr/local is NOT local and used by several
+   machines via NFS, I'd recommend to use the old default /usr or
+   /opt or whatever is appropriate and *really* local.
+   If DES-encryption should be performed and the required headers
+   and libraries are not found automatically by configure, use the
+   following options as needed:
+
+        --with-des [ --with-des-header=<des-header-file> ]
+                   [ --with-des-include=<path-to-des-header> ]
+                   [ --with-des-libdir=<path-to-des-lib> ]
+                   [ --with-des-ldflag=<des-lib-specifier> ]
+
+        Defaults, if openssl cannot be found:
+               <des-header-file>      des.h
+               <path-to-des-header>   ../libdes
+               <path-to-des-lib>      <path-to-des-header>
+               <des-lib-specifier>    -ldes
+
+   DES-encryption is used, if detected automatically. If this is
+   not desired, it must be explicitely turned off by --without-des
+
+   If built-in compression should be performed and the required
+   headers and libraries are not found automatically by configure,
+   locate the zlib.h header file and the library libz.a (or
+   libz.so...) on your system (or install version >= 1.0.2 if not
+   available), then use the following options as needed:
+
+        --with-zlib [ --with-zlib-include=<path-to-zlib.h> ]
+                    [ --with-zlib-libdir=<path-to-libz.*> ]
+
+        Defaults, if libz cannot be found:
+               <path-to-zlib.h>   /usr/local/include
+               <path-to-zlib.*>   /usr/local/lib
+
+   Changes in the encryption routines were necessary due to a bug
+   in all libdes versions. Thus the newly built programs are unable
+   to authenticate successfully with existing installations.
+   Furthermore if the __descrpt program was used to encrypt files,
+   they cannot be decrypted with this program any longer.
+   Nonetheless it is possible to build the package using the buggy
+   function, so backward compatibility for existing installations
+   is provided. If the buggy function should be used, the following
+   line must be appended to the file des_aux.h:
+
+    #define LIBDESBUG_COMPATIBILITY 1
+
+
+   Then type:
+
+        make client
+
+   Warnings can usually be ignored.
+   You will be asked to enter a key for authentication. This
+   key is needed so that no one other than a real backup client 
+   can connect to the fbackup service. This is to prevent 
+   unauthorized people or programs from getting access 
+   to the backup media. Note that the stuff you enter is
+   somewhat converted and used for processing some bytes 
+   sent from the server to the client. Both sides do some 
+   calculations and then the client sends back the result 
+   and the server decides whether the client may take control. 
+   After the successful installation you
+   should do a "make distclean", so the file with the key is
+   removed and cannot be used by hackers to rebuild the stuff.
+   You may decide to have the sources and programs read 
+   protected during installation for more security.
+
+   More detailed installation options to pass to configure:
+   (to be used like assignments, e.g. -prefix=/desired/path,
+    every --with-stuff has it's --without-counterpart)
+
+   option name           default                   comment
+
+   -prefix               /usr/local/afbackup       the base for all
+   --with-prefixext      /backup                   appended to $prefix
+   --with-serverdir      $prefix/$prefixext/server serverside base
+   --with-serverbindir   $serverdir/bin            for executables
+   --with-serverlibdir   $serverdir/lib            for libraries
+   --with-servervardir   $serverdir/var            varying stuff
+   --with-serverconfdir  $serverdir/etc            configuration
+   --with-servermandir   $serverdir/man            manual pages
+   --with-serverlogdir   $serverdir/var            for logfiles
+   --with-serverconf     backup.conf               config filename
+   --with-clientdir      $prefix/$prefixext/client clientside base
+   --with-clientbindir   $clientdir/bin            for executables
+   --with-clientlibdir   $clientdir/lib            for libraries
+   --with-clientvardir   $clientdir/var            varying stuff
+   --with-clientconfdir  $clientdir/etc            configuration
+   --with-clientmandir   $clientdir/man            manual pages
+   --with-clientlogdir   $clientdir/var            for logfiles
+   --with-rexecdir       $prefix/$prefixext/rexec  remotely executables
+   --with-clientconf     backup.conf               config filename
+   --with-commondir      $prefix/$prefixext/common client and server
+   --with-commondatadir  $commondir/share          architecture indep
+   --with-commonshlibdir $commondatadir/lib        arch indep code
+   --with-tmpdir         /tmp                      alternative tmp dir
+   --without-strip       no (i.e. perform strip)   don't strip binaries
+
+   options without arguments
+
+   --disable-threads     --enable-threads          don't use threads
+
+   Minimum to affect all defaults is to set -prefix and possibly
+   -{with|without}-prefixext. The next more detailed step is to
+   set --with-serverdir, --with-clientdir, --with-rexecdir, and
+   --with-commondir .
+
+   More detailed installation options to pass to make:
+
+   2 variables can be set to modify compilation, so the programs
+   will be built with e.g. lower optimization or debuggable. To
+   turn on debugging ability pass DEBUG=-g (or whatever argument
+   the compiler needs). For adjusting the optimization pass an
+   argument like this to make: OPTIMIZE=-O3 . If several options
+   should be passed to the compiler, use quotes, e.g.
+   OPTIMIZE="-O1 -finline-functions"
+
+3) Install the files and programs
+
+   Just enter:
+
+     make install.client
+
+4) Configure the client side
+
+   To do this run the program
+
+    $BASEDIR/client/bin/clientconfig
+
+   where BASEDIR is the install directory chosen with configure.
+   Everything should be self-explaining (help-command available)
+
+   I suggest to backup as first file one containing the name of
+   the client machine. On most distributions of Linux, the file 
+   /etc/HOSTNAME could be used for this purpose.
+
+5) If you want the logfiles to reside in the /var-directory,
+   move the $BASEDIR/client/var diretory to a subdiretory of
+   /var with a name of your choice. I'd suggest
+    /var/logs/backup/client .
+   Then make a symbolic link in $BASEDIR/client with the
+   name var, that points to the newly created diretory under
+   /var. e.g. enter:
+
+    rmdir $BASEDIR/client/var
+    mkdir -p /var/logs/backup/client
+    ln -s $BASEDIR/client/var /var/logs/backup/client
+
+6) If ordinary users should be able to restore files without
+   administrator help the restore-utility must be installed as
+   executable for all users and setuid root. This can be achieved
+   entering:
+
+   make install.userrestore
+
+   The following steps are preformed:
+
+   rm -f $BASEDIR/client/bin/afrestore $BASEDIR/client/bin/afbackout
+   cp $BASEDIR/client/bin/full_backup $BASEDIR/client/bin/afrestore
+   ln $BASEDIR/client/bin/afrestore $BASEDIR/client/bin/afbackout
+   chmod 4755 $BASEDIR/client/bin/afrestore
+
+   If they should be able to use the xafrestore GUI frontend, this
+   program should be installed executable for normal users, setuid-Bit
+   is unnecessary as this program is only a frontend for the afrestore
+   program (also done by make install.userrestore):
+
+   chmod 755 $BASEDIR/client/bin/xafrestore
+
+   It might be desirable, that normal users can run update_indexes.
+   Then it may also be installed setuid root like afrestore. If
+   afrestore is already setuid root, it is sufficient to (done by
+   make install.userrestore):
+
+   rm -f $BASEDIR/client/bin/update_indexes
+   ln $BASEDIR/client/bin/afrestore $BASEDIR/client/bin/update_indexes
+
+   otherwise it must be copied like afrestore above:
+
+   rm -f $BASEDIR/client/bin/update_indexes
+   cp $BASEDIR/client/bin/full_backup $BASEDIR/client/bin/update_indexes
+   chmod 4755 $BASEDIR/client/bin/update_indexes
+
+7) When the server has been configured properly, the following
+   commands can be used to do backup, verify and restore:
+
+    $BASEDIR/client/bin/full_backup    to make a full backup
+    $BASEDIR/client/bin/incr_backup    to make an incremental backup
+    $BASEDIR/client/bin/afverify       to verify the latest backup
+    $BASEDIR/client/bin/afrestore ...  to make restores
+
+   For more information see the INTRO file and the manual pages.
+
+
+Server Side
+-----------
+
+1) To build the distribution enter (on SunOS-4 preceded with bash ,
+                                   - get one if you don't have it):
+
+     ./configure [ -prefix=/my/desired/install/path ]
+
+     make server
+
+   And see: Client Side (especially, if you want to use DES
+   encryption for authentication, the same steps must be
+   performed like explained above). The default installation path
+   is /usr/local, /backup/server will be appended to this
+   path. For the pre-2.11.5-defaults type /usr as install path.
+   For Debian the default has hanged to /usr/local, but in these
+   cases, where /usr/local is NOT local and used by several
+   machines via NFS, I'd recommend to use the old default
+   /usr or /opt or whatever is appropriate and *really* local.
+
+2) Install the files and programs
+
+   Just enter:
+
+     make install.server
+
+3) Add a service entry to the system
+
+   This entry must be present in /etc/services. You have to
+   select a port number (I suggest 2988, what is hexadecimal
+   0xbac (like backup ;-) ). The name of the service could be
+   simply "afbackup". So you have to add the following line to
+   /etc/services:
+
+    afbackup   2988/tcp
+
+   First check whether there is already an entry with port number 
+   2988 for the TCP-protocol, but usually there is not.
+   If you want to use the multi-stream server, I highly recommend
+   to use an additional service for it. An entry like this may
+   then be added to the /etc/services file:
+
+    afmbackup  2989/tcp
+
+4) Add a user to the system, under whose ID the service will run
+   (this makes sense for a server-only system. In all other
+   cases this user should be root).
+
+   This is usually done adding a line to /etc/passwd (before
+   the NIS line starting with a +, if present):
+
+    backup:x:2988:14:Backup Server:$BASEDIR/bu/server:
+
+   In this entry the user's ID is 2988. Make sure that this ID
+   does not already exist. If it does choose an unused ID.
+
+5) Tell the (x)inetd about the new service
+
+5a) Using inetd:
+
+   The inetd-Superdaemon reads the file /etc/inetd.conf, so
+   you have to add a line to this file. Assuming the service-
+   name "afbackup" (made known in the file /etc/services) this
+   line should be like this:
+
+    afbackup stream tcp nowait <username> $BASEDIR/server/bin/afserver $BASEDIR/server/bin/afserver $BASEDIR/server/lib/backup.conf
+
+   Where <username> is either the user you added to the system in
+   case of a server-only host or root (see above).
+
+   When using the multi-stream server for the second
+   configured service, another correspoding line is necessary, 
+   that looks like this:
+
+    afmbackup stream tcp wait <username> $BASEDIR/server/bin/afmserver $BASEDIR/server/bin/afmserver $BASEDIR/server/lib/backup.conf
+
+   Note, that this line differs not only in the called program
+   and the service name, but also in the way the inetd handles
+   several calls for this service: column 4 is 'wait' instead of
+   'nowait', so only one multi stream server will run at a time.
+
+5b) Using xinetd:
+
+   The xinetd-Superdaemon reads the file /etc/xinetd.conf, so
+   you have to add a section to this file. Assuming the service-
+   name "afbackup" (made known in the file /etc/services) this
+   section should be like this:
+
+service afbackup
+{
+        flags           = REUSE NAMEINARGS
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = <username>
+        server          = /usr/local/afbackup/server/bin/afserver
+        server_args     = /usr/local/afbackup/server/bin/afserver /usr/local/afbackup/server/lib/backup.conf
+}
+
+   Where <username> is either the user you added to the system in
+   case of a server-only host or root (see above). The PATH entry
+   is necessary, because it seems not to be possible to tell the
+   xinetd, what argv[0] should be set during exec(2).
+
+   When using the multi-stream server for the second
+   configured service, another correspoding section is necessary, 
+   that looks like this:
+
+service afmbackup
+{
+        flags           = REUSE NAMEINARGS
+        socket_type     = stream
+        protocol        = tcp
+        wait            = yes
+        user            = backup
+        server          = /usr/local/afbackup/server/bin/afmserver
+        server_args     = /usr/local/afbackup/server/bin/afmserver /usr/local/afbackup/server/lib/backup.conf
+}
+
+   Note: It seems, xinetd offers a consistent and reasonable
+         wait=yes mode, that we can rely on (in contrast to
+         inetd behaviour on some commercial Unixes)
+
+6) Activate the service
+
+   This is done by sending a HANGUP-signal to the (x)inetd process.
+   Determine the process-ID of (x)inetd
+   (ps -ef | grep inetd | grep -v grep
+    on many systems,
+    ps -uxa | grep inetd | grep -v grep
+    on the others).
+   Something like this will be output:
+
+    root   431     1 0.0 Sep 27   ??    0:00.35 /usr/sbin/inetd
+
+   The second number in the line ending with inetd 
+   (and no grep) is the process ID. Then enter:
+
+    kill -HUP <process-id>
+
+   In the example case:
+
+    kill -HUP 431
+
+   If xinetd is used instead of inetd, replace -HUP with -USR2
+   in the examples above.
+
+7) Test the availability of the service
+
+   Enter:
+
+    telnet localhost afbackup
+
+   If you see a greeting message like:
+
+    AF's backup server ready.
+
+   everything is fine. You may try the same on the multi-stream
+   port:
+
+    telnet localhost afmbackup
+
+   If you get an error message like:  "afbackup: bad port number"
+   something is wrong with the entry in /etc/services.
+   If you get an error like: "... connection refused"
+   inetd did not start the service. 
+   Look at the syslog file to find out what went wrong. 
+   Inetd error messages are usually found in the syslog file.
+
+8) Configure the server side
+
+   To do this, run the program
+
+    $BASEDIR/server/bin/serverconfig
+
+   where BASEDIR is the install directory chosen with configure.
+   Everything should be self-explanitory (help-command available)
+
+9) Give the afbackup service exclusive access to the tape
+
+   This is simply done with
+
+    chown <username> /dev/whatever
+    chmod 600 /dev/whatever
+
+10) If you want the logfiles to reside in the /var-directory,
+   move the $BASEDIR/server/var diretory to a subdiretory of
+   /var with a name of your choice. I'd suggest
+    /var/logs/backup/server .
+   Then generate a symbolic link in $BASEDIR/server with the
+   name var, that points to the newly created diretory under
+   /var. e.g. enter:
+
+    rmdir $BASEDIR/server/var
+    mkdir -p /var/logs/backup/server
+    ln -s $BASEDIR/server/var /var/logs/backup/server
+
+11) Run a basic test for the client/server authentication.
+   On the client side run the following command:
+
+    $BASEDIR/client/bin/afclient -h <servername> -qwv
+
+   If an authentication key file has been configured, the
+   option  -k /path/to/keyfile  must be supplied. If the
+   server is not listening on the default port, also give
+   the option  -p <service-or-port>
+
+
+
+Remote Start Server Side
+------------------------
+
+1) To build the distribution enter (on SunOS-4 preceded with bash ,
+                                   - get one if you don't have it):
+
+     ./configure [ -prefix /my/desired/install/path ]
+
+     make
+
+   And see: Client Side. Default installation path is
+   /usr/local, /backup/server will be appended to the path.
+   For the pre-2.11.5-defaults type /usr as install path.
+   For Debian the default changed to /usr/local, but in these
+   cases, where /usr/local is NOT local and used by several
+   machines via NFS, I'd recommend to use the old default
+   /usr or /opt or whatever may be found appropriate and
+   *really* local.
+
+2) Install the files and programs
+
+   Just enter:
+
+     make install.rclient install.server
+
+3) Edit the file $BASEDIR/server/lib/backup.conf
+
+   Change the entry in the line starting with
+   "Program-directory", so it reflects your installation
+   directory. This editing can be done using the program
+   $BASEDIR/server/bin/serverconfig
+
+4) Configure (x)inetd to perform the remote start on request
+
+   Follow steps 3, 5-11 of the server side installation. Use
+   root for the user entry as the started client side must
+   be able to read all data, that is subject of backup
+
+
+
+RPM packages
+------------
+
+You are probably used to build RPMs from source RPMs (SRPMS).
+To create such an SRPM or build RPMs with fixed paths can be
+done using the file afbackup.spec.rh for creating RPMS for
+typical RedHat-like Linux systems adhering to the LSB, or with
+the files afbackup.spec.egidy and afbackup.spec.rtc contributed
+by the kind persons named in the files. Please note, that the
+latter two files are not maintained, so you are on your own.
+With this way to create RPMs it is hardly possible to change
+anything, because no options can be passed to the configure or
+make step.
+
+To build such an SRPM with predefined paths put the original
+sources afbackup-...tar.gz file into a directory named SOURCES.
+Aside of SOURCES, in the same parent directory <parentdir> ,
+another directory SRPMS must exist. Then run:
+
+ rpmbuild -bs --define='_topdir <parentdir>' path/to/afbackup.spec.rh
+
+The SRPM will be created in <parentdir>/SRPMS . To build the
+final RPMs pass the option -bb instead of -bs in the command
+above. The following additional subdirectories must esist in
+<parentdir> for this step: BUILD RPMS/`uname -i`
+
+Doing the configure step, another RPM spec file afbackup.spec
+is created, that reflects all the settings and findings performed
+by configure. In the generated Makefile, there is a target for
+building RPMs, so after the configure step it is immediately
+possible to run:
+
+make rpms
+
+3 RPMs are created in the subdirectory RPM:
+afbackup-<version>.<arch>.rpm         the client side
+afbackup-server-<version>.<arch>.rpm  the server side
+afbackup-devel-<version>.<arch>.rpm   utilities for development
+
+In these files all paths are set as specified during configure.
+
+When using the afbackup.spec.rh spec file, the server RPM initially
+configures a server with the directory /var/lib/afbackup/server/backup
+as backup media. The client side RPM only sets the server to localhost
+and MUST be futher configured e.g. running xafclientconfig.
+
+
+Debian packages
+---------------
+
+You are probably used to build Debian packages from source tarballs
+using the fancy Debian package builder infrastructure. Doing it this
+way implies ending up with paths, that cannot be changed, especially
+not reflecting any setting one usually wants to modify during the
+configure step.
+
+Another thing is, that this build infrastructure is imo complex to
+handle (though they state it's not). When it comes to building several
+packages from one set of sources, it gets even more complicated and
+having different configuration files or init scripts requires writing
+a thesis about Debian packaging in advance (at least i did not find
+a really simpler way, frankly).
+
+To build Debian packages, after having run configure, type:
+
+make debs
+
+Please note, that the .deb package files will be created in the
+parent directory, what is the usual way Debian packaging is done.
+Hope, this is ok for your needs. A different way to obtain Debian
+packages is currently not supported.
+

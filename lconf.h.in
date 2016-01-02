@@ -1,0 +1,90 @@
+/****************** Start of $RCSfile: lconf.h.in,v $  ****************
+*
+* $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/lconf.h.in,v $
+* $Id: lconf.h.in,v 1.6 2013/08/04 16:18:05 alb Exp alb $
+* $Date: 2013/08/04 16:18:05 $
+* $Author: alb $
+*
+*
+******* description ***********************************************
+*
+*
+*
+*******************************************************************/
+
+#ifndef	__LIBRARY_HEADER_CONF_H
+#define	__LIBRARY_HEADER_CONF_H	__LIBRARY_HEADER_CONF_H
+
+#define	@DONT_INC_TIME_H@INC_TIME_H			1
+#define	@DONT_INC_SYS_TIME_H@INC_SYS_TIME_H		1
+#define	@DONT_INC_SYS_TIMERS_H@INC_SYS_TIMERS_H		1
+#define	@DONT_INC_REGEX_H@INC_REGEX_H			1
+#define	@DONT_INC_LIMITS_H@INC_LIMITS_H			1
+#define	@DONT_INC_VALUES_H@INC_VALUES_H			1
+#define	@DONT_INC_STDINT_H@INC_STDINT_H			1
+#define	@DONT_INC_OPENSSL_SSL_H@INC_OPENSSL_SSL_H	1
+#define	@DONT_TYPE_INT64_T@TYPE_INT64_T			1
+#define	@DONT_TYPE_INT32_T@TYPE_INT32_T			1
+#define	@DONT_TYPE_INT16_T@TYPE_INT16_T			1
+#define	@DONT_TYPE_INT8_T@TYPE_INT8_T			1
+#define	@DONT_TYPE_UINT64_T@TYPE_UINT64_T		1
+#define	@DONT_TYPE_UINT32_T@TYPE_UINT32_T		1
+#define	@DONT_TYPE_UINT16_T@TYPE_UINT16_T		1
+#define	@DONT_TYPE_UINT8_T@TYPE_UINT8_T			1
+#define	@DONT_TYPE_U_INT64_T@TYPE_U_INT64_T		1
+#define	@DONT_TYPE_U_INT32_T@TYPE_U_INT32_T		1
+#define	@DONT_TYPE_U_INT16_T@TYPE_U_INT16_T		1
+#define	@DONT_TYPE_U_INT8_T@TYPE_U_INT8_T		1
+#define	@DONT_TYPE_INT64_IS_NOT_64@TYPE_INT64_IS_NOT_64	1
+#define	@DONT_DEF_RE_COMP@DEF_RE_COMP			1
+#define	@DONT_DEF_STRRSTR@DEF_STRRSTR			1
+#define	@DONT_DEF_STRCASESTR@DEF_STRCASESTR		1
+#define	@DONT_DEF_MEMMOVE@DEF_MEMMOVE			1
+#define	@DONT_DEF_QSORT@DEF_QSORT			1
+#define	@DONT_DEF_EACCESS@DEF_EACCESS			1
+#define	@DONT_DEF_BSEARCH@DEF_BSEARCH			1
+#define	@DONT_DEF_LSEARCH@DEF_LSEARCH			1
+#define	@DONT_DEF_LFIND@DEF_LFIND			1
+#define	@DONT_DEF_RINT@DEF_RINT				1
+#define	@DONT_DEF_ISATTY@DEF_ISATTY			1
+#define	@DONT_DEF_ISNAN@DEF_ISNAN			1
+#define	@DONT_DECL_RE_UTILS@DECL_RE_UTILS		1
+#define	@DONT_DECL_POSIX_REGEX@DECL_POSIX_REGEX		1
+#define	@DONT_OFFER_64_BIT@FILESIZE_64_BIT_API		1
+#ifdef	sun
+#define	@DONT_USE_SOLARIS2_ACLS@USE_SOLARIS2_ACLS	1
+#define	@DONT_USE_NFS4_ACLS@USE_NFS4_ACLS		1
+#endif
+#if defined(HPUX_10) || defined(HPUX_11)
+#define	@DONT_USE_HPUX10_ACLS@USE_HPUX10_ACLS		1
+#endif
+#define @DONT_USE_POSIX_ACLS@USE_POSIX_ACLS		1
+
+#ifdef	FILESIZE_64_BIT_API
+
+/* defining this variable the programmer can request 64 bit filesize API: */
+#ifdef	REQUEST_FILESIZE_64_BIT_API
+
+#ifdef	_AIX
+#define	_LARGE_FILES	1
+#define	_LARGE_FILE_API	1
+#endif
+#if	defined(sun) || defined(linux)
+#define	_FILE_OFFSET_BITS	64
+#endif
+#if	defined(__hpux) || defined(hpux)
+#define	_LARGEFILE64_SOURCE	1
+#define	_FILE_OFFSET_BITS	64
+#endif
+#ifdef UnixWare_5
+#define	_LARGEFILE64_SOURCE	1
+#endif
+#endif	/* defined(REQUEST_FILESIZE_64_BIT_API) */
+
+#else	/* defined(FILESIZE_64_BIT_API) */
+
+#undef	REQUEST_FILESIZE_64_BIT_API	/* if the code wants to know */
+
+#endif	/* defined(FILESIZE_64_BIT_API) */
+
+#endif	/* defined(__LIBRARY_HEADER_CONF_H) */

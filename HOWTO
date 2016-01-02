@@ -1,0 +1,2197 @@
+
+                AF's Backup HOWTO
+                =================
+
+
+Index
+-----
+
+1: How to optimize the performance to obtain a short backup time ?
+
+2: How to start the backup on several hosts from a central machine ?
+
+3: How to store the backup in a filesystem instead of a tape ?
+
+4: How to use several streamer devices on one machine ?
+
+5: How to recover from a server crash during backup ?
+
+6: How to port to other operating systems ?
+
+7: How to provide recovery from hard crashes (disk crash, ...) ?
+
+8: How to make differential backups ?
+
+9: How to use several servers for one client ?
+
+10: How can i automatically make copies of the written tapes after a backup ?
+
+11: How to redirect network backups through a secure ssh connection ?
+
+12: What's the appropriate way to eject the cartridge after backup ?
+
+13: How to encrypt the stored files and not only compress them ?
+
+14: How to use the multi-stream server ? Anything special there ?
+
+15: How many clients can connect the multi-stream server ?
+
+16: How to get out of the trouble, when the migration script fails ?
+
+17: How to use built-in compression ?
+
+18: How to save database contents ?
+
+19: How to use the ftape driver ?
+
+20: How to move a cartridge to another set due to it's usage count ?
+
+21: How to make backups to different cartridge sets by type or by date ?
+
+22: How to achieve independence from the machine names ?
+
+23: How to restrict the access to cartridges for certain clients ?
+
+24: How to recover from disaster (everything is lost) ?
+
+25: How to label a tape, while the server is waiting for a tape ?
+
+26: How to use a media changer ?
+
+27: How to build Debian packages ?
+
+28: How to let users restore on a host, they may not login to ?
+
+29: How to backup through a firewall ?
+
+30: How to configure xinetd for afbackup ?
+
+31: How to redirect access, when a client contacts the wrong server ?
+
+32: How to perform troubleshooting when encountering problems ?
+
+33: How to use an IDE tape drive with Linux the best way ?
+
+34: How to make afbackup reuse/recycle tapes automatically ?
+
+35: How to make the server speak one other of the supported languages ?
+
+36: How to build a Solaris package of the afbackup software ?
+
+37: How to work with barcode labels ?
+
+38: How to deal with a robot, if there is no changer operating program ?
+
+39: How to write an eject command for my removable media device ?
+
+
+--------------------------------------------------------------------------
+
+1: How to optimize the performance to obtain a short backup time ?
+
+Basically since version 2.7 the client side tries to optimally adapt
+to the currently maximum achievable throughput, so the administrator
+doesn't have to do much here.
+The crucial point is the location of the bottleneck for the throughput
+of the backup data stream. This can be one of:
+
+- The streamer device
+- The network connection between backup client and server
+- The CPU on the backup client (in case of compression selected)
+
+What usually is not a problem:
+
+- The CPU load of the server
+
+The main influence the administrator has on a good backup performance
+is the compression rate on the client side. In most cases the bottleneck
+for the data stream will be the network. If it is based on standard
+ethernet, the maximum throughput without any other network load will be
+around 1 MB/sec. With 100 MBit ethernet or a similar technology about
+10 MB/sec might be achieved, so the streamer device is probably the
+slowest part (with maybe 5 MB/sec for a Exabyte tape). To use this
+capacity it is not clever to plug up the client side CPU with heavy
+data compression load. This might be inefficient and thus lead to a
+lousy backup performance. The influence of the compression rate on the
+backup performance can be made clear with the following table. The
+times in seconds have been measured with the (unrepresentative)
+configuration given below the table. The raw backup duration gives the
+pure data transmission time without tape reeling or cartridge loading
+or unloading.
+
+ compression program   |  raw backup duration
+-----------------------+----------------------
+  gzip -1              |    293 seconds         |
+  gzip -5              |    334 seconds         |
+  compress             |    440 seconds         | increasing duration
+  <no compression>     |    560 seconds         |
+  gzip -9              |    790 seconds         V
+
+
+Configuration:
+Server/Client machine:
+  586, 133/120MHz (server/client), 32/16 MB (server/client)
+Network:
+  Standard ethernet (10 MB, 10BASE2 (BNC/Coax), no further load)
+Streamer:
+  HP-<something>, 190 kByte/sec
+
+Obviously the bottleneck in this configuration is the streamer.
+Anyway it shows the big advantage compression can have on the
+overall performance. The best performance is here achieved with
+the lowest compression rate and thus the fastest compression
+program execution. I would expect, that the performance optimum
+shifts towards a somewhat better compression with a faster client
+CPU (e.g. the latest Alpha-rocket).
+
+So to find an individual performance optimum i suggest to run some
+backups with a typical directory containing files and subdirectories
+of various sizes. Run these backups manually on the client-side machine
+with different compression ratios using the "client"-command as
+follows:
+
+/the/path/to/bin/afclient -cvnR -h your_backuphost -z "gzip -1" gunzip \
+                             /your/example/directory
+
+Replace "gzip -1" and "gunzip" appropriately for the several runs.
+
+
+--------------------------------------------------------------------------
+
+2: How to start the backup on several hosts from a central machine ?
+
+For this purpose serves the remote startup utility. To implement this
+as fast as possible, a part of the serverside installation must be
+made on the client side, where it is requested to start the backup from
+a remote site. Choose the appropriate option when running the Install-
+script or follow the instructions in the INSTALL file.
+
+To start a backup on another machine, use the -X option of the
+client-program. A typical invocation is
+
+/the/path/to/client/bin/afclient -h <hostname> -X incr_backup
+
+This starts an incremental backup on the supplied host. Often
+-k /path/to/cryptkey must be given as well, if on the remote
+side an EncryptionKeyFile is configured, what is recommended. Each
+program on the remote host residing in the directory configured
+as Program-Directory in the configuration file of the serverside
+installation part of the remote host (default: $BASEDIR/server/rexec)
+can be started, but no other. The entries may be symlinks, but
+they must have the same filename like the programs, they point to.
+
+The machine, where this script is started may be any machine in
+the network having the client side of the backup system installed.
+
+
+--------------------------------------------------------------------------
+
+3: How to store the backup in a filesystem instead of a tape ?
+
+There are several ways how to accomplish that. Two options are
+explained here. I personnally prefer option 2, but they are
+basically equivalent.
+
+* Option 1 (using symbolic links)
+
+Assumed the directory, where you'd like to store the backup, is
+/var/backup/server/vol.X with X being the number of the pseudo-
+cartridge, change to the directory /var/backup/server and create
+a symbolic link and a directory like this:
+
+ ln -s vol.1 vol ; mkdir vol.1
+
+Then create the file `data.0' and a symlink `data' to it with
+
+ touch vol/data.0
+ ln -s data.0 vol/data
+
+The directories and symlinks /var/backup/server/vol* must be owned
+or at least be writable for the user, under whose ID the backup server
+is running. The same applies for the directory /var/backup/server.
+If this is not root, issue an appropriate chown command, e.g.:
+
+ chown afbackup /var/backup/server /var/backup/server/vol*
+
+At least two pseudo-cartridges should be used. This is achieved by
+limiting the number of bytes to be stored on each of them. So now
+edit your serverside configuration file and make e.g. the following
+entries (assuming /usr/backup/server/bin is the directory, where the
+programs of the server side reside):
+
+Backup-Device:          /var/backup/server/vol/data
+Tape-Blocksize:         1024
+Cartridge-Handler:      1
+Number Of Cartridges:	1000
+Max Bytes Per File:     10485760
+Max Bytes Per Tape:     104857600
+Cart-Insert-Gracetime:  0
+SetFile-Command:        /bin/rm -f %d;touch %d.%m; ln -s %d.%m %d; exit 0
+SkipFiles-Command:      /usr/backup/server/bin/__inc_link -s %d %n
+Set-Cart-Command:       /bin/rm -f /var/backup/server/vol; mkdir -p /var/backup/server/vol.%n ; ln -s vol.%n /var/backup/server/vol ; touch %d.0 ; /bin/rm -f %d ; ln -s data.0 %d;exit 0
+Change-Cart-Command:    exit 0
+Erase-Tape-Command:     /bin/rm -f %d.[0-9]* %d ; touch %d.0 ; ln -s %d.0 %d ; exit 0
+
+If the directory /var/backup/server/vol/data is on a removable media,
+you can supply the number of media you would like to use and an
+eject-command as follows:
+
+Number Of Cartridges:   10
+# or whatever
+
+Change-Cart-Command:    your_eject_command
+
+If a suitable eject-command does not exist, try to write one yourself.
+See below for hints.
+
+Furthermore you can add the appropriate umount command before the eject-
+command like this:
+
+Change-Cart-Command:    umount /var/backup/server/vol ; your_eject_command
+
+To get this working the backup serverside must run as root. Install the
+backup stuff supplying the root-user when prompted for the backup user.
+Or edit /etc/inetd.conf and replace backup (or whatever user you configured)
+(5th column) with root, sending a kill -1 to the inetd afterwards.
+Actually you must mount the media manually after having it inserted into
+the drive. Afterwards run the command /path/to/server/bin/cartready to
+indicate, that the drive is ready to proceed. This is the same procedure
+like having a tape drive.
+
+Each media you will use must be prepared creating the file "data.0" and
+setting the symbolic link "data" pointing to data.0 like described above.
+
+
+* Option 2 (supply a directory name as device)
+
+Like with option 1 several pseudo-cartridges should be used, at
+least two. Like above create a directory to contain the backup data
+and a symlink, then chown them to the backup user:
+
+ mkdir -p /var/backup/server/vol.1
+ ln -s vol.1 /var/backup/server/vol
+ chown afbackup /var/backup/server /var/backup/server/vol* 
+
+Using one of the serverside configuration programs or editing the
+configuration file, supply a directory name as the backup device.
+The directory must be writable for the user, under whose ID the
+server process is started (whatever you configured during
+installation, see /etc/inetd.conf). The backup system then writes
+files with automatically generated names into this directory.
+The rest of the configuration should e. g. be set as follows:
+
+Backup-Device:          /var/backup/server/vol
+Tape-Blocksize:         1024
+Cartridge-Handler:      1
+Number Of Cartridges:   100
+Max Bytes Per File:     10485760
+Max Bytes Per Tape:     104857600
+Cart-Insert-Gracetime:  0
+SetFile-Command:        exit 0
+SkipFiles-Command:      exit 0
+Set-Cart-Command:       /bin/rm -f %d ; mkdir -p %d.%n ; ln -s %d.%n %d ;  exit 0
+Change-Cart-Command:    exit 0
+Erase-Tape-Command:     /bin/rm -f %d/* ; exit 0
+
+A SetFile-Command is mandatory, so this exit 0 is a dummy.
+For the further options (using mount or eject commands) refer
+to the explanations under * Option 1.
+
+If some kind of removable media should be ejected, see also question 38
+
+--------------------------------------------------------------------------
+
+4: How to use several streamer devices on one machine ?
+
+Run an installation of the server side for each streamer device,
+install everything into a separate directory and give a different
+port number to each installed server. This can be done giving each
+server an own service name. For the default installation, the
+service is named "afbackup" and has port number 2988. Thus, entries
+are provided in files in /etc:
+
+/etc/services:
+afbackup  2988/tcp
+
+/etc/inetd:
+afbackup stream tcp nowait ...
+
+For a second server, you may add appropriate lines, e.g.:
+
+/etc/services:
+afbackup2 2989/tcp
+
+/etc/inetd.conf:
+afbackup2 stream tcp nowait ...
+
+Note, that the paths to the configuration files later in the inetd.conf-
+lines must be adapted to each installation, respectively. To get the
+services active, send a Hangup-Signal to the inetd.
+(ps ..., kill -HUP <PID>)
+
+It is important, that every server of several running on the same
+host has it's own lock file. So e.g. configure lockfiles, that
+are located in each server's var-directories. If they all share
+one lockfile, several servers cannot run at the same time, what
+is usually not, what you want.
+
+The relations between backup clients and streamer devices on the
+server must be unique. Thus the /etc/services on the clients must
+contain the appropriate port number for the backup entry, e.g.:
+
+afbackup  2990/tcp
+
+Note, that on the clients the service name must always be "afbackup"
+and not "afbackup2" or whatever.
+
+As an alternative, you can supply the individual port number in
+the clientside configuration. If you do so, no changes must be
+made in any clientside system file, here /etc/services.
+
+Do not use NIS (YP) for maintaining the afbackup-services-entry, i.e.
+do not add the entry with "afbackup" above to your NIS-master-services-file.
+It is anyway better not to use the files /etc/passwd ... as sources
+for your NIS-master-server, but to use a copy of them in a separate
+directory (as usually configured on Solaris and other Unixes).
+
+
+--------------------------------------------------------------------------
+
+5: How to recover from a server crash during backup ?
+
+With some devices there will be the problem, that the end-of-tape mark
+is not written on power-down during writing to the tape. Even worse,
+when power is up again, the position, where the head is currently placed,
+gets corrupt, even if no write access has been applied at power-down.
+Some streamers are furthermore unable to start to write at a tape
+position, where still records follow, e.g. if there are 5 files on tape,
+it is e.g. impossible to go to file 2 and start to write there. An
+I/O-error will be reported.
+
+The only way to solve this is to tell the backup system to start to
+write at the beginning of the next cartridge. If the next cartridge
+has e.g. the label-number 5, log on to the backup server, become root
+and type:
+
+  /your/path/to/server/bin/cartis -i 5 1
+
+
+--------------------------------------------------------------------------
+
+6: How to port to other operating systems ?
+
+
+* Unix-like systems *
+
+This is not that difficult. The GNU-make is mandatory, but this is
+usually no problem. A good way to start is to grep for AIX or sun
+over all .c- and .h-files, edit them as needed and run the make.
+You might want to run the prosname.sh to find out a specifier for
+your operating system. This specifier will be defined as a macro
+during compilation (exactly: prepocessing).
+
+An important point is the x_types.h-file. Here the types should be
+adapted as described in the comments in this file, lines 28-43.
+Insert ifdef-s as needed like for the OSF 1 operating system on alpha
+(macros __osf__ and __alpha). Note, that depending on the macro
+USE_DEFINE_FOR_X_TYPES the types will be #define-d instead of
+typedef-d. This gives you more flexibility, if one of those
+possibilities is making problems.
+
+The next point is the behaviour of the C-library concerning the
+errno-variable in case the tape comes to it's physical end. In most
+cases errno is set to ENOSPC, but not always (e.g. AIX is special).
+This can be adapted modifying the definition of the macro
+END_OF_TAPE (in budefs.h). This macro is only used in if-s as shown:
+  if(END_OF_TAPE) ...
+Consult your man-pages for the behaviour of the system calls on
+your machine. It might be found under rmt, write or ioctl.
+
+The next is the default name of the tape device. Define the macro
+DEFAULT_TAPE_DEVICE (in budefs.h) appropriately for your OS.
+
+A little pathological is the statfs(2) system call. It has a different
+number of arguments depending on the system. Consult your man-pages,
+how it should be used. statfs is only used in write.c
+
+There may be further patches to be done, but if your system is close
+to POSIX this should be easy. The output of the compiler and/or the
+linker should give the necessary hints.
+
+Please report porting successes to af@muc.de. Thanks.
+
+Good luck !
+
+
+
+* Win-whatever *
+
+This is my point of view:
+
+Porting to Microsoft's Features-and-bugs-accumulations is systematically
+made complicated by the Gates-Mafia. They spend a lot of time on taking
+care, that it is as difficult as possible to port to/from Win-whatever.
+This is one of their monopolization strategies. Developers starting to
+write programs shall have to make the basic decision: "Am i gonna hack
+for Micro$oft's "operating systems", or for the others ?" Watching the
+so-called market this decision is quite easy: Of course they will program
+for the "market leader". And as few as possible of what they produce
+should be usable on other ("dated") platforms. Companies like Cygnus
+are providing cool tools (e. g. a port of the GNU-compiler) to make
+things easier but due to the fact, that M$ are not providing so many
+internals to the public, in my opinion porting is nonetheless an
+annoying job. Thank Bill Gates for his genious strategies.
+
+In short, at the moment i'm not gonna provide information how to port
+to Micro$oft-platforms. If somebody will do a port, i don't hinder him
+but will not provide any support for it. As this software (like the most
+on Unix) heavily relies on POSIX-conformance and Mafia$oft has announced,
+that the "POSIX-subsystem for NT" will not be shipped anymore in the near
+future (BTW they discourage to use it at all "cause of security problems"
+(Bullshit) - see the Microsoft web pages), the porting job will either
+substitute all POSIX-calls by Win32-stuff (super-heavy efforts), or bring
+only temporary fun (see above).
+
+
+--------------------------------------------------------------------------
+
+7: How to provide recovery from hard crashes (disk crash, ...) ?
+
+A key to this is the clientside StartupInfoProgram parameter. This
+command should read the standard input and write it to some place
+outside of the local machine - to be more precise - not to a disk
+undergoing backups or containing the clientside backup log files.
+The information written to the standard input of this program is
+the minimum information required to restore everything after a
+complete loss of the saved filesystems and the client side of the
+backup system. Recovery can be achieved using the restore-utility
+with the -e flag (See: PROGRAMS) and supplying the minimum recovery
+information to the standard input of restore. Several options exist:
+
+- Write this information to a mail-program (assumed the mail folders
+  are outside of the filesystems undergoing backup) and sending this
+  information to a backup-user. Later the mailfile can be piped into
+  the restore-utility (mail-related protocol lines and other unneeded
+  stuff will be ignored). For each machine, that is a backup client,
+  an individual mail user should be configured, cause the minimum
+  restore information does NOT contain the hostname (to be able to
+  restore to a different machine, what might make perfect sense in
+  some situations)
+
+- Write the information into a file (of course: always append),
+  that resides on an NFS-mounted filesystem, eventually for security
+  reasons exported especially to this machine only. To be even more
+  secure, the exported directory might be owned by a non-root-user,
+  who is the only one, who may write to this directory. This way it
+  can be avoided to export a directory with root-access. Then the
+  StartupInfoProgram should be something like:
+   su myuser -c "touch /path/to/mininfo; cat >> /path/to/mininfo"
+  The mininfo-file should have a name, that allows to deduce the
+  name of the backup-client, that wrote it. E.g. simply use the
+  hostname for this file.
+
+- Write the information to a file on floppy disk. Then the floppy
+  disk must always be in the drive, whenever a backup runs. The
+  floppy could be mounted using the amd automounter as explained in
+  ftp://ftp.zn.ruhr-uni-bochum.de/pub/linux/README.amd.floppy.cdrom
+  or using the mtools usually installed for convenience. In the
+  former case the command should contain a final sync. In the
+  latter case the file must be first copied from floppy, then
+  appended the information, finally copied back to floppy e.g. like
+  this:
+   mcopy -n a:mininfo /tmp/mininfo.$$; touch /tmp/mininfo.$$; \
+       cat >> /tmp/mininfo.$$; mcopy -o /tmp/mininfo.$$ a:mininfo; \
+       /bin/rm -f /tmp/mininfo.$$; exit 0
+  Note, that the whole command must be entered in one line using
+  the (x)afclientconfig command. In the configuration file lineend
+  escaping is allowed, but not recognized by (x)afclientconfig. An
+  alternative is to put everything into one script, that is started
+  as StartupInfoProgram (Don't forget to provide a good exit code
+  on successful completion)
+
+My personal favourite is the second option, but individual preferences
+or requirements might lead to different solutions. There are more
+options here. If someone thinks, i have forgotten an important one,
+feel free to email me about it.
+
+It might be a good idea to compile afbackup linked statically with
+all required libraries (building afbackup e.g. using the command
+make EXTRA_LD_FLAGS=-static when using gcc), install it, run the
+configuration program(s), if not yet done, tar everything and
+put it to a floppy disk (if enough space is available).
+
+To recover from a heavy system crash perform the following steps:
+- Replace bad disk(s) as required
+- Boot from floppy or cdrom (the booted kernel must be network-able)
+- Add the backup server to /etc/hosts and the following line to
+  /etc/services: afbackup 2988/tcp
+- Mount your new disk filesystem(s) e.g. in /tmp/a and in a way, that
+  this directory reflects your original directory hierarchy below
+  / (like usually most system setup tools do)
+- Untar your packed and statically linked afbackup-distribution, but
+  NOT to the place, where it originally lived (e.g. /tmp/a/usr/backup),
+  cause it will be overwritten, if you also saved the clientside
+  afbackup-installation, what i strongly recommend.
+- Run the restore-command with -e providing the minimum restore
+  information saved outside of the machine to stdin:
+  /path/to/staticlinked/afrestore -C /tmp/a -e < /path/to/mininfo-file
+
+Bootsector stuff is NOT restored in this procedure. For Linux
+you will have to reinstall lilo, but this is usually no problem.
+
+
+--------------------------------------------------------------------------
+
+8: How to make differential backups ?
+
+A differential backup means for me: Save all filesystem entries modified
+since the previous full backup, not only those modified since the last
+incremental backup.
+
+This task can be accomplished using the -a option of the incr_backup
+command. It tells incr_backup to keep the timestamp. If -a is omitted
+one time, another differential backup is no longer possible since the
+timestamp is modified without -a. So if differential backups are required,
+you have to do without incremental backups.
+
+
+--------------------------------------------------------------------------
+
+9: How to use several servers for one client ?
+
+Several storage units can be configured for one client. A storage unit
+is a combination of a hostname, a port number and a cartridge set number.
+Several servers can be configured on one machine, each operating an own
+streamer device or directory for storing the data.
+
+The storage units are configured by the first three parameters of the
+client side. These are hostnames, port numbers and cartridge set numbers,
+respectively. Several entries can be made for each of these parameters.
+The port numbers and/or cartridge set numbers can be omitted or fewer
+than hostnames can be supplied, then the defaults will apply. If more
+port or cartridge set numbers than hostnames are given, the superfluous
+ones are ignored. The lists of hostnames and numbers can be separated
+by whitespace and/or commas.
+
+When a full or incremental backup starts on a client, it tests the
+servers, one after the other, whether they are ready to service them.
+If none is ready, it waits for a minute and tries again.
+
+With each stored filesystem entry, not only the cartridge number and
+file number on tape is stored, but now also the name of the host,
+where the entry is stored to, and the appropriate port number. Thus
+they can be restored without the necessarity, that the user or adminis-
+trator knows, where they are now. This all happens transparently and
+without additional configuration efforts. For older backups, the first
+entry of each list (hostname and port) is used. Therefore, in case of
+an upgrade, the first entries MUST be those, that applied for this
+before the upgrade.
+
+If there are several clients, the same order of server entries should
+not be configured for all of them. This would probably cause most of
+the backups to go to the first server, while the other(s) are not
+exploited. The entries should be made in a way, that a good balancing
+of storage load is achieved. Other considerations are:
+
+- Can the backup be made to a server in the same subnet, where the
+  client is
+- Has this software been upgraded ? Then the first entry should be
+  the same server as configured before (see above)
+- The data volume on the clients to be saved (should be balanced)
+- The tape capacity of the servers
+- other considerations ...
+
+
+--------------------------------------------------------------------------
+
+10: How can i automatically make copies of the written tapes after a backup ?
+
+For this purpose a script has been added to the distribution. It's name
+is autocptapes and it can be found in the /path/to/client/bin directory.
+autocptapes should read the statistics output and will copy all tapes
+from the first accessed tape through the last one to the given destination.
+Copying will begin at the first written tapefile, so not the whole tape
+contents are copied all the time again.
+
+The script has the following usage:
+
+autocptapes [ -h <targetserver> ] [ -p <targetport> ] \
+                   [ -k <targetkeyfile> ] [ -o cartnumoffset ]
+
+targetserver    must be the name of the server, where to copy the tapes to.
+                (default, if not set: the source server)
+targetport      must be the appropriate target server port (default, if not
+                set: the source port)
+targetkeyfile   the file containing the key to authenticate to the target
+                server (default: the same file as for the source server)
+cartnumoffset   the offset to be added to the source cartridges' numbers
+                to get the target cartridge numbers (may be negative,
+                default: 0). This is useful, if e.g. copies of tapes 0-5
+                shall be on tapes 6-10, then simply an offset of 5 would
+                be supplied.
+
+The script can be added to the client side configuration parameter
+ExitProgram, so that it reads the report file containing the backup
+statistics. This may e.g. look as follows:
+
+ExitProgram:		/path/to/client/bin/autocptapes -o 5 < %r
+
+Note, that this is a normal shell interpreted line and %r can be used
+in several commands separated by semicolon, && or || ...
+
+WARNING: If several servers are configured for the client, this
+automatic copying is severely discouraged, cause cartridge numbers
+on one server do not necessarily have something to do with those on
+another server. It should be carefully figured out, how a mapping of
+source and target servers and cartridge numbers could be achieved.
+This is subject of future implementations.
+
+
+--------------------------------------------------------------------------
+
+11: How to redirect network backups through a secure ssh connection ?
+
+ssh must be up and working on client(s) and server(s). On the
+server, an sshd must be running. Then port forwarding can be
+used. As afbackup does not use a privileged port, the forwarding
+ssh needs not to run as root. Any user is ok. To enable afbackup
+to use a secure ssh connection, no action is necessary on the
+server. On the client, the following steps must be made:
+
+- Configure the client itself as the server in the clientside
+  configuration file as localhost (the ssh forwarder seems to
+  accept connections only from the loopback interface). No
+  afbackup server process should be running on this client. If
+  an afbackup server is running, a different port than the default
+  2988 must be configured. This different port number should be
+  passed to ssh forwarder, when started.
+
+- Start the ssh forwarder. The following command should do the job:
+
+   ssh -f -L 2988:afbserver:2988 afbserver sleep 100000000
+
+Explanations: -f makes the ssh run in the background, & is not
+ necessary. -L tells the ssh to listen locally at port 2988.
+ This(first) port number must be replaced, if a different port
+ must be used due to an afbackup server running locally or other
+ considerations. afbserver must be replaced with the name of the
+ real afbackup server. The second port number 2988 is the one,
+ where the afbackup server really expects connections and that
+ was configured on the client before trying to redirect over ssh.
+ The sleep 100000 is an arbitrary command that does not terminate
+ within a sufficient time interval.
+
+Now the afbackup client connects to the locally running ssh, who
+in turn connects the remote sshd, who connects the afbackup server
+awaiting connections on the remote host. So all network traffic is
+done between the ssh and sshd and is thus encrypted.
+A simple test can be run (portnum must only be supplied if != 2988)
+on the client:
+
+ /path/to/client/bin/client -h localhost -q [ -p portnum ]
+
+If that works, any afbackup stuff should.
+
+If it is not acceptable, that the ssh-connection is initiated from
+the client side, the other direction can be set up using the -R
+option of ssh. Instead of the second step in the explanations above
+perform:
+
+- On the server start the command:
+
+   ssh -f -R 2988:afbserver:2988 afbclient sleep 100000000
+
+
+--------------------------------------------------------------------------
+
+12: What's the appropriate way to eject the cartridge after backup ?
+
+In my opinion it is best to exploit the secure remote start option
+of afbackup. Programs present in the directory configured as the
+Program-Directory on the server side can be started from a client
+using the -X option of afclient. Either write a small script, that
+does the job and put the script into the configured and created (if
+not already present) directory. Don't forget execute permission. Or
+simply create a symbolic link to mt in that directory (e.g. type
+ln -s `which mt` /path/to/server/rexec/mt). Then you can eject the
+cartridge from any client eject running 
+
+/.../client/bin/afclient -h backupserver -X "mt -f /dev/whatever rewoffl"
+
+
+--------------------------------------------------------------------------
+
+13: How to encrypt the stored files and not only compress them ?
+
+A program, that performs the encryption is necessary, let's simply call
+it des, what is an example program for what we want to achieve here. The
+basic problem must be mentioned here: To supply the key it is necessary
+to either type in the key twice or to supply it on the command line using
+the option -k. Typing the key in is useless in an automated environment.
+Supplying the key in an option makes it visible in the process list, that
+any user can display using the ps command or (on Linux) reading the
+pseudo-file cmdline present in each process's /proc/<pid>/ directory.
+The des program tries to hide the key overwriting the 8 significant bytes
+of the argument, but this does not always work. Anyway the des program
+shall serve as example here. Note, that the des program will usually
+return an exit status unequal to 0 (?!?), so the message "minor errors
+occurred during backup" does not have special meanings.
+
+Another encryption program comes with the afbackup distribution and is
+built, if the libdes is available and des-encrypted authentication is
+switched on. The program is called __descrpt. See the file PROGRAMS
+for details on this program. The advantage of this program is, that
+no key has to be supplied on the command line visible in the process
+list. The disadvantage is, that the program must not be executable by
+intruders, cause they would be able to simply start it and decrypt.
+To circumvent this to a certain degree, a filename can be supplied to
+this program, that the key will be read from. In this case this key
+file must be access restricted instead of the program itself.
+
+If only built-in compression is to be used, everything is quite simple.
+The BuiltinCompressLevel configuration parameter must be set > 0 and the
+en- and decrypt programs be specified as CompressCmd and UncompressCmd.
+If an external program should be used for compress and uncompress, it
+is a little more difficult:
+
+Cause the client side configuration parameter CompressCommand is NOT
+interpreted in a shell-like manner, no pipes are possible here. E.g. it
+is impossible to supply something like:  gzip -9 | des -e -k lkwjer80723k
+there.
+
+To fill this gap the helper program __piper is added to the distribution.
+This program gets a series of commands as arguments. The pipe symbol |
+may appear several times in the argument list indicating the end of a
+command and the beginning of the next one. Standard output and standard
+input of the following command are connected as usual in a shell command.
+No other special character is interpreted except the double quotes, that
+can delimit arguments consisting of several words separated by whitespace.
+The backslash serves as escape character for double quotes or the pipe
+symbol. The startup of a pipe created by the __piper program is expected
+to be much faster compared to a command like  sh -c "gzip | des -e ...",
+where a shell with all it's initializations is used.
+
+Example for the use of __piper in the client side configuration file:
+
+CompressCommand:  /path/to/client/bin/__piper gzip -1 | des -e -k 87dsfd
+
+UncompressCommand: /path/to/client/bin/__piper des -d -k 87dsfd | gunzip
+
+
+--------------------------------------------------------------------------
+
+14: How to use the multi-stream server ? Anything special there ?
+
+The multi-stream server should be installed properly as described in the
+file INSTALL or using the script Install. It is heavily recommended to
+configure a separate service (i.e. TCP-port) for the multi-stream server.
+Thus backups can go to either the single-stream server or to the multi-
+stream server. The index mechanism of the client side handles this
+transparently. The information, where the data has been saved, has not
+to be supplied for restore.
+
+The single stream server might be used for full backups, because it is
+generally expected to perform better and provide higher throughput. The
+multi-stream server has advantages with incremental backups, because
+several clients can be started in parallel to scan through their disk
+directories for things, that have changed, what may take a long time.
+If there are several file servers with a lot of data it might be desired
+to start the incremental backups at the same time, otherwise it would
+take too much time. Having configured the single stream server as default
+in the client side configuration, the incr_backup program will connect
+to the multi-stream server using the option -P with the appropriate port
+number of the multi-stream server.
+
+As it is not possible, that several single stream servers operate on the
+streamer at the same time, it is not possible, that a multi-stream server
+and a single-stream server do in parallel. This is only the multi-stream
+server's job.
+
+The clients must be distinguishable for the multi-stream server. It puts
+the data to tape in packets prefixed with a header containing the clients'
+identifiers. Dispatching during read it must have an idea, which client
+is connected and what data it needs. Default identifier is the official
+hostname of the client or the string "<client-program>", if the program
+"afclient" is used. It is not allowed, that several clients with the same
+identifier connect, cause that would mix up their data during read, what
+is obviously not desirable. A client identifier can be configured in the
+client side configuration file using the parameter ClientIdentifier or
+using the option -W (who), that every client side program supports.
+It might be necessary to do this, e.g. if a client's official hostname
+changes. In this case the client won't receive any data anymore, cause
+the server now looks for data for the client with the new name on tape,
+which he won't find.
+
+To find out and store the client's identifiers easily it is included
+into the statistics report, that can be used (e.g. sent to an admin
+via E-mail) in the client side exit program.
+
+
+--------------------------------------------------------------------------
+
+15: How many clients can connect the multi-stream server ?
+
+This depends on the maximum number of filedescriptors per process on the
+server. On a normal Unix system this number is 256. The backup system
+needs some file descriptors for logging, storing temporary files and so
+on, so the maximum achievable number of clients is something around 240.
+It is not recommended to really run that many clients at the same time,
+this has NOT been tested.
+Anyway the number of filedescriptors per process can be increased on
+most systems, if 240 is not enough.
+
+
+--------------------------------------------------------------------------
+
+16: How to get out of the trouble, when the migration script fails ?
+
+This depends, where the script fails. If it says:
+"The file .../start_positions already exists."
+there is no problem. You might have attempted migration before.
+If this is true, just remove this file or rename it. If it does
+not contain anything it is anyway useless. When the script tells,
+that some files in .../var of your client installation contain
+different (inconsistent) numbers, then it is getting harder.
+Locate the last line starting with ~~Backup: in you old style
+minimum restore info and take the number at the end of it.
+The file `num' in your clientside var directory should contain
+the same number. If it does not, check the current number of the
+File index files, also in the clientside var directory. Their
+name is determined by the configuration parameter IndexFilePart.
+The file `num' should contain the highest number found in the
+filenames. If not, edit the file num, so it does. Nonetheless
+this number must also match the one noted earlier. If it does
+not, this is weird. If your minimum restore info contains only
+significantly lower numbers, you have a real problem, cause
+then you minimum restore info is not up to date. In this case
+migration makes no sense and you can skip the migration step
+starting anew with fingers crossed heavily.
+If the file `num' in the var directory is missing, then you
+must check your configuration. If you have never made a backup
+before, then this file is indeed not there and migration makes
+not too much sense.
+If the full_backup program you supply is found not being
+executable, please double-check your configuration and make
+sure, that you are a user with sufficient power.
+
+
+--------------------------------------------------------------------------
+
+17: How to use built-in compression ?
+
+The distribution must be built selecting the appropriate
+options to link the zlib functions in. When using the Install
+script you are asked for the required information. Otherwise
+see the file INSTALL for details.
+
+The zlib version 1.0.2 or higher is required to build the
+package with the built-in compression feature. If the zlib is not
+available on your system (on Linux it is usually installed by
+default), get it from some ftp server and build it first before
+attempting to build afbackup.
+
+The new clientside configuration parameter BuiltinCompressLevel
+turns on built-in compression. See FAQ Q27, what to do when the
+compression algorithm is to be changed.
+
+
+--------------------------------------------------------------------------
+
+18: How to save database contents ?
+
+There are several ways to save a database. Which to choose,
+depends on the properties of the database software. The
+simplest way is to
+
+1.) Save the directory containing the database files
+
+This assumes, that the database stores the data in normal
+files somewhere in the directory structure. Then these
+files can be written to tape. But there is a problem here,
+cause the database software might make use of caching or
+generally keep necessary information in memory as long as
+some database process is running. Then just saving the
+files and later restoring them will quite sure corrupt the
+database structure and at least make some (probably long
+running) checks necessary, if not make the data unusable.
+Thus it is necessary to shut down the database before
+saving the files. This is often unacceptable, cause users
+can not use the database while it is not running. Consult
+the documentation of your database, whether it can be
+saved or dumped online and read on.
+
+2.) Save the raw device
+
+This assumes, that the database software stores the data
+on some kind of raw device, maybe a disk partition, a solid
+state disk or whatever. Then it can be saved prefixing the
+name with /../, no space between the prefix and the raw
+device name. Instead of /../ the option -r can be used in
+the client side configuration file. By default the data is
+not compressed, because one single wrong bit in the saved
+data stream might make the whole rest of the data stream
+unusable during uncompression. If compression is nonetheless
+desired, the prefix //../ can be used or the option -R .
+For online/offline issues the same applies here, as if the
+data were kept in normal files.
+
+3.) Save the output of a dump command
+
+If your database has a command to dump all it's contents,
+it can be used to directly save the output of this command
+to the backup. In the best case, this dump command and it's
+counterpart, who reads, what the dump command has written
+and thus restores the whole database or parts of it, is able
+to do the job online without shutting down the database.
+Such a pair of commands can be supplied in the client side
+configuration file as follows: In double quotes, write a
+triple bar ||| , followed by a space character and the dump
+command. This may be a shell command, maybe a command pipe
+or sequence or whatever. Then another triple bar must be
+written, followed by the counterpart of the dump command
+(also any shell-style command is allowed). After all that,
+an optional comment may follow, prefixed with a triple
+sharp ###. Example:
+
+ ||| pg_dumpall ||| psql db_tmpl ### Store Postgres DBs
+
+
+--------------------------------------------------------------------------
+
+19: How to use the ftape driver ?
+
+There's nothing very special here. All mt commands in the
+server side configuration must be replaced with appropriate
+ftmt versions. The script __mt should be obsolete here, as
+it only handles the special case when the count value is 0
+e.g. for skipping tape files with  mt fsf <count> . ftmt
+should be able to handle count=0, so simply replace __mt
+with ftmt in the default configuration. For the tape device,
+supply /dev/nqftX with X being the appropriate serial number
+assigned to the device by your OS (ls /dev/nqft* will tell
+all available devices, try ftmt ... to find out the correct
+one).
+
+
+--------------------------------------------------------------------------
+
+20: How to move a cartridge to another set due to it's usage count ?
+
+This can be done automatically configuring an appropriate
+program as Tape-Full-Command on the server side. An example
+script has been provided and installed with the distribution.
+It can be found as /path/to/server/bin/cartagehandler. As is,
+it maintains 3 cartridge sets. If a tape has become full more
+than 80 times and it is in set 1, it is moved to set 2. If
+it became full more than 90 times and it is in set 1 or 2,
+it is moved to set 3. If the number of cycles exceeds 95, the
+cartridge is removed from all sets.
+To accomplish this task, the script gets 3 arguments:
+The number of the cartridge currently getting full, the number
+of it`s complete write cycles up to now and the full path to
+the serverside configuration file, which is modified by the
+script. If the Tape-Full-Command is configured like this:
+
+ TapeFull-Command:  /path/to/server/bin/cartagehandler %c %n %C
+
+then it will do the job as expected. Feel free to modify this
+script to fit your needs. The comments inside should be helpful.
+Look for "User configured section" and the like in the comments.
+This script is not overwritten, when upgrading i.e. installing
+another version of afbackup. Please note, that the configuration
+file must be writable for the user, under whose id the server
+starts. The best way is to make the configuration file be owned
+by this user.
+See also the documentation for the program __numset, it's very
+helpful in this context.
+
+
+--------------------------------------------------------------------------
+
+21: How to make backups to different cartridge sets by type or by date ?
+
+Sometimes people want to make the incremental backups to other sets
+of cartridges than the full backups. Or they want to change the
+cartridge set weekly. Here the normal cartridge set mechanisms can
+be used (client side option -S). If the difference is the type
+(full or incremental), the -S can be hardcoded into the crontab
+entry. If the difference is the date, a little simple script can
+help. If e.g. in even weeks the backup should go to set 1 and in
+odd weeks to set 2 the following script conveys the appropriate
+set number, when called:
+
+#!/bin/sh
+
+expr '(' `date +%W` % 2 ')' + 1
+
+This script can be called within the crontab entry. Typical crontab
+entries will thus look as follows, assuming the script is called
+as /path/to/oddevenweek:
+
+# full backup starting Friday evening at 10 PM
+0 22 * * 5  /path/to/client/bin/full_backup -d -S `/path/to/oddevenweek`
+# incremental backup starting Monday - Thursday at 10 PM
+0 22 * * 1-4 /path/to/client/bin/incr_backup -d -S `/path/to/oddevenweek`
+
+
+--------------------------------------------------------------------------
+
+22: How to achieve independence from the machine names ?
+
+- Use a host alias for the backup server and use this name in the
+  clients' configuration files. Thus, if the server changes, only
+  the hostname alias must be changed to address the new server
+
+- Configure a ServerIdentifier, e.g. reflecting the hostname alias
+  on the server side
+
+- Use the client identifiers in the clientside configuration files.
+  Set them to strings, that can easily be remembered
+
+Notes:
+
+Performing the steps above no hostname should appear in any index
+file, minimum restore info or other varying status information
+files any more.
+If now the server changes, the server identifier must be set to
+the value the other server had before and the client will accept
+him after contacting. To contact the correct server the client
+configurations would have to be changed to the new hostname. Here
+the hostname alias serves for making things easier. No client
+configuration must be touched, just the hostname alias assigned
+to a different real hostname in NIS or whatever nameservice is
+used.
+If restore should go to a different client, the identifier of the
+original client, the files have been saved from, must be supplied
+to get the desired files back. Option -W will be used in most cases.
+
+
+--------------------------------------------------------------------------
+
+23: How to restrict the access to cartridges for certain clients ?
+
+Access can restricted on a cartridge set base. For each cartridge
+set a check can be configured, whether a client has access to it
+or not. Refer to the afserver.conf manual page under Cartridge-Sets
+how to specify the desired restrictions.
+
+
+--------------------------------------------------------------------------
+
+24: How to recover from disaster (everything is lost) ?
+
+There are several stages to recover. First for the client side:
+
+* Only the data is lost, afbackup installation and indexes are still
+  in place
+
+Nothing special here. To avoid searching the index the -a option of
+afrestore is recommended. Instead, afrestore '*' can be used, but
+this will search the index and might take longer.
+
+* Data, afbackup installation and indexes are gone, minimum restore
+  information is available
+
+Install afbackup from whatever source. Then run afrestore -e. If you
+haven't configured afbackup after installing, pass the client's unique
+identifier to the program using the option -W. After pressing <Return>
+to start the command, you are expected to enter the minimum restore
+info. It is necessary, that it is typed in literally like written by
+the backup system. The easiest way is to cut and paste. The line, that
+is containing this information needs not to be the first one entered
+and there may be several lines of the expected format, also from other
+clients (the client identifier is part of the minimum restore info).
+The lastest available one from the input and coming from the client
+with the given or configured identifier will be picked and used. Thus
+the easiest way to use the option -e is to read from a file containing
+the expected information. If you have forgotten the identifier of the
+crashed client, look through your minimum restore infos to find it.
+To restore only the indexes use option -f instead of -e.
+
+* Data, afbackup installation and indexes are gone, minimum restore
+  information is also lost
+
+Find out, which tape(s) has been written to the last time the backup
+succeeded for the crashed client. Possibly see the mails sent by the
+ExitProgram for more information about this. Install afbackup on the
+client. Now run afrestore with option -E, pass it the client identifier
+with option -W and one or more tape specifiers with the hostname and
+port number (if it's not the default) of the server, where the client
+did it's backup to. Examples:
+
+ afrestore -E -W teefix 3@backupserver%3002
+ afrestore -E -W my-ID 4-6,9@buhost%backupsrv
+ afrestore -E -W c3po.foodomain.org 3@buserv 2@buserv
+
+The third example will scan tapes 3 and 2 on the server buserv using
+the default TCP-service to retrieve the minimum restore information.
+The first will scan tape 3 on host backupserver, using port number
+3002 (TCP). The second one will scan tapes 4 through 6 and 9 on the
+server buhost connecting the TCP-service backupsrv. This name must
+be resolvable from /etc/services, NIS or similar. Otherwise this
+command will not work.
+While scanning the tapes all found minimum restore informations (for
+any client) will be output, so another one than the one with the
+latest timestamp can be used later with option -e. If only the tapes
+should be scanned for minimum restore informations without restoring
+everything afterwards, option -l can be supplied. Then operation will
+terminate having scanned all the given tapes and having printed all
+found minimum restore informations.
+
+
+For the server side:
+
+The var-directory of the server is crucial for operation, so it is
+heavily recommended to save it, too (see below under Do-s and Dont-s).
+The afbackup system itself can be installed from the latest sources
+after a crash.
+To get the var-directory back, run afrestore -E or -e, depending on
+the availability of the minimum restore information, as explained
+above, and pass it a directory to relocate the recovered files. Then
+make sure, that no afserver process is running anymore (kill them,
+if they don't terminate voluntarily), and move all files from the
+recovered and relocated var-directory to the one, that is really
+used by the server. If you are doing this as root, don't forget to
+chown the files to the userid, with that the afbackup server is
+started. If the server's var directory has been stored separately
+as explained in Do-Dont, the different client-ID must be supplied to
+the afrestore command using the options -W like when having run the
+full_backup, e.g.
+ afrestore -E -W serv-var -V /tmp/foo -C /tmp/servvar 2@backuphost%backupport
+The directory /tmp/foo must exist and can be removed afterwards.
+See the man-pages of afrestore for details of the -E mode.
+
+
+--------------------------------------------------------------------------
+
+25: How to label a tape, while the server is waiting for a tape ?
+
+Start the program label_tape with the desired options, furthermore
+supplying the option -F, but without option -f. Wait for the program
+to ask you for confirmation. Do not confirm now, first put the tape,
+you want to label, into the drive. (The server does not perform any
+tape operation, while the label_tape program is running) Now enter
+yes to proceed. If the label is the one expected by the server and
+the server is configured to probe the tape automatically, it will
+immediately use it, otherwise eject the cartridge.
+
+
+--------------------------------------------------------------------------
+
+26: How to use a media changer ?
+
+To use a media changer, a driver program must be used. If there is
+no such program available, probably the changer can be configured
+to operate in sequential mode, that is, the robot puts the cartridge
+from the next slot into the drive, when the current one is ejected.
+For how to deal with this mode of operation, please see question 38.
+
+On many architectures mtx can be used. On the Sun under Solaris-2 the
+stctl package is very useful. On FreeBSD chio seems to be the preferred
+tool. Another driver available for Linux is the sch driver coming
+together with the mover command (See changer.conf.sch-mover for a
+link). Check the documentation of either package how to use them.
+Changer configuration files for these four are coming with the
+afbackup distribution (changer.conf.mtx, changer.conf.stctl,
+changer.conf.chio and changer.conf.sch-mover), they should work
+immediately with the most changers. mtx and stctl can be obtained
+from the place, afbackup has been downloaded from.
+
+Very short:
+mtx uses generic SCSI devices (e.g. /dev/sg0 ... on Linux), stctl
+ships a loadable kernel module, that autodetects changer devices
+and creates device files and symlinks /dev/rmt/stctl0 ... in the
+default configuration. With stctl it is crucial to write enough
+target entries to probe into the /kernel/drv/stctl.conf file.
+Note, that the attached mtx.c is a special implementation i was
+never able to test myself. It is quite likely, that it behaves
+differently than the official mtx, so it will not work with the
+attached changer.conf.mtx file. The mover command also comes with
+a kernel driver called sch.
+
+If the driving command is installed and proven to work (play around
+a little with it), the configuration file for it must be created.
+It should reside in the same directory like the serverside config
+file, but this is arbitrary. The path to the file must be given
+in the server configuration file as parameter like this example:
+
+Changer-Configuration-File:     %C/changer.conf
+
+%C will be replaced with the path to the confdir of the server side.
+See the manual pages of the cart_ctl command about what this file
+must contain.
+
+Now the device entry in the server configuration must be extended.
+The new format is:
+
+<streamerdevice>[=<drive-count>]@<device>#<num-slots>[^<num-loadbays>]
+
+Whitespace is allowed between the special characters for readability.
+An example:
+
+/dev/nst0 @ /dev/sg0 # 20
+
+This means: Streamer /dev/nst0 is attached to media handler at /dev/sg0,
+which has 20 slots. The part = <drive-count> is optional. It must be
+set appropriately, if the streamer is not in position 1 in the changer.
+(Note, that with cart_ctl every count starts with 1, independent of the underlaying driver command. This abstraction is done in the configuration).
+^ <num-loadbays> is also optional and must not be present, if the changer
+does not have any loadbay. A full example:
+
+/dev/nst1 = 2 @ /dev/sg0 # 80 ^ 2
+
+If is recommended to configure a lockfile for the changer with full
+path, too. For example:
+
+Changer-Lockfile:        /var/adm/backup/changer.lock
+
+To check the configuration now the command cart_ctl should be run,
+simply with option -l. An empty list of cartridge locations should
+be printed, just the header should appear. Now the backup system
+should be told, where the cartridges currently are. This is done
+using the option -P of cart_ctl. To tell the system, that the tapes
+10-12 are in slot 1-3 and tapes 2-4 in slot 4-6, enter:
+
+cart_ctl -P -C 10-12,2-4 -S 1-6
+
+Verify this with cart_ctl -l . To tell the system, that Tape 1 is in
+the drive 1, enter:
+
+cart_ctl -P -C 1 -D 1
+
+(The drive number 1 is optional, as this is the default)
+Optionally the system can store locations for all cartridges not
+placed inside any changer. A free text line can be given with the
+-P option, what might be useful, for example:
+
+cart_ctl -C 5-9,13-20 -P 'Safe on 3rd floor'
+
+To test the locations database, one might move some cartridges around,
+e.g. cartridge 3 into the drive (assumed tape 6 is in some slot and
+the location has been told to the system as explained above):
+
+cart_ctl -m -C 3 -D
+
+Load another cartridge to drive, it will be automatically unloaded to
+a free slot, if the List-free-slots-command in the configuration works
+properly.
+
+Instead of telling the system, what tapes are located in the slots,
+one might run an inventory, what makes them all to be loaded into
+the drive and the labels to be read. To do this, enter:
+
+cart_ctl -i -S 1-6
+
+For further information about the cart_ctl command, refer to the
+manual pages.
+
+To make the server also use the cart_ctl command for loading tapes,
+the SetCartridgeCommand in the server configuration must be set as
+follows:
+
+Setcart-Command:  %B/cart_ctl -F -m -C %n -D
+
+The parameter Cartridge-Handler must be set to 1 .
+
+Now the whole thing can be tested making the server load a tape from
+a client command:
+
+/path/to/client -h serverhost [ -p serverport ] -C 4
+
+Cartridge 4 should be loaded to drive now. Try with another
+cartridge. If this works, the afbackup server is properly
+configured to use the changer device. Have fun.
+
+
+--------------------------------------------------------------------------
+
+27: How to build Debian packages ?
+
+Run the debuild command in the debian subdirectory of the distribution
+
+
+--------------------------------------------------------------------------
+
+28: How to let users restore on a host, they may not login to ?
+
+Here's one suggestion, how to do that. It uses inetd and the
+tcpwrapper tcpd on the NFS-server side, where login is not permitted,
+and the identd on the client, where the user sits. It starts the X11-
+frontend of afrestore setting the display to the user's host:0.
+Furthermore required is the ssu (silent su, only for use by the
+superuser, not writing to syslog) program. Source can be obtained
+from the same download location, where afbackup had been found.
+It is part of the albiutils package.
+
+Perform the following steps:
+
+* Add to /etc/services:
+
+remote-afbackup		789/tcp
+(or another unused service number < 1024)
+
+
+* Add to or create the tcpd configuration file /etc/hosts.allow (or similar,
+  man tcpd ...):
+
+in.remote-afbackup : ALL : rfc931 : twist=/usr/sbin/in.remote-afbackup %u %h
+
+
+* Add to /etc/inetd.conf and kill -HUP the inetd:
+
+remote-afbackup   stream tcp  nowait  root  /usr/sbin/tcpd  in.remote-afbackup
+
+(if the tcpd is not in /usr/sbin, adapt the path. If it's not
+installed: Install it. It makes sense anyway)
+
+
+* create a script /usr/sbin/in.remote-afbackup and chmod 755 :
+#!/bin/sh
+#
+# $Id: HOWTO,v 1.7 2013/12/21 11:34:42 alb Exp alb $
+#  
+# shell script for starting the afbackup X-frontend remotely through
+# inetd, to be called using the 'twist' command of the tcp wrapper.
+# Note: on the client the identd must be running or another RFC931
+# compliant service
+#
+
+if [ $# != 2 ] ; then
+   echo Error, wrong number of arguments
+   exit 0
+fi
+
+remuser="$1"
+remhost="$2"
+
+if [ "$remuser" = "" -a "$remuser" = "" ] ; then
+   echo Error, required argument empty
+   exit 0
+fi
+
+# check for correct user entry in NIS
+ushell=`/usr/bin/ypmatch "$remuser" passwd 2>/dev/null | /usr/bin/awk -F: ' {print $7}'`
+if [ _"$ushell" = _ -o _"$ushell" = "_/bin/false" ] ; then
+   echo "You ($remuser) are not allowed to use this service"
+   exit 0
+fi
+
+gr=`id "$remuser"| sed 's/^.*gid=[0-9]*(//g' | sed 's/).*$//g'`
+
+# check, if group exists
+ypmatch $gr group.byname >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+  echo "Error: group $gr does not exist. Please check"
+  exit 0
+fi
+
+DISPLAY="$remhost":0
+export DISPLAY
+
+/path/to/ssu "$remuser":$gr -c /usr/local/afbackup/client/bin/xafrestore
+
+####### end of script ######
+
+* Edit the last line with ssu to reflect the full path to ssu, that you
+  have built from the albiutils package.
+
+Now a user can start the xafrestore remotely by simply:
+
+telnet servername 789
+
+(or whatever port has been chosen above).
+For user-friendlyness, this command can be put into a script
+with an appropriate name.
+
+Thanks to Dr. Stefan Scholl at Infineon Techologies for this
+concept and part of the implementation
+
+
+--------------------------------------------------------------------------
+
+29: How to backup through a firewall ?
+
+Connections to port 2988 (or whatever port the service is assigned)
+must be allowed in direction towards the server (TCP is used for all
+afbackup connections). If the multi stream service is to be used,
+this port must also be open (default 2989, if not changed) in the
+same direction.
+If the remote start option is desired (afclient -h hostname -X ...),
+connections to the target port 2988 (i.e. afbackup) of the client
+named with option -h must be permitted from the host, this command
+is started on.
+If the encryption key for the client-server authentication is kept
+secret and protected with care on the involved computers, the server
+port of afbackup is not exploitable. So it may be connectable by the
+world without any security risk. The only non desirable thing, that
+might happen, is a denial of service attack opening high numbers of
+connections to that port. The inetd will probably limit the number
+of server programs to be started simultaneously, but clients will
+no longer be able to open connections to run their backup.
+The connections permitted through the firewall should in any case be
+restricted from and to the hosts participating in the backup service.
+If initiating connections from outside of the firewall is unwanted,
+an ssh tunnel can be started from the inside network to a machine
+outside thus acting as kind of a proxy server. The outside backup
+clients must be configured to connect the proxy machine for backup,
+where the TCP port is listening, i.e. the other side of the ssh
+tunnel sees the light of the outside world. It should be quite clear,
+that ssh tunneling reduces throughput because of the additional
+encryption/decryption effort. See the ssh documentation and HOWTO Q11
+for more information.
+
+
+--------------------------------------------------------------------------
+
+30: How to configure xinetd for afbackup ?
+
+Here are the appropriate xinetd.conf entries. As long as the convenient
+way of configuration like with inetd is not included into afbackup,
+the entries have to be made manually, followed by a kill -USR2 to the
+xinetd.
+
+For the single stream service:
+
+service afbackup
+{
+        flags           = REUSE NAMEINARGS
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = backup
+        server          = /usr/local/afbackup/server/bin/afserver
+        server_args     = /usr/local/afbackup/server/bin/afserver /usr/local/afbackup/server/lib/backup.conf
+}
+
+For the multi stream service:
+
+service afmbackup
+{
+        flags           = REUSE NAMEINARGS
+        socket_type     = stream
+        protocol        = tcp
+        wait            = yes
+        user            = backup
+        server          = /usr/local/afbackup/server/bin/afmserver
+        server_args     = /usr/local/afbackup/server/bin/afmserver /usr/local/afbackup/server/lib/backup.conf
+}
+
+Replace the user value with the appropriate user permitted to operate
+the device to be used (see: INSTALL).
+
+--------------------------------------------------------------------------
+
+31: How to redirect access, when a client contacts the wrong server ?
+
+This situation might arise, when localhost has been configured and
+restore should be done on a different client, but the same server.
+Or it might happen, that the backup service has moved, no host alias
+has been used during backup and it is not possible to rename the
+machine cannot be renamed.
+
+Here the xinetd can help, cause it is able to redirect ports to
+different machines and/or ports. On the machine, that does not have
+the service, but is contacted by a client, put an entry like this
+into the xinetd configuration file (normally /etc/xinetd.conf) and
+(re)start xinetd (sending the typical kill -HUP):
+
+service afbackup_redirect
+{
+        flags           = REUSE
+        socket_type     = stream
+        protocol        = tcp
+        port            = 2988
+        redirect        = backupserver 2988
+        wait            = no
+}
+
+Replace backupserver with the real name of the backup server host.
+If the multi stream service is to be used, add another entry:
+
+service afmbackup_redirect
+{
+        flags           = REUSE
+        socket_type     = stream
+        protocol        = tcp
+        port            = 2989
+        redirect        = backupserver 2989
+        wait            = no
+}
+
+
+--------------------------------------------------------------------------
+
+32: How to perform troubleshooting when encountering problems ?
+
+Here are some steps, that will help narrowing the search and probably
+even solve the problem:
+
+Check, if the environment variable BACKUP_HOME is set. If yes, this
+might lead to all kinds of problems as afbackup evaluates this setting
+and considers it as the base directory of the afbackup installation.
+Maybe the name of this variable should be changed in afbackup ...
+
+Start on the client side:
+
+If full_backup or incr_backup report cryptic error messages, probably
+in the client side logfile (check this file out, maybe cleartext error
+messages can be found here), try to run the low level afclient command
+querying the server. Don't forget to supply the authentication key file,
+if one is configured, with option -k, because afclient is a low level
+program, that can be run standalone and does NOT read the configuration
+file. An afclient call to check basic functionality can be:
+
+/path/to/afclient -qwv -h <servername> [ -p <service-or-port> ] \
+                      [ -k /path/to/keyfile ]
+
+After a short time < 2 seconds it should printout something like this:
+Streamer state: READY+CHANGEABLE
+Server-ID: Backup-Server_1
+Actual tape access position
+Cartridge: 8
+File:      1
+Number of cartridges: 1000
+Actual cartridge set: 1
+
+If afclient does not finish within half a minute or so and later prints
+the error message 'Error: Cannot open communication socket', then there
+is a problem on the server side or with the network communication. Try
+to telnet to the port, where the afbackup server (i.e. usually inetd)
+is awaiting connections:
+
+  telnet <servername> 2988
+
+(or whatever your afbackup service portnumber is). You should see some
+response like this:
+
+Trying 10.142.133.254...
+Connected to afbserver.mydomain.de.
+Escape character is '^]'.
+afbackup 3.3.4
+ 
+AF's backup server ready.
+Õâ¼h]|f*(
+
+Type return until the afserver terminates the connection or type
+Ctrl-] and on the >-prompt enter quit to terminate telnet.
+
+If you don't see a response like indicated above, but instead
+'Connection refused', then the service is not properly configured on the
+server host. Please check the /etc/inetd.conf or /etc/xinetd.conf file
+for proper afbackup entries and make sure, the service name is known
+either in the local /etc/services file or from NIS or NIS+ or whatever
+service is used. Send a kill -HUP <PID> with the PID of inetd or -USR2
+with the PID or xinetd (if that one is used) to make the daemon reread
+it's configuration. If afterwards the connection is still not possible,
+see the syslog of the server for error messages from the (x)inetd. They
+will indicate, what the real problem is. The syslog file is usually one
+of the following files:
+ /var/adm/messages
+ /var/adm/SYSLOG
+ /var/log/syslog
+ /var/log/messages
+ /var/adm/syslog/syslog.log
+
+On AIX use the errpt command, e.g. with option -a to get recent syslog
+output (see man-page).
+
+If you don't get any connection response starting the telnet command,
+there is a network problem. If you can ping the remote machine, but
+can't telnet to the afbackup port, try to connect any other port, e.g.
+the real telnet port (without 3rd argument) or the daytime port (type
+telnet <remotehost> 13). If they work, there is probably a firewall
+between the afbackup client and the server, that is blocking connections
+to the afbackup port. Then check the firewall configuration and permit
+the afbackup and afmbackup connections, if you want to remote start by
+afbackup means, in both directions.
+
+The error message 'An application seems to hold a lock ...' indicates,
+that there is already an afbackup program like full_backup or afverify
+running on the same host. Use ps to find out, what that process is. If
+you need to know, what this program is doing, see the client side log
+for hints. If that doesn't give any clue, try to trace that program or
+the subprocess afbackup, that is running in most cases, when one of the
+named programs is also running. To trace a program use:
+ truss     on Solaris
+ strace    on Linux, SunOS-4, FreeBSD
+ par       on IRIX
+ trace     on HP-UX
+
+For AIX a system tracer is announced. Until now there can only scripts
+be used, that are in turn running trace -a -d -j <what-you-want-to-get>,
+trcon, trcstop and trcrpt, but this must be done with real care, cause
+changes are high, that the filesystem, where the trace is written (normally
+/tmp) will be plugged up. See the manpages for the named commands for
+details.
+
+Very useful is lsof, what helps to find out, what the filedescriptors
+in system calls like read, write, close, select etc. are meaning. Run
+lsof either with no arguments to grep for something specific or with
+the arguments -p <PID>, with <PID> being e.g. the process id of afbackup
+or afserver.
+
+If there is something wrong on the server, e.g. the server starts up, but
+immediately terminates with or without any message in the serverside log,
+it might help to trace the (x)inetd using the flag -f with strace (or
+truss or ...) and -p with the pid of the inetd. The -f flags makes the
+trace follow subprocess forks and execs. So one can probably see, why
+the server terminates. If this does not help, one can try to catch the
+server in a debugger after startup. This requires the server to be built
+debuggable. To achieve this the easiest way, after building afbackup run
+
+ make clean
+
+in the distribution directory and then run
+
+ make server DEBUG=-g [ EXTRA_CFLAGS=-DORIG_DEFAULTS ]
+
+the ORIG_DEFAULTS stuff is needed, if you built afbackup using the Install
+script. Now do NOT run make install, but copy the files over to the
+installation directory using cp thus overwriting the files in there. If
+you moved the original binaries out of the way, don't forget to chown
+the copied files to the user configured in the /etc/(x)inetd.conf file.
+Otherwise they can't be executed by (x)inetd.
+Then add the option -D to the afserver or afmserver configured in the
+(x)inetd.conf file. The inetd.conf entry will then e.g. look like this:
+
+afbackup stream tcp nowait backup /usr/local/afbackup/server/bin/afserver /usr/local/afbackup/server/bin/afserver -D /usr/local/afbackup/server/lib/backup.conf
+
+or the xinetd.conf entry as follows:
+
+service afbackup
+{
+        flags           = REUSE NAMEINARGS
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = backup
+        server          = /usr/local/afbackup/server/bin/afserver
+        server_args     = /usr/local/afbackup/server/bin/afserver -D /usr/local/afbackup/server/lib/backup.conf
+}
+
+Send a kill -HUP <PID> to the PID of the inetd or -USR2 to xinetd.
+Now, when any client connects the server, the afserver or afmserver
+process is in an endless loop awaiting either an attach of a debugger
+or the USR1 signal causing him to continue. Please note, that during
+a full_backup or incr_backup, the server will probably contacted not
+only once during a backup, but several times. Furthermore the afmserver
+starts the afserver in slave mode as subprocess passing it also the -D
+flag, so this process must also kill -USR1 'ed or caught in a debugger.
+Attaching the debugger gdb works passing the binary as first argument
+and the process ID as second argument, e.g.:
+
+ gdb /path/to/afserver 2837
+
+Now you see lines similar to those ones:
+
+0x80453440 in main () at server.c:3743
+3743:     while(edebug);   /* For debugging the caught running daemon */
+(gdb)
+
+on the gdb prompt set the variable edebug to 0:
+(gdb) set edebug=0
+
+Enter n to step through the program, s to probably step into subroutines,
+c to continue, break <functionname> to stop in certain functions, c to
+continue, finish to continue until return from the current subroutine etc.
+See the man-page of gdb or enter help for more details. With dbx and
+graphical frontends it's quite similar. It is possible to first start the
+debugger and then attach a process. Supply only the binary to the debugger
+when starting, then e.g. with gdb enter  attach 2837  (if that's the PID).
+This works also with xxgdb or ddd (very fine program !)
+The named calling structure and the possible several server startups can
+make the debugging a little complicated, but that's the price for a system
+comprising of several components running concurrently or being somewhat
+independent from each other. But it makes development and testing easier
+and less error prone.
+
+Debugging the client side is not as complicated. To build the client side
+debuggable works the same way as explained, except that the make step must
+have afclient as target:
+
+ make client DEBUG=-g [ EXTRA_CFLAGS=-DORIG_DEFAULTS ]
+
+For the installation the same applies like above: Do NOT run make install,
+but copy the files to the installation directory using cp.
+
+
+--------------------------------------------------------------------------
+
+33: How to use an IDE tape drive with Linux the best way ?
+
+As the IDE tape driver on Linux seems to have problems to work well,
+the recommendation is to use the ide-scsi emulation driver. Here's how
+Mr. Neil Darlow managed to get his HP Colorado drive to work properly:
+
+The procedure, for my Debian Woody system with 2.4.16 kernel, was
+as follows:
+
+1) Disable IDE driver access to the Tape Drive in lilo.conf
+   append="hdd=ide-scsi"
+
+2) Ensure the ide-scsi module is modprobe'd at system startup by
+   adding it to /etc/modules
+
+3) Install the linux mt-st package for the SCSI ioctl-aware mt
+   program
+
+4) Modify the Tape Blocksize parameter in server/lib/backup.conf
+   Tape Blocksize: 30720
+
+After all this, you can access the Colorado as a SCSI Tape Drive
+using /dev/nst0. Then full_backup and afverify -v work flawlessly.
+
+
+--------------------------------------------------------------------------
+
+34: How to make afbackup reuse/recycle tapes automatically ?
+
+There are two parameters in the client side configuration, that affect
+reusing tapes. One of them is NumIndexesToStore. A new index file is
+started with each full backup. For all existing indexes the backup data
+listed inside of them is protected from being overwritten on the server.
+This is achieved by telling the server, that all tapes, the data has
+been written to, are write protected. The parameter NumIndexesToStore
+tells the client side, how many indexes in addition to the current one
+that is needed in any case are kept. More i.e. older index files are
+removed and the related tapes freed. A common pitfall is, that the
+number configured here is one too high. If the number is e.g. 3, the
+current index file plus 3 older indexes are kept, not 3 in total. Note
+furthermore, that afbackup only removes an older index, when the next
+full backup has succeeded.
+
+The other parameter DaysToStoreIndexes can be configured the number of
+days, how old index file contents may become. Still a new index file
+is created on every full backup. That is, an index file may contain
+references to tapes and data, that are in fact older than configured by
+this parameter. Nonetheless the index file is kept to be able to restore
+a status completely, that has the given age, what requires also older
+data. E.g.: To restore a status, that is 20 days old, the previous full
+backup is also needed that is e.g. 25 days old together with data from
+following incremental, level-X or differential backups.
+
+The server side also keeps track, what tapes are needed by what client.
+When a client tells the server a new current list of tapes, that are to
+be write-protected, the server overwrites the previously stored list
+for that client. The lists are lines in the file .../var/precious_tapes.
+It may be desired, that a client is no longer in backup, but was before.
+Then the associated tapes must be freed manually on the server(s) either
+removing the appropriate line in the precious_tapes file (not while a
+server is running !) or issuing a server message using a command like
+that:
+ /path/to/afclient -h <server> [ -p <service> ] [ -k /path/to/keyfile ] \
+                      -M "DeleteClient:  <client-identifier>"
+The setting for the <client-identifier> can be taken from the outdated
+client's configuration file (default: the official hostname) or from
+the precious_tapes file on the server: it's the first column. Using
+the command makes sure the file remains in a consistent state as the
+server locks the files in the var-directory during modification.
+
+When a server refuses to overwrite tapes, but there is no obvious reason
+for this behaviour, the precious_tapes file on the server should be
+checked like mentioned above, furthermore the readonly_tapes file.
+Probably tapes have been set to read-only mode some time ago, but one
+doesn't remember, when or why. Note, that afbackup never sets tapes to
+read-only by itself. This can only be done manually.
+
+
+--------------------------------------------------------------------------
+
+35: How to make the server speak one other of the supported languages ?
+
+If your system's gettext uses the settings made by the setlocale
+function or supports one of the functions setenv or putenv, then
+the option -L of af(m)server can be used to set a locale on the
+command line in the /etc/(x)inetd.conf file. GNU gettext in most
+cases is not built to use setlocale due to compatibility problems.
+Fortunately the glibc supports both setenv and putenv, so the
+option is usually available. If supplying the commandline option
+does not work, environment variables can be used:
+
+The environment variable LANG must be set to it in the server's
+environment. To achieve that the command from the inetd.conf file
+can be put into a script, where the LANG environment variable is
+set before e.g.
+
+#!/bin/sh
+#
+# this is a script e.g.
+#    /usr/local/afbackup/server/bin/afserverwrapper
+#
+LANG=it
+export LANG
+
+exec /usr/backup/server/bin/afserver /usr/backup/server/bin/afserver /usr/backup/server/lib/backup.conf
+
+# end of script
+
+
+Do the same for afmserver. Then replace the command in
+inetd.conf with
+
+/usr/local/afbackup/server/bin/afserverwrapper afserverwrapper
+
+When using the xinetd, environment settings can be made by adding
+a line to the appropriate section in the configuration file, e.g.:
+
+   env  =   LANG=de
+
+so a complete xinetd entry for afserver would be:
+
+service afbackup
+{
+        flags           = REUSE NAMEINARGS
+        env             = LANG=de
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = backup
+        server          = /usr/local/afbackup/server/bin/afserver
+        server_args     = /usr/local/afbackup/server/bin/afserver /usr/local/afbackup/server/lib/backup.conf
+}
+
+If the multi-stream server is configured to run permanently, the
+LANG setting can be simply be done in the start script like in
+the script above.
+
+
+--------------------------------------------------------------------------
+
+36: How to build a Solaris package of the afbackup software ?
+
+NOTE: only /usr/local/afbackup is supported as base directory for
+      afbackup with this procedure and the supplied packaging files,
+      furthermore libz must be used and libdes for encryption
+
+* Run the Install script as normal (probably several times if required),
+  leave the target directories with the default values, answer the
+  question whether to install the software with 'no'
+
+* Run the script ./build_local_inst
+  (this creates a subdirectory root containing the install image)
+
+* Run the command
+   pkgmk -o -d . -b `pwd` -f afbackup.sun.map AFbackup
+
+  This creates the Solaris package AFbackup in the current directory
+  (specified by `pwd`) with the name AFbackup. If this name should
+  be changed, also the file pkginfo must be modified.
+
+
+--------------------------------------------------------------------------
+
+37: How to work with barcode labels ?
+
+First of all, buy them. Be warned, they are strangely expensive. So
+if you don't want to buy them, print them. You can use the GNU barcode
+program. Just type barcode at your shell prompt, it is not too unlikely,
+that you have it already and thus get a usage output. It's available on
+recent SuSE Linux and probably other systems. If it's not already there,
+build it yourself after downloading from the Free Software Foundation:
+http://www.gnu.org/software/barcode/barcode.html .
+
+The barcode program produces PostScript, that can immediately be sent
+to a printer or to a file first. To print barcode labels for DLT or
+tapes of a similar size, you may put the desired text strings to a
+file, one per line, and run:
+
+barcode -u mm -p 210x297 -e 39 -t 2x14+10+30 -g 65x16.5 -m 15,15 -i inputfile
+
+Redirect the standard output to a file for checking with ghostview or
+whatever is suitable. The -g argument specifies the size (geometry),
+-e 39 means the encoding (experience shows, that Code 39 works with
+jukebox barcode readers), -u means the units for following size related
+options (can occur several times and affects only the arguments to it's
+right until a possible other -u). -p gives the paper size (210x297 is A4)
+and -m the margins on the page on the left and the bottom. The -t above
+tells to print 2 barcodes per row i.e. 2 columns in 14 rows, 10 and 30
+are some bit weird margin widths. At least my experience is, that the
+combination of -t and -m is incorrectly documented. The best is to play
+around a bit to find out the most appropriate settings.
+
+No more that 8 characters usually succeed to make their way through
+barcode reader and all the hardware into the program, that initiated
+the query. Lowercase characters are changed to be uppercase.
+
+To enable afbackup to deal with barcodes, commands reading the changer
+device must be configured in the ChangerConfigFile. The maintainer has
+the choice whether to configure one command for all 3 types of locations
+in a changer (slot, drive and loadport), or whether to configure three
+commands. If only one command is configured, it must be given as the
+List-Tape-Labels-Command and must produce a minimum of three fields of
+output, separated by whitespace. The first column must be one of the
+words "slot", "drive" or "loadport" (may be upper or lowercase), the
+second field must be the instance number starting with 1, the rest of
+the line must contain the text form of the barcode label. If three
+commands are wished to be configured separately, their names are
+ List-Tapelabels-in-Slots-Command,
+ List-Tapelabels-in-Drives-Command and
+ List-Tapelabels-in-Loadports-Command.
+Their output must be similar like with the single command, but omitting
+the first field containing the location type. Configuring one command for
+all usually has the advantage of faster execution, but is a bit harder
+to code. %D appearing in the command is replaced with the changer device.
+Check the sample files coming with the distribution, probably suitable
+commands have already been provided for your changer operating command
+(mtx, stctl, chio, ...) in the respective changer.conf.* file.
+
+The primary identification for cartridges is still their number. This
+number is written to the media when writing the media label. It is the
+primary key. This does not change when barcodes are used. This means,
+that barcode labels may change. Then the assigned number information must
+be updated for proper operation.
+
+To check, whether the commands configured in the changer configuration
+file work, run
+ cart_ctl -li
+This must list the locations with the identified barcodes. In this mode
+the cart_ctl command is nothing more than a wrapper or unifier for the
+actual changer handling commands working in the background, configured
+in the changer configuration file. The assigned cartridge numbers can be
+listed additionally supplying option -N :
+ cart_ctl -liN
+If it is still unknown, what cartridge number is assigned to a barcode,
+a question mark will be shown in the respective column.
+
+To have afbackup collect and assign the barcode data to cartridges, the
+cartridges' positions in the changer must be known. If not already done,
+this can be achieved using option -P of the cart_ctl program. E.g. to
+tell the server, that cartridges 1-6 are in the slots 4-9, run
+ cart_ctl -P -C 1-6 -S 4-9
+If they have barcode labels, run
+ cart_ctl -iN -C 1-6
+to collect the barcode information and assign it to the cartridges. This
+assignment is stored in the file cartridge_names in the server's var
+directory. Another situation, when the command must be ran like this is,
+when the barcodes of cartridges change. Thus the assignment information
+will be updated.
+If the reverse way is desired, that is, cartridges with already known
+barcode labels are inserted in slots of the changer, the location data
+can be updated running the normal inventory command, that is, cart_ctl
+with option -i (without -N), e.g.
+ cart_ctl -i -S 1-6
+If no barcode information is recognized or it is not known, to what tape
+the barcode belongs, the cartridge is loaded into a free drive, it's
+media label is read and the location and barcode information stored. This
+can be forced using option -F, then available barcode information is not
+evaluated, the label on media is read and a possibly changed barcode is
+registered. When labeling tapes running e.g.
+ cart_ctl -t -C 1-6 -S 4-9
+and barcode information is present, it is assigned automatically to the
+given cartridge numbers. Use
+ cart_ctl -lN
+to check the current barcode assignments and
+ cart_ctl -l
+to list the current location registration.
+
+Arbitrary comments (or descriptions or however this attribute wants be
+called), can be assigned to cartridges using option -N together with -C
+and given cartridge lists. Each description must be in an own argument.
+If more cartridges are given than descriptions, the last description is
+used for the remaining cartridges. The pattern %C can be used in the
+description and will be replaced with the respective cartridge number.
+Example:
+ cart_ctl -N -C 1-3,5 "My 1st tape ever" "The %Cth tape"
+Check the assignment running the respective listing form of the command:
+ cart_ctl -lN [ -C <cartridge-list> ] \
+              [ -S <slots> ] [ -D <drives> ] [ -L <loadports> ]
+This lists known barcode labels as well.
+
+
+--------------------------------------------------------------------------
+
+38: How to deal with a robot, if there is no changer operating program ?
+
+See the documentation of the changer, whether it is can be set to
+sequential mode, that means, that it will put the tape from the next
+slot into the drive as soon as the current one is ejected.
+If this operation mode is not possible, the story ends here.
+
+Note: This operation mode has certain disadvantages, e.g.:
+* Increased wear of all mechanical parts and the first sections of
+  the tapes due to the numerous necessary load / unload operations
+* The relation between tapes and slots cannot be automatically
+  determined, especially after manual changes. This is due to the
+  fact, that the robot cannot be queried, what slot the cartridge
+  currently in the drive has been taken from and from what slot it
+  will take the next one to be loaded after eject. So the software
+  has to try and error, if it is not told about the current status.
+  This implies:
+* Danger of handling unlabeled tapes incorrectly. See below how
+  to avoid this
+
+Note: Due to the unclear relation between slots and cartridges, the
+enhanced features like the location database and barcode labels can
+not be used (check the documentation of the cart_ctl command, what
+funcionality you will be missing).
+
+If it is still the wish of the administrator to proceed:
+Configure the robot to run in sequential mode and setup the server
+side of the software to deal with this mode as follows:
+
+* Comment out the parameter with the command to set the cartridge
+  (Setcart-Command)
+* Set the Cartridge-Handler parameter to 1 (or Yes)
+* Make sure there is a suitable command configured to eject the tape
+  as parameter Changecart-Command
+* Set the Cart-Insert-Gracetime parameter high enough, so the server
+  sees the drive ready for operation after loading a tape and the
+  gracetime (in seconds) having passed
+* Recommendation: provide the number of slots in the robot appending
+  @#<number-of-slots> to the device name (e.g.: /dev/nst0@#10 ).
+  This means: The streamer has a changer attached with an empty name
+  (anything between @ and # ) and 10 cartridge slots. Actually any
+  valid string can be used as name for the changer (for more details
+  please see the documentation of the Backup-Device parameter).
+  However, is recommended to avoid a name, that represents a device
+  actually present in the system (e.g. /dev/sg1 ).
+  Supplying the number of slots in the device specification makes
+  the backup system give up earlier, if a certain tape cannot be
+  found in the slots of the robot, thus limiting the mechanical wear
+* Recommendation: Always label all tapes, that are intended for use,
+  and set the parameter Reject Unlabeled Tapes to 1 (or yes). This
+  avoids accidential overwriting of tapes whose label cannot be
+  recognized i.e. are usually required for other purposes outside
+  afbackup
+* If the previous recommendation is not obeyed, unlabeled tapes MUST
+  be put into the device in the order expected by the backup system.
+  That is:
+  * If the next writing position is at the beginning on an unlabeled
+    tape, put this tape into the drive and tell afbackup about that
+    by running the cartis command once with option -i and once
+    without (see the documentation of cartis for more details).
+  * Put the next tapes, that are about to be labeled with subsequent
+    numbers into the next slots, from that the robot will take the
+    next cartridges
+* Recommendation: When manually loading the slots and the drive of
+  the robot, the cartridges should be put into the slots according
+  to the order of their numerical labels.
+  This way a certain number of load operations for try and error can
+  be avoided.
+
+Some hints about how to do the daily operation with this setup:
+
+When it is expected or necessary, that tapes are about to be accessed,
+that are currently not present in the slots or the streamer device,
+manually put these cartridges, that will soon be required, into the
+slots of the changer. The system will automatically recognize by the
+labels on the tapes, what cartridge is in the drive, when loaded. A
+warning might be written to the serverside log telling, that another
+cartridge was found than expected, but this is just a warning and we
+know, that this happened by manually changing the expected order.
+
+The patterns %b, %c, %m and %n might be helpful in the server's
+Change-Cart-Command. They are replaced as follows:
+
+     %c   The number of the cartridge currently in the drive
+     %b   The number of the cartridge currently in the drive minus 1
+     %n   The number of the cartridge expected to be put into the
+          drive after ejecting. The cartridge handler must be in
+          sequential mode. If no cartridge handler is present, %n
+          will not be replaced.
+     %m   like %n, but 1 is subtracted
+
+So e.g. if there are groups of 10 cartridges each to be put into the
+cartridge handler and the administrator needs to be informed each
+time the 10th, 20th, ... cartridge is ejected and has to change the
+cartridges, a small script can be implemented as a wrapper for the mt
+command. Let's call this script eject_check_n with the device, the
+number of slots, the current cartridge number, the expected next
+cartridge number and a user to be E-mailed as arguments. Configure
+this command as the Change-cart-command e.g. like this:
+     /your/path/to/eject_check_n %d 10 %c %n Backupmaster@my.domain
+The script itself might look like this:
+
+#!/bin/sh
+#
+# Usage: eject_check_n <device> <numslots> <current-cartno> <next-cartno> <mailaddr>
+#
+
+DEVICE="$1"
+NUMCARTSINGROUP="$2"
+CURRENTCART="$3"
+NEXTCART="$4"
+MAILADDR="$5"
+
+TMPFILE=/tmp/cart_group_markerfile.$$
+/bin/rm -f $TMPFILE
+
+CURRENTGROUP=`expr '(' $CURRENTCART - 1 ')' / $NUMCARTSINGROUP`
+NEXTGROUP=`expr '(' $NEXTCART - 1 ')' / $NUMCARTSINGROUP`
+
+if [ $CURRENTGROUP -ne $NEXTGROUP ] ; then
+  touch $TMPFILE
+
+  mail "$MAILADDR" << END_OF_MAIL
+    Hello,
+
+    Please insert new cartridges into your cartridge handler.
+    The current cartridge is $CURRENTCART and the expected next
+    one is $NEXTCART. Remove the file $TMPFILE, when done.
+
+    Regards, your automatic backup service
+
+END_OF_MAIL
+
+  while [ -f $TMPFILE ] ; do
+    sleep 5
+  done
+
+else
+
+  # simply perform the eject
+  #
+  exec mt -f $DEVICE rewoffl
+
+fi
+
+exit 0
+
+# End of eject_check_n
+
+
+--------------------------------------------------------------------------
+
+39: How to write an eject command for my removable media device ?
+
+If the information in the man-pages is not sufficient or you don't
+know, where to search, try the following:
+Do a grep ignoring case for the words "eject", "offline" and
+"unload" over all system header-files like this:
+
+egrep -i '(eject|offl|unload)' /usr/include/sys/*.h
+
+On Linux also try /usr/include/linux/*.h and /usr/include/asm/*.h.
+You should find macros defined in headers with names giving hints
+to several kinds of devices. Look into the header, whether the
+macros could be used with the ioctl system call. The comments
+should tell details. Then you can eject the media with the
+following code fragment:
+
+#include <sys/ioctl.h>
+#include <your_device_related_header>
+
+{
+  int   res, fd;
+  char  *devicefile = "/dev/whatever";
+
+  fd = open(devicefile, O_RDONLY);
+
+  if(fd < 0){
+    /* catch error */
+    ...
+  }
+
+  res = ioctl(fd, YOUR_EJECT_MACRO);
+
+  if(res < 0){
+    /* catch error */ ...
+  }
+
+  close(fd);
+}
+
+You might want to extend the utility obtainable via ftp from:
+ftp://ftp.zn.ruhr-uni-bochum.de/pub/Linux/eject.c and related
+files. Please send me any success news. Thanks !
+

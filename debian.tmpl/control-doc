@@ -1,0 +1,12 @@
+Source: @PACKAGE@-doc
+Section: unknown
+Priority: optional
+Maintainer: Albert Fluegel <af@muc.de>
+Build-Depends: debhelper (>= 7), autotools-dev
+Standards-Version: 3.8.3
+Homepage: http://www.sourceforge.net/projects/@PACKAGE@
+
+Package: @PACKAGE@-doc
+Architecture: all
+Description: documentation for @PACKAGE@
+

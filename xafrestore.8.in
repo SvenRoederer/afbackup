@@ -1,0 +1,30 @@
+.TH INCR_BACKUP 8 "2001 April 1" "Debian Project"
+.SH NAME
+xafrestore \- GUI frontend fot the restore utility
+.SH SYNOPSIS
+.B xafrestore
+.SH DESCIPTION
+This is the terrible, slow, bullshitty, horrific, crazy
+GUI frontend for the restore utility. See the help-menu
+of this program how to use it exactly. By the time of this
+writing this GUI does not use all options of the
+afrestore command line program.
+.PP
+.SH FILES
+.IP @clientconfdir@/@clientconf@
+Client configuration file
+.IP @clientlogdir@
+The directory for logging the client backups
+.IP @clientvardir@
+Some internal state information of the client backups.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).

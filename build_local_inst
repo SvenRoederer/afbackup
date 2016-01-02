@@ -1,0 +1,45 @@
+#!/bin/sh
+################### Start of $RCSfile: build_local_inst,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/build_local_inst,v $
+# $Id: build_local_inst,v 1.3 2004/07/08 20:34:48 alb Exp alb $
+# $Date: 2004/07/08 20:34:48 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+#
+# usage: $0 [ <targetdirectory> [ <make-target(s)> ] ]
+#
+
+# to make an installation competely to the directory defined by BASE below
+
+if [ _"$1" != _ ] ; then
+  BASE="$1"
+else
+  BASE=`pwd`/root/afbackup
+fi
+if [ _"$2" != _ ] ; then
+  TARGETS="$2"
+else
+  TARGETS=install
+fi
+
+make $TARGETS	CLIENTLIBDIR="$BASE"/client/lib \
+		CLIENTBINDIR="$BASE"/client/bin \
+		CLIENTVARDIR="$BASE"/client/var \
+		CLIENTMANDIR="$BASE"/client/man \
+		CLIENTCONFDIR="$BASE"/client/etc \
+		SERVERLIBDIR="$BASE"/server/lib \
+		SERVERBINDIR="$BASE"/server/bin \
+		SERVERVARDIR="$BASE"/server/var \
+		SERVERMANDIR="$BASE"/server/man \
+		SERVERCONFDIR="$BASE"/server/etc \
+		SERVERREXECDIR="$BASE"/server/rexec \
+		COMMONDIR="$BASE"/common \
+		COMMONDATADIR="$BASE"/common/share \
+		COMMONSHLIBDIR="$BASE"/common/share/lib

@@ -1,0 +1,18 @@
+/****************** Start of $RCSfile: des_aux.h.in,v $  ****************
+*
+* $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/des_aux.h.in,v $
+* $Id: des_aux.h.in,v 1.2 2004/07/08 20:34:44 alb Exp alb $
+* $Date: 2004/07/08 20:34:44 $
+* $Author: alb $
+*
+*
+******* description ***********************************************
+*
+*
+*
+*******************************************************************/
+
+/* for build with openssh-0.9.7 or later: */
+#define	OPENSSL_DES_LIBDES_COMPATIBILITY	1
+
+#include "@DESHEADER@"

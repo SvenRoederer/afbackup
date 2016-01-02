@@ -1,0 +1,731 @@
+#!/bin/sh
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/postinstall.in,v $
+# $Id: postinstall.in,v 1.2 2013/12/21 11:34:41 alb Exp alb $
+#
+
+#
+# This script can be used as postinstall, preremove and checkinstall
+# script in Solaris-2 packages, RPMS or debian packages
+#
+
+TARGET=all
+
+if [ $# -gt 0 ] ; then
+  TARGET="$1"
+  shift
+fi
+
+PROGNAME=`basename "$0" | sed 's/^[.]*//g'`
+
+case "$TARGET" in
+  install|upgrade|abort-*|configure|remove|deconfigure|purge|failed-*)
+	# dpkg
+	case $DPKG_MAINTSCRIPT_PACKAGE in
+	  *server*)
+		TARGET=server ;;
+	  *doc|devel*)
+		;; # should not be present, force error
+	  *)
+		TARGET=client ;;
+	esac
+	PROGNAME=`echo "$PROGNAME" | sed 's/^.*[.]//g'`
+	;;
+esac
+
+case "$TARGET" in
+  server|client|all|remclient)
+	;;
+  *)
+	echo "ERROR: Unknown target $TARGET. Allowed: all, client, server, remclient" >&2
+	exit 2
+esac
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+
+PASSWDFILE=/etc/passwd
+SHADOWFILE=/etc/shadow
+GROUPFILE=/etc/group
+INETDCONF=/etc/inetd.conf
+SERVICES=/etc/services
+XINETDFILE="/etc/xinetd.conf"
+BACKUPUSER=@PACKAGE@
+BACKUPUSERID=2988
+BACKUPGROUP=@PACKAGE@
+BACKUPGROUPID=$BACKUPUSERID
+BACKUPPORT=2988
+MBACKUPPORT=2989
+SERVICENAME=@PACKAGE@
+MSERVICENAME=afmbackup
+
+TMPFILE=/tmp/inst.@PACKAGE@.$$
+
+/bin/rm -f $TMPFILE
+if [ -f $TMPFILE ] ; then
+  echo "ERROR: tempfile $TMPFILE could not be removed." >&2
+  exit 2
+fi
+
+ps -uxawwww >/dev/null 2>&1
+if [ $? -eq 0 ] ; then
+  ps -uxawwww 2>&1 | egrep -i 'bad.*syntax.*bogus' >/dev/null
+  if [ $? -eq 0 ] ; then
+    PSALL="ps uxawwww"
+  else
+    PSALL="ps -uxawwww"
+  fi
+else
+  ps uxawwww >/dev/null 2>&1
+  if [ $? -eq 0 ] ; then
+    PSALL="ps uxawwww"
+  else
+    PSALL="ps -ef"
+  fi
+fi
+
+USE_XINETD=no
+if [ -f "$XINETDFILE" ] ; then
+  $PSALL | grep -v grep | grep xinetd >/dev/null 2>&1
+  if [ $? -eq 0 ] ; then
+    USE_XINETD=yes
+  fi
+fi
+
+find_program(){
+(
+  for DIR in `echo $PATH | tr : " "` ; do
+    if [ -x "$DIR"/"$1" ] ; then
+      echo "$DIR"/"$1"
+      return 0
+    fi
+  done
+
+  return 1
+)
+}
+
+resolv(){
+(
+  FN="$1"
+
+  if [ ! -f "$FN" ] ; then
+    echo "$FN"
+    return 0
+  fi
+
+  while [ `ls -l "$FN"|cut -c1` = l ] ; do
+    SYML=`/bin/ls -l "$FN" | sed 's/^.*->[ 	]*//g'`
+
+    if [ _`echo "$SYML" | cut -c1` != _/ ] ; then
+      FN=`dirname "$FN"`/"$SYML"
+    else
+      FN="$SYML"
+    fi
+  done
+
+  echo $FN
+)
+}
+
+for f in PASSWDFILE INETDCONF SERVICES XINETDFILE ; do
+  eval $f'=`resolv $'"$f"'`'
+done
+
+#
+# get xinetd entry stanza
+#
+get_xinetd_entry(){
+  sed -n '/^\([ 	]\)\?service[	 ][	 ]*'"$1"'\([	 ].*\)\?/,/^[	 ]*[}][	 ]*/ p' "$2"
+}
+#
+# get xinetd param value
+#
+get_xinetd_param(){
+  sed -n '/^\([ 	]\)\?service[	 ][	 ]*'"$1"'\([	 ].*\)\?/,/^[	 ]*[}][	 ]*/ p' "$3"|grep '^[ 	]*'"$2"'[ 	]*=[ 	]*'|sed 's/^[^=]*=[	 ]*//g'
+}
+#
+# remove named xinetd entry from data stream
+#
+strip_xinetd_entry(){
+  sed '/^\([ 	]\)\?service[	 ][	 ]*'"$1"'\([	 ].*\)\?/,/^[	 ]*[}][	 ]*/ d' "$2"
+}
+#
+# combine empty lines to one empty line
+#
+comb_empty_lines(){
+  awk 'BEGIN{s = 0;}{if(NF == 0){if(s == 0)print; s = 1}else{s = 0; print}}'
+}
+
+#
+# check and add services
+#
+check_add_service(){
+(
+  CHECKONLY=no
+  if [ _"$1" = _-n ] ; then
+    CHECKONLY=yes
+    shift
+  fi
+
+  SNAME="$1"
+  PROT="`echo $2|tr A-Z a-z`"
+  PORTNUM=`echo "$PROT"|cut -d/ -f1`
+  TRANSP=`echo "$PROT"|cut -d/ -f2`
+
+  egrep "^[ 	]*($SNAME[ 	][ 	]*$PROT|[^ 	][^ 	]*[ 	][ 	]*$PROT.*[ 	]$SNAME)([ 	].*)?$" "$SERVICES" >/dev/null
+  if [ $? -eq 0 ] ; then
+    for P in `grep "^[ 	]*($SNAME[ 	][ 	]*[1-9][0-9]*/[tT][Cc][Pp]|[^ 	][^ 	]*[ 	][ 	]*[1-9][0-9]*/[tT][Cc][Pp].*[ 	]$SNAME)([ 	].*)?$" "$SERVICES" | awk '{print $2}'` ; do
+      PN=`echo $P|cut -d/ -f1`
+      TP=`echo $P|cut -d/ -f2`
+      if [ "$TP" = "$TRANSP" -a "$PN" != "$PORTNUM" ] ; then
+	echo "ERROR: Services entry exists with wrong port specification." >&2
+	return 3
+      fi
+    done
+
+    return 0
+  fi
+
+  if [ $CHECKONLY = yes ] ; then
+    return 0
+  fi
+
+  awk '{print $2}' "$SERVICES" | egrep -i '^'"$PROT"'$' >/dev/null
+  if [ $? -eq 0 ] ; then
+    SERVLINE=`egrep '^[ 	]*[^# 	][^ 	]*[ 	][ 	]*'"$PORTNUM/"'[tT][Cc][Pp]([ 	].*)?$' $SERVICES | head -1`
+    SERVLINENO=`egrep -n '^[ 	]*[^# 	][^ 	]*[ 	][ 	]*'"$PORTNUM/"'[tT][Cc][Pp]([ 	].*)?$' $SERVICES | sed 's/:.*$//g' | head -1`
+    COMMENT=`echo "$SERVLINE"|grep '#'|sed 's/^[^#]*#/	#/g'`
+    THEBEEF=`echo "$SERVLINE"|sed 's/[ 	]*#.*$//g'`
+    TMPFILE="$SERVICES"_add_tmp.$$
+    /bin/rm -f "$TMPFILE"
+    if /bin/ls -d "$TMPFILE" >/dev/null 2>&1 ; then
+      echo "ERROR: Cannot remove file $TMPFILE" >&2
+      return 14
+    fi
+    /bin/cp -p "$SERVICES" "$TMPFILE"
+    if [ $? -ne 0 ] ; then
+      echo "ERROR: Cannot make copy of file $SERVICES" >&2
+      return 13
+    fi
+    awk '{if(NR == '"$SERVLINENO"') printf "%s '"$SNAME"'%s\n","'"$THEBEEF"'","'"$COMMENT"'"; else print $0}' "$SERVICES" > "$TMPFILE"
+    NDIFFS1=`diff "$SERVICES" "$TMPFILE"|grep '^< '|wc -l`
+    NDIFFS2=`diff "$SERVICES" "$TMPFILE"|grep '^> '|wc -l`
+    if [ $NDIFFS1 -ne 1 -o $NDIFFS2 -ne 1 ] ; then
+      echo "ERROR: Cannot modify $SERVICES correctly" >&2
+      /bin/rm -f "$TMPFILE"
+      return 15
+    fi
+
+    /bin/mv "$TMPFILE" "$SERVICES"
+    return $?
+  fi
+
+  echo "$SNAME	$PROT" >> "$SERVICES"
+)
+}
+
+#
+# check and remove services
+#
+check_rm_service(){
+(
+  SNAME="$1"
+  PROT="`echo $2|tr A-Z a-z`"
+  PORTNUM=`echo $PROT|cut -d/ -f1`
+
+  egrep "^[ 	]*($SNAME[ 	][ 	]*$PROT|[^ 	][^ 	]*[ 	][ 	]*$PROT.*[ 	]$SNAME)([ 	].*)?$" "$SERVICES" >/dev/null
+  if [ $? -ne 0 ] ; then
+    return 0
+  fi
+
+  TMPFILE="$SERVICES".new.$$
+
+  /bin/cp -p "$SERVICES" "$TMPFILE"	# also transfer file mode ...
+  egrep -v "^[ 	]*($SNAME[ 	][ 	]*$PROT|[^ 	][^ 	]*[ 	][ 	]*$PROT.*[ 	]$SNAME)([ 	].*)?$" "$SERVICES" > "$TMPFILE"
+  N1=`diff "$SERVICES" "$TMPFILE" | grep '^[<>]' | wc -l`
+  N2=`diff "$SERVICES" "$TMPFILE" | grep -v '^[<>]' | wc -l`
+  if [ $N1 -ne 1 -o $N2 -ne 1 ] ; then
+    /bin/rm -f "$TMPFILE"
+    echo "ERROR: Removing entry from $SERVICES failed." >&2
+    return 11
+  fi
+
+  /bin/mv "$TMPFILE" "$SERVICES"
+)
+}
+
+#
+# check and add user
+#
+check_add_user(){
+(
+  CHECKONLY=no
+  if [ _"$1" = _-n ] ; then
+    CHECKONLY=yes
+    shift
+  fi
+
+  USERNAME="$1"
+  USERID="$2"
+  GROUPID="$3"
+
+  getent passwd "$USERNAME" | grep "^$USERNAME:[^:]*:$USERID:" >/dev/null
+  if [ $? -eq 0 ] ; then
+    return 0
+  fi
+
+  getent passwd "$USERNAME" | grep "^$USERNAME:" >/dev/null
+  if [ $? -eq 0 ] ; then
+    UID=`grep "^$USERNAME:" $PASSWDFILE|cut -d: -f3`
+    echo "ERROR: User entry exists with wrong UID $UID." >&2
+    return 6
+  fi
+
+  getent passwd "$USERID" | grep "^[^:]*:[^:]*:$USERID:" >/dev/null
+  if [ $? -eq 0 ] ; then
+    U=`getent passwd "$USERID" | grep "^[^:]*:[^:]*:$USERID:" |cut -d: -f1`
+    echo "ERROR: User entry with UID $USERID exists: $U." >&2
+    return 7
+  fi
+
+  if [ $CHECKONLY = yes ] ; then
+    return 0
+  fi
+
+  RST=0
+  if [ -d "@servervardir@" ] ; then
+    USERHOME="@servervardir@"
+  elif [ -d "@clientvardir@" ] ; then
+    USERHOME="@clientvardir@"
+  else
+    USERHOME="@commondir@"
+  fi
+
+  find_program useradd >/dev/null
+  if [ $? -eq 0 ] ; then
+
+    useradd -c 'AFBackup Service' -d "$USERHOME" -g $GROUPID -s /bin/false -u $USERID $USERNAME >/dev/null 2>&1	# don't want to see warnings
+    RST=$?
+
+  else
+    NEW_ENTRY="$USERNAME:*:$USERID:$GROUPID:AFBackup Service:$USERHOME:/bin/false"
+
+    TMPFILE="$PASSWDFILE".new.$$
+
+    if grep '^+' "$PASSWDFILE" >/dev/null ; then
+      /bin/cp -p "$PASSWDFILE" "$TMPFILE"	# also copy file mode ...
+      awk 'BEGIN{p=1}{if($1 ~ /^[+]/){if(p) print ne; p=0} print}' "ne=$NEW_ENTRY" "$PASSWDFILE" > "$TMPFILE"
+      N1=`diff "$PASSWDFILE" "$TMPFILE" | grep '^[<>]' | wc -l`
+      N2=`diff "$PASSWDFILE" "$TMPFILE" | grep -v '^[<>]' | wc -l`
+      if [ $N1 -ne 1 -o $N2 -ne 1 ] ; then
+	echo "ERROR: Removing entry from $PASSWDFILE failed." >&2
+	/bin/rm -f "$TMPFILE"
+	return 12
+      fi
+      /bin/mv "$TMPFILE" "$PASSWDFILE"
+      RST=$?
+    fi
+
+    echo "$NEW_ENTRY" >> "$PASSWDFILE"
+    NRST=$?
+    if [ $RST -eq 0 ] ; then
+      RST=$NRST
+    fi
+
+    if [ -f "$SHADOWFILE" ] ; then
+      egrep '^'"$USERNAME": "$SHADOWFILE" >/dev/null 2>&1
+      if [ $? -ne 0 ] ; then
+	NEW_ENTRY="$USERNAME:!!:14900::::::"
+	echo "$NEW_ENTRY" >> "$SHADOWFILE"
+        NRST=$?
+        if [ $RST -eq 0 ] ; then
+          RST=$NRST
+        fi
+      fi
+    fi
+  fi
+
+  return $RST
+)
+}
+
+#
+# check and remove user
+#
+check_rm_user(){
+(
+  USERNAME="$1"
+  USERID="$2"
+
+  getent passwd "$USERNAME" >/dev/null
+  if [ $? -ne 0 ] ; then
+    return 0
+  fi
+
+  find_program userdel >/dev/null
+  if [ $? -eq 0 ] ; then
+
+    userdel "$USERNAME" >/dev/null 2>&1 # don't want to see warnings
+    RST=$?
+
+  else
+    for F in "$PASSWDFILE" "$SHADOWFILE" ; do
+      if [ -f "$F" ] ; then
+	NF="$F".new.$$
+	/bin/cp -p "$F" "$NF"		# also transfer file mode ...
+	grep -v "^$USERNAME:[^:]*:" "$F" > "$NF"
+	N1=`diff "$F" "$NF" | grep '^[<>]' | wc -l`
+	N2=`diff "$F" "$NF" | grep -v '^[<>]' | wc -l`
+	if [ $N1 -ne 1 -o $N2 -ne 1 ] ; then
+	  /bin/rm -f "$NF"
+	  echo "ERROR: Removing entry from $F failed." >&2
+	  return 11
+	fi
+
+	/bin/mv "$NF" "$F"
+      fi
+    done
+  fi
+)
+}
+
+#
+# check and add group
+#
+check_add_group(){
+(
+  CHECKONLY=no
+  if [ _"$1" = _-n ] ; then
+    CHECKONLY=yes
+    shift
+  fi
+
+  GROUPNAME="$1"
+  GROUPID="$2"
+
+  getent group "$GROUPNAME" | grep "^$GROUPNAME:[^:]*:$GROUPID:" >/dev/null
+  if [ $? -eq 0 ] ; then
+    return 0
+  fi
+
+  getent group "$GROUPNAME" | grep "^$GROUPNAME:" >/dev/null
+  if [ $? -eq 0 ] ; then
+    GID=`grep "^$GROUPNAME:" $GROUPFILE|cut -d: -f3`
+    echo "ERROR: Group entry exists with wrong GID $GID." >&2
+    return 6
+  fi
+
+  getent group "$GROUPID" | grep "^[^:]*:[^:]*:$GROUPID:" >/dev/null
+  if [ $? -eq 0 ] ; then
+    G=`getent group "$GROUPID" | grep "^[^:]*:[^:]*:$GROUPID:" |cut -d: -f1`
+    echo "ERROR: Group entry with GID $GROUPID exists: $G." >&2
+    return 7
+  fi
+
+  if [ $CHECKONLY = yes ] ; then
+    return 0
+  fi
+
+  RST=0
+
+  find_program groupadd >/dev/null
+  if [ $? -eq 0 ] ; then
+
+    groupadd -g $GROUPID $GROUPNAME >/dev/null 2>&1	# don't want to see warnings
+    RST=$?
+
+  else
+    NEW_ENTRY="$GROUPNAME:*:$GROUPID:"
+
+    TMPFILE="$GROUPFILE".new.$$
+
+    if grep '^+' "$GROUPFILE" >/dev/null ; then
+      /bin/cp -p "$GROUPFILE" "$TMPFILE"	# also copy file mode ...
+      awk 'BEGIN{p=1}{if($1 ~ /^[+]/){if(p) print ne; p=0} print}' "ne=$NEW_ENTRY" "$GROUPFILE" > "$TMPFILE"
+      N1=`diff "$GROUPFILE" "$TMPFILE" | grep '^[<>]' | wc -l`
+      N2=`diff "$GROUPFILE" "$TMPFILE" | grep -v '^[<>]' | wc -l`
+      if [ $N1 -ne 1 -o $N2 -ne 1 ] ; then
+	echo "ERROR: Removing entry from $GROUPFILE failed." >&2
+	/bin/rm -f "$TMPFILE"
+	return 12
+      fi
+      /bin/mv "$TMPFILE" "$GROUPFILE"
+      RST=$?
+    fi
+
+    echo "$NEW_ENTRY" >> "$GROUPFILE"
+    NRST=$?
+    if [ $RST -eq 0 ] ; then
+      RST=$NRST
+    fi
+  fi
+
+  return $RST
+)
+}
+
+#
+# check and remove group
+#
+check_rm_group(){
+(
+  GROUPNAME="$1"
+
+  getent group "$GROUPNAME" >/dev/null
+  if [ $? -ne 0 ] ; then
+    return 0
+  fi
+
+  find_program groupdel >/dev/null
+  if [ $? -eq 0 ] ; then
+
+    groupdel "$GROUPAME" >/dev/null 2>&1 # don't want to see warnings
+    RST=$?
+
+  else
+    for F in "$GROUPFILE" ; do
+      if [ -f "$F" ] ; then
+	NF="$F".new.$$
+	/bin/cp -p "$F" "$NF"		# also transfer file mode ...
+	grep -v "^$GROUPNAME:[^:]*:" "$F" > "$NF"
+	N1=`diff "$F" "$NF" | grep '^[<>]' | wc -l`
+	N2=`diff "$F" "$NF" | grep -v '^[<>]' | wc -l`
+	if [ $N1 -ne 1 -o $N2 -ne 1 ] ; then
+	  /bin/rm -f "$NF"
+	  echo "ERROR: Removing entry from $F failed." >&2
+	  return 11
+	fi
+
+	/bin/mv "$NF" "$F"
+      fi
+    done
+  fi
+)
+}
+
+#
+# check and add (x)inetd entry
+#
+check_add_inetd(){
+(
+  CHECKONLY=no
+  if [ _"$1" = _-n ] ; then
+    CHECKONLY=yes
+    shift
+  fi
+
+  SERVNAME="$1"
+  SOCKTYPE="$2"
+  PROT="$3"
+  FLAGS="$4"
+  USERNAME="$5"
+  PROGRAM="$6"
+
+  if [ $USE_XINETD = no ] ; then
+    grep "^$SERVNAME[ 	][ 	]*$SOCKTYPE[ 	][ 	]*$PROT[ 	]" $INETDCONF >/dev/null
+    if [ $? -eq 0 ] ; then
+      ENTRY=`grep "^$SERVNAME[ 	][ 	]*$SOCKTYPE[ 	][ 	]*$PROT[ 	]" $INETDCONF | sed 's/[ 	][ 	]*/ /g'`
+      if [ "$ENTRY" != "$SERVNAME $SOCKTYPE $PROT $FLAGS $USERNAME $PROGRAM" ] ; then
+	echo "ERROR: Entry for service $SERVNAME exists, but is wrong." >&2
+	return 9
+      else
+	return 0
+      fi
+    fi
+  else
+    if [ _"$FLAGS" = _wait ] ; then
+	WAITYESNO=yes
+    else
+	WAITYESNO=no
+    fi
+    SERVER_ARGS=`echo "$PROGRAM"|awk 'BEGIN{sep="";}{for(i=2;i<=NF;i++){printf "%s%s",sep,$i;sep=" "}}'`
+    SERVERPROG=`echo "$PROGRAM" | awk '{print $1}'`
+
+    if [ `get_xinetd_entry "$SERVNAME" "$XINETDFILE" | wc -l` -gt 0 ] ; then
+      server="`get_xinetd_param "$SERVNAME" server "$XINETDFILE"`"
+      server_args="`get_xinetd_param "$SERVNAME" server_args "$XINETDFILE"`"
+      server_args_=`echo "$server_args"|sed 's/[	 ][ 	]*/ /g'`
+      username="`get_xinetd_param "$SERVNAME" user "$XINETDFILE"`"
+      prot="`get_xinetd_param "$SERVNAME" protocol "$XINETDFILE"`"
+      wait="`get_xinetd_param "$SERVNAME" wait "$XINETDFILE"`"
+      sockt="`get_xinetd_param "$SERVNAME" socket_type "$XINETDFILE"`"
+      flags="`get_xinetd_param "$SERVNAME" flags "$XINETDFILE"`"
+      test _"$server" = _"$SERVERPROG" \
+	&& test _"$server_args_" = _"$SERVER_ARGS" \
+	&& test _"$username" = _"$USERNAME" \
+	&& test _"$sockt" = _"$SOCKTYPE" \
+	&& test _"$wait" = _$WAITYESNO \
+	&& test  _"$prot" = _"$PROT" \
+	&& test `echo "$flags" | egrep '^(.* )?REUSE( .*$)?' |wc -l` -gt 0 \
+	&& test `echo "$flags" | egrep '^(.* )?NAMEINARGS( .*$)?' | wc -l` -gt 0
+      if [ $? -ne 0 ] ; then
+	echo "ERROR: Entry for service $SERVNAME exists in $XINETDFILE, but is wrong." >&2
+	return 9
+      else
+	return 0
+      fi
+    fi
+  fi
+
+  if [ $CHECKONLY = yes ] ; then
+    return 0
+  fi
+
+  if [ $USE_XINETD = no ] ; then
+    echo "$SERVNAME	$SOCKTYPE	$PROT	$FLAGS	$USERNAME	$PROGRAM" >> $INETDCONF
+    RST=$?
+  else
+    cut -c10- >> "$XINETDFILE" << EOF
+       > 
+       > service $SERVNAME
+       > {
+       >         flags           = REUSE NAMEINARGS
+       >         socket_type     = $SOCKTYPE
+       >         protocol        = $PROT
+       >         wait            = $WAITYESNO
+       >         user            = $USERNAME
+       >         server          = $SERVERPROG
+       >         server_args     = $SERVER_ARGS
+       > }
+EOF
+    RST=$?
+  fi
+
+  return $RST
+)
+}
+
+#
+# check and remove inetd entry
+#
+check_rm_inetd(){
+(
+  SERVNAME="$1"
+  SOCKTYPE="$2"
+  PROT="$3"
+
+  if [ $USE_XINETD = no ] ; then
+    grep "^$SERVNAME[ 	][ 	]*$SOCKTYPE[ 	][ 	]*$PROT[ 	]" "$INETDCONF" >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then
+      return 0
+    fi
+
+    /bin/cp -p "$INETDCONF" "$INETDCONF".new.$$	# also transfer file mode ...
+    grep -v "^$SERVNAME[ 	][ 	]*$SOCKTYPE[ 	][ 	]*$PROT[ 	]" "$INETDCONF" > "$INETDCONF".new.$$
+    N1=`diff "$INETDCONF" "$INETDCONF".new.$$ | grep '^[<>]' | wc -l`
+    N2=`diff "$INETDCONF" "$INETDCONF".new.$$ | grep -v '^[<>]' | wc -l`
+    if [ $N1 -ne 1 -o $N2 -ne 1 ] ; then
+      echo "ERROR: Removing entry from $INETDCONF failed." >&2
+      return 11
+    fi
+
+    /bin/mv "$INETDCONF".new.$$ "$INETDCONF"
+  else
+    if [ `get_xinetd_entry "$SERVNAME" "$XINETDFILE" | wc -l` -lt 1 ] ; then
+	return 0
+    fi
+
+    /bin/cp -p "$XINETDFILE" "$XINETDFILE".new.$$	# also transfer file mode ...
+    strip_xinetd_entry "$SERVNAME" "$XINETDFILE" | comb_empty_lines > "$XINETDFILE".new.$$
+## this is too heavy to check
+#    diff "$XINETDFILE" "$XINETDFILE".new.$$ | egrep '^<[ 	]*[^ 	]' >/dev/null
+#    if [ $? -eq 0 ] ; then
+#      echo "ERROR: Removing entry from $INETDCONF failed." >&2
+#      return 11
+#    fi
+
+    /bin/mv "$XINETDFILE".new.$$ "$XINETDFILE"
+  fi
+)
+}
+
+find_program getent >/dev/null
+if [ $? -ne 0 ] ; then
+getent(){
+(
+  egrep '^[^:]*:[^:]*:'"$2": /etc/"$1"
+  RST=$?
+  if [ $RST -ne 0 ] ; then
+    egrep '^'"$2": /etc/"$1"
+    RST=$?
+  fi
+  return $RST
+)
+}
+fi
+
+if echo "$PROGNAME" | egrep '^(postinst(all)?|checkinstall|prereq)' >/dev/null ; then
+  CHECKFLAG=""
+  if echo "$PROGNAME" | egrep '^(checkinstall|prereq)' >/dev/null ; then
+    CHECKFLAG="-n"
+  fi
+
+  check_add_group $CHECKFLAG "$BACKUPGROUP" "$BACKUPGROUPID" \
+   && check_add_user $CHECKFLAG "$BACKUPUSER" "$BACKUPUSERID" "$BACKUPGROUPID"
+  EST=$?
+  if [ $EST -ne 0 ] ; then
+    echo "ERROR: Could not add entry to $PASSWDFILE" >&2
+    exit $EST
+  fi
+
+  if [ $TARGET != client ] ; then
+    check_add_inetd $CHECKFLAG $SERVICENAME stream tcp nowait root "@serverbindir@/afserver @serverbindir@/afserver @serverconfdir@/@serverconf@" \
+     && check_add_inetd $CHECKFLAG $MSERVICENAME stream tcp wait root "@serverbindir@/afmserver @serverbindir@/afmserver @serverconfdir@/@serverconf@"
+    EST=$?
+    if [ $EST -ne 0 ] ; then
+      echo "ERROR: Could not add entry to $INETDCONF" >&2
+      exit $EST
+    fi
+  fi
+
+  check_add_service $CHECKFLAG $SERVICENAME "$BACKUPPORT"/tcp \
+   && check_add_service $CHECKFLAG $MSERVICENAME "$MBACKUPPORT"/tcp
+  EST=$?
+  if [ $EST -ne 0 ] ; then
+    echo "ERROR: Could not create entry to $SERVICES" >&2
+    exit $EST
+  fi
+fi
+if echo "$PROGNAME" | egrep '^prere?m(ove)?' >/dev/null ; then
+  check_rm_inetd $SERVICENAME stream tcp \
+   && check_rm_inetd $MSERVICENAME stream tcp
+  if [ $? -ne 0 ] ; then
+    echo "WARNING: Could not remove entry from $INETDCONF" >&2
+  fi
+
+  check_rm_user "$BACKUPUSER" "$BACKUPUSERID"
+  if [ $? -ne 0 ] ; then
+    echo "WARNING: Could not remove entry from $PASSWDFILE" >&2
+  fi
+
+  check_rm_group "$BACKUPGROUP"
+  if [ $? -ne 0 ] ; then
+    echo "WARNING: Could not remove entry from $GROUPFILE" >&2
+  fi
+
+  check_rm_service $SERVICENAME "$BACKUPPORT"/tcp \
+   && check_rm_service $MSERVICENAME "$MBACKUPPORT"/tcp
+  if [ $? -ne 0 ] ; then
+    echo "WARNING: Could not remove entry from $SERVICES" >&2
+  fi
+fi
+
+echo "$PROGNAME" | egrep '^(checkinstall|prereq)' >/dev/null
+if [ $? -ne 0 ] ; then
+  if [ $USE_XINETD = no ] ; then
+    PID=`$PSALL|grep -v grep|egrep '[ 	/]inetd([ 	].*)?$'|awk '{print $2}'`
+    if [ _"$PID" != _ ] ; then
+      kill -HUP $PID
+    else
+      echo "WARNING: No (x)inetd running. Remote start not working." >&2
+    fi
+  else
+    PID=`$PSALL|grep -v grep|egrep '[ 	/]xinetd([ 	].*)?$'|awk '{print $2}'`
+    if [ _"$PID" != _ ] ; then
+      kill -USR2 $PID
+    else
+      echo "WARNING: No (x)inetd running. Remote start not working." >&2
+    fi
+  fi
+fi

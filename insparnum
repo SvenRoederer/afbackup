@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# $RCSfile: insparnum,v $
+#
+
+filename="$3"
+startnum="$1"
+endnum="$2"
+
+usage(){
+  echo `basename $1` '<start-number> <end-number> <filename>'
+  exit 2
+}
+
+if [ $# -ne 3 ] ; then
+  usage $0
+fi
+
+echo "$startnum"|grep '^[1-9][0-9]*$' >/dev/null
+EST1=$?
+echo "$endnum"|grep '^[1-9][0-9]*$' >/dev/null
+if [ $? -ne 0 -o $EST1 -ne 0 ] ; then
+  echo "Error: Argument 1 and 2 must be numbers" >&2
+  usage $0
+fi
+if [ $startnum -ge $endnum ] ; then
+  echo "Error: Argument 1 must be a smaller number than argument 2" >&2
+  usage $0
+fi
+
+if [ ! -r "$filename" ] ; then
+  echo "Error: File $filename must be readable" >&2
+  exit 3
+fi
+
+head -1 "$filename" | egrep '/bin/(wi|tcl)sh' >/dev/null
+if [ $? -eq 0 ] ; then
+  STARTCHRS="("
+  ENDCHRS=")"
+else
+  STARTCHRS="__"
+  ENDCHRS=""
+fi
+
+TMPFILE=/tmp/modscipt.$$
+TMPFILE2="$TMPFILE".2
+/bin/rm -f $TMPFILE $TMPFILE2
+if [ -f $TMPFILE -o -f $TMPFILE2 ] ; then
+  echo "Error: Cannot remove file $TMPFILE" >&2
+  exit 4
+fi
+
+cp "$filename" $TMPFILE
+if [ $? -ne 0 ] ; then
+  echo "Error: cannot copy file $filename" >&2
+  /bin/rm -f $TMPFILE $TMPFILE2
+  exit 5
+fi
+
+I=$endnum
+while [ $I -ge $startnum ] ; do
+  I_1=`expr $I + 1`
+  sed s/"$STARTCHRS$I$ENDCHRS/$STARTCHRS$I_1$ENDCHRS"/g $TMPFILE > $TMPFILE2
+  if [ $? -ne 0 ] ; then
+    echo "Error occured during rewrite of $TMPFILE." >&2
+    /bin/rm -f $TMPFILE $TMPFILE2
+    exit 6
+  fi
+  /bin/mv $TMPFILE2 $TMPFILE
+  if [ $? -ne 0 ] ; then
+    echo "Error occured during rename of $TMPFILE2 to $TMPFILE." >&2
+    /bin/rm -f $TMPFILE $TMPFILE2
+    exit 7
+  fi
+
+  I=`expr $I - 1`
+done
+
+cat $TMPFILE
+/bin/rm -f $TMPFILE $TMPFILE2

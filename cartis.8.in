@@ -1,0 +1,86 @@
+.TH CARTIS 8 "2001 April 1" "Debian Project"
+.SH NAME
+cartis \- Administration of the cartridge numbers.
+.SH SYNOPSIS      
+.B cartis 
+<number>
+.br
+.B cartis 
+-i <ins-cart> <ins-file> [-S <cartset>]
+.SH DESCRIPTION
+The first form of this command is used to give the backup
+server a hint, which cartridge number is currently placed inside
+the streamer. If the tape has a valid afbackup label, then it
+is not necessary to tell the server, what tape is in the drive,
+cause it will try to read and evaluate it. If the tape is not
+labeled (e.g. if it has not been used before), the server has
+no chance to find out the number and must maintain it's own
+information about it. The server will automatically label new
+tapes, if they don't already have a valid label, the next time,
+a write operation is attempted on the tape. By issuing cartis
+after inserting an unlabeled tape you tell the server, what
+tape it should become. If you are not initially starting with
+cartridge number 1 and an unlabeled tape, you have to enter
+this command at least one time.
+.PP  
+The second form instructs the server to write the next backup
+data stream to cartridge number 
+.I <ins-cart>, 
+starting at file number 
+.I <ins-file>. 
+This is useful, if for some reason you want
+to take out the cartridge which is currently inside the drive and
+continue on a different tape or at the beginning of the tape
+you have put in instead. Note, that it usually causes problems,
+if you try to write at a tape position, that is not at the end
+of the last file, that has been written to tape. So set the
+.I <ins-file> 
+number only to a value different from 1, if you
+really know, that this is the end of the used tape area. In
+other words, if n files are on tape, set 
+.I <ins-file> 
+to n+1. So
+if you don't know n, you're better off starting to write at the
+beginning of a new tape entering the appropriate cartis-command.
+To find out, what the server is thinking, which cartridge is
+currently inside the drive, you can give the command
+.B afclient -q  
+on any client. If the value, that
+is printed out, does not reflect the reality, you have to inform
+the backup server about this fact via this command entering both
+forms of this command. The first form with the real cartridge
+number and the second one with the next cartridge number and a 1
+as file number. Then the next backup goes to the next cartridge.
+You may also set the next backup writing position to the current
+file number on the correct cartridge. To find out, where the
+server side intents to write the next backup, enter the command
+.B afclient -Q  
+on any client.
+.PP  
+It makes sense to check the consistency from time to time, if
+the backup server has the right idea of the current cartridge.
+.PP
+.TP 
+.B -S <cartset>    
+The cartridge set to use, where 
+.I <cartset> 
+is the
+number of a valid cartridge set on the server
+side. Default is 1
+.SH FILES
+.IP @servervardir@
+Some internal state information of the server.
+.IP @serverlogdir@
+The directory for logging the server actions.
+.SH SEE ALSO
+afclientconfig(8), xafclientconfig(8), full_backup(8),
+incr_backup(8), afverify(8), afrestore(8), xafrestore(8),
+update_indexes(8), 
+copy_tape(8), afclient.conf(8), afserver(8), afmserver(8),
+afserver.conf(8), tar(1) 
+.SH AUTHOR
+.B afbackup 
+was written by Albert Fluegel (af@muc.de). This manpage was
+extracted from the text docs by Christian Meder 
+(meder@isr.uni-stuttgart.de).
+

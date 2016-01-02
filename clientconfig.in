@@ -1,0 +1,707 @@
+#!/bin/sh
+################### Start of $RCSfile: clientconfig.in,v $ ##################
+#
+# $Source: /home/alb/afbackup/afbackup-3.5.8.12/RCS/clientconfig.in,v $
+# $Id: clientconfig.in,v 1.4 2005/02/13 14:09:28 alb Exp alb $
+# $Date: 2005/02/13 14:09:28 $
+# $Author: alb $
+#
+#
+####### description ################################################
+#
+#
+#
+####################################################################
+
+#
+# 2 configurable parts
+#
+
+if [ $# -gt 1 ] ; then
+  echo `T_ "Usage"`": `basename $0` [ <configfile> ]"
+  exit 2
+fi
+
+cleantmp(){
+  exit 3
+}
+
+echo_n(){
+  echo "$@" | $AWK '{printf "%s",$0}'
+}
+
+matches(){
+  N=`echo "$1" | egrep -i "$2" | wc -l`
+
+  echo $N
+
+  if [ $N -lt 1 ] ; then
+    return 1
+  fi
+
+  return 0
+}
+
+find_program(){
+  for dir in `echo $PATH | tr : " "` ; do
+    if [ -x "$dir"/"$1" ] ; then
+      echo "$dir"/"$1"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+T_(){
+  if [ _"$HAVE_GETTEXT" = _ ] ; then
+    GETTEXT=`find_program gettext`
+
+    if [ _"$GETTEXT" = _ ] ; then
+      HAVE_GETTEXT=no
+    else
+      HAVE_GETTEXT=yes
+
+      TEXTDOMAIN="@PACKAGE@"
+      TEXTDOMAINDIR="@commondatadir@/locale"
+      export TEXTDOMAIN TEXTDOMAINDIR
+    fi
+  fi
+
+  if [ $HAVE_GETTEXT = yes ] ; then
+    $GETTEXT "$1"
+    return $?
+  fi
+
+  echo "$1"
+}
+
+TN_(){
+  echo "$1"
+}
+
+repl_backsl_seq(){
+  $AWK '{a = "";while(a != $0){a=$0;sub("\\\\n","\n");sub("\\\\t","\t");}; print}'
+}
+
+fmt_output(){
+  $AWK '{printf "%s\n.br\n",$0}' | nroff | $AWK '{a[NR] = $0;n = NR;}END{while(n > 1 && match(a[n], "^[ 	]*$")) n--; for(i = 1; i <= n; i++) printf "%s\n",a[i];}'
+}
+
+spcext(){
+  echo "$1" | awk '{n = '"$2"'; printf "%s",$0; while(length($0) < n) { printf " "; n-- }}'
+}
+
+resolvepath(){
+  oldpath="$1"
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo "$oldpath"|sed 's#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      set oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  if [ _`echo "$oldpath"|cut -c1` = _"/" ] ; then
+    oldhead="/"`echo "$oldpath"|cut -c2-|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|cut -c2-|sed 's#^[^/]*/##'`
+  else
+    oldhead=`echo "$oldpath"|sed 's#/.*$##g'`
+    oldtail=`echo "$oldpath"|sed 's#^[^/]*/##'`
+  fi
+  if [ _"$oldpath" = _"$oldhead" ] ; then
+    oldtail=""
+  fi
+
+  while true ; do
+    if [ _"$oldhead" = _ ] ; then
+      oldhead="."
+    fi
+    if [ ! -f "$oldhead" -a ! -d "$oldhead" ] ; then
+      echo ""
+      return 0
+    fi
+
+    linkchar=`ls -ld "$oldhead"|cut -c1`
+    if [ $linkchar = 'l' ] ; then
+      points_to=`ls -ld "$oldhead"|sed 's#^.*->[ 	]*##g'`
+
+      if [ `echo "$points_to"|cut -c1` = '/' ] ; then
+        newpath="$points_to"/"$oldtail"
+      else
+        newpath=`dirname "$oldhead"`/"$points_to"/"$oldtail"
+      fi
+
+      echo `resolvepath "$newpath"`
+      return $?
+    fi
+
+    if [ _"$oldtail" = _ ] ; then
+      oldpath="$oldhead"
+      break
+    fi
+
+    oldhead="$oldhead"/`echo "$oldtail"|sed 's#/.*$##g'`
+    if [ `echo "$oldtail"|grep /|wc -l` -lt 1 ] ; then
+      oldtail=''
+    else
+      oldtail=`echo "$oldtail"|sed 's#^[^/]*/##g'`
+    fi
+  done
+
+  newpath="$oldpath"_
+  while [ _"$newpath" != _"$oldpath" ] ; do
+    newpath="$oldpath"
+
+    oldpath=`echo $oldpath|sed 's#[^/][^/]*/\.\./##g;s#[^/][^/]*/\.\.$##g;s#/\./#/#g;s#/\.$##g;s#//*#/#g;s#^\./##g;s#^/\.\./#/#g'`
+
+    if [ "$oldpath" != '/' ] ; then
+      oldpath=`echo "$oldpath"|sed 's#/*$##g'`
+    fi
+  done
+
+  echo "$newpath"
+  return 0
+}
+
+set_var_params(){
+  if [ $num_var_sp_idx -gt 0 ] ; then
+    eval num_var_params='"$'values__$num_var_sp_idx'"'
+
+    if [ _"$num_var_params" = _ ] ; then
+      num_var_params=1
+    fi
+  else
+    num_var_params=0
+  fi
+
+  num_total_params=`expr $num_fix_params + $num_var_params`
+  first_var_param=`expr $num_fix_params + 1`
+}
+
+if [ _"$BACKUP_HOME" = _ ] ; then
+  p="$0"
+  pnam=$p
+  pnam=`basename $pnam`
+  if [ "$pnam" = "$0" ] ; then
+    p=`find_program "$pnam"`
+  fi
+  if [ _`echo "$p"|cut -c1` != "_/" ] ; then
+    p="`pwd`/$p"
+  fi
+
+  BACKUP_HOME=`resolvepath "$p"`
+  BINDIR=`dirname "$BACKUP_HOME"`
+  SBINDIR="$BINDIR"
+  BACKUP_HOME="$BINDIR"
+  if [ `basename "$BACKUP_HOME"` = bin -o `basename "$BACKUP_HOME"` = sbin ] ; then
+    BACKUP_HOME=`dirname "$BACKUP_HOME"`
+  fi
+  export BACKUP_HOME
+fi
+
+if [ _"$BINDIR" = _ ] ; then
+  BINDIR="$BACKUP_HOME/bin"
+fi
+if [ _"$SBINDIR" = _ ] ; then
+  SBINDIR="$BACKUP_HOME/sbin"
+fi
+
+PATH="$BINDIR":"$SBINDIR":"$PATH"
+export PATH
+
+unset AWK
+
+# the solaris' awk is a piece of shit
+for awk in nawk gawk awk ; do
+  AWK=`find_program $awk`
+  if [ _"$AWK" != _ ] ; then
+    break
+  fi
+done
+
+if [ _"$AWK" = _ ] ; then
+  echo `T_ "No awk ? Is this really a lovely UNIX ?"`
+  echo `T_ "Sorry. I have to exit."`
+  exit 1
+fi
+
+if [ _"$PAGER" = _ ] ; then
+  PAGER=`find_program less`
+  if [ _"$PAGER" = _ ] ; then
+    PAGER=more
+  else
+    PAGER="$PAGER -eX"
+  fi
+fi
+
+if [ $# -eq 1 ] ; then
+  configfile="$1"
+else
+  found=0
+
+#
+# configurable part: configuration files to look for
+#
+  configfiles="$BACKUP_HOME/etc/backup.conf $BACKUP_HOME/lib/backup.conf /etc/buclient.conf /etc/afbuclient.conf /etc/afclient.conf /etc/afbackup/client.conf @clientconfdir@/@clientconf@ @clientlibdir@/@clientconf@"
+#
+# end configurable part
+#
+
+  for configfile in $configfiles ; do
+    if [ -r $configfile ] ; then
+      found=1
+      break
+    fi
+  done
+  if [ $found -eq 0 ] ; then
+    echo `T_ "No configuration file found. Exiting."`
+    exit 2
+  fi
+fi
+
+configfile=`resolvepath $configfile`
+
+if [ ! -r $configfile ] ; then
+  echo `T_ "Error: Cannot read configuration file"`" $configfile. "`T_ "Exiting."`
+  exit 3
+fi
+
+configlines="`cat $configfile`"
+
+getparam(){
+  if [ _"$configlines" = _ ] ; then
+    configlines="`cat $configfile`"
+  fi
+
+  echo "$configlines" | $AWK '/^[ 	]*'"$1"'/{sub("'"$1"'[ 	]*",""); print}'
+}
+
+promptlen=32
+
+#
+# configurable part: the parameter values
+#
+
+num_fix_params=35
+num_var_sp_idx=35
+
+comments__1=`TN_ "\nThe backup server hosts"`
+comments__2=`TN_ "\nThe backup server port-numbers"`
+comments__3=`TN_ "\nThe cartridge sets to use"`
+comments__4=`TN_ "\nServer messages output configuration"`
+comments__5=`TN_ "\nThe programs to process the files, that are saved, and the counterpart\nto do the reverse processing, if desired. In most cases compression\nand uncompression"`
+comments__6=''
+comments__7=`TN_ "\nLevel of built-in compression, if supported."`
+comments__8=`TN_ "\nThe part of the file, where the saved filenames
+are stored (current number appended)"`
+comments__9=`TN_ "\nThe programs to process the file indexes and the counterpart to do\nthe reverse processing, if desired. In most cases compression\nand uncompression"`
+comments__10=''
+comments__11=`TN_ "\nWhether to process the saved files"`
+comments__12=`TN_ "\nWhether to process the index files"`
+comments__13=`TN_ "\nPatterns for names of files, no preprocessing
+is performed on"`
+comments__14=`TN_ "\nThe number of such files, that are maintained.
+More (older ones) are removed."`
+comments__15=`TN_ "Alternatively the maximum age of index files to be kept in days.
+Older ones are removed"`
+comments__16=`TN_ "\nThe maximum number of previous index files, that are scanned for restore"`
+comments__17=`TN_ "\nAlternatively the maximum age of index files in days to be scanned for
+restore"`
+comments__18=`TN_ "\nFor restore: Check, whether the user has sufficient permissions
+to restore files to the same place, from where they were saved"`
+comments__19=`TN_ "\nThe file where to log events"`
+comments__20=`TN_ "\nThe directory for varying files"`
+comments__21=`TN_ "\nThe identifier for the client (needed, if several afbackup
+installations reside on one host)"`
+comments__22=`TN_ "\nLocking file to prevent several client program starts"`
+comments__23=`TN_ "\nThe file with the authentication encryption key"`
+comments__24=`TN_ "\nThe program to save startup information"`
+comments__25=`TN_ "\nThe program to be run before attempting a backup. If this program
+returns an exit status unequal to 0, no backup is performed."`
+comments__26=`TN_ "\nThe program to be executed when everything requested is done.
+%l is replaced by the filename-logfile, %r by the file with
+the report statistics, %e by the overall exit status,
+%i with the minimum restore information"`
+comments__27=`TN_ "\nThe directory, where to run the backup"`
+comments__28=`TN_ "\nNames of files to be skipped during the backup
+(wildcards are allowed)"`
+comments__29=`TN_ "\nNames of directories to be skipped during the backup
+(wildcards are allowed)"`
+comments__30=`TN_ "\nName of a file containing a (pattern-) list of files
+and directories to be skipped during the backup"`
+comments__31=`TN_ "\nFilesystem types to save, skip (-) or prune (/)"`
+comments__32=`TN_ "\nWhether to write CRC32 checksums to the backup or not"`
+comments__33=`TN_ "\nWhether to use the ctime in addition to mtime during incremental backup"`
+comments__34=`TN_ "\nWhether to report the backup progress in the progress file"`
+comments__35=`TN_ "\nThe number of parts of the full backup (if this takes a long time)"`
+comments__36=`TN_ "\nThe subdirectories of the RootDirectory to backup
+(wildcards are allowed)"`
+comments__37=`TN_ "\nThe subdirectories of the RootDirectory to backup, part #num#
+(wildcards are allowed)"`
+
+names__1='BackupHosts'
+names__2='BackupPorts'
+names__3='CartridgeSets'
+names__4='PrintServerMessages'
+names__5='ProcessCmd'
+names__6='UnprocessCmd'
+names__7='BuiltinCompressLevel'
+names__8='IndexFilePart'
+names__9='IndexProcessCmd'
+names__10='IndexUnprocessCmd'
+names__11='ProcessBackupedFiles'
+names__12='ProcessIndexFiles'
+names__13='DoNotProcess'
+names__14='NumIndexesToStore'
+names__15='DaysToStoreIndexes'
+names__16='NumIndexesToScan'
+names__17='DaysToScanIndexes'
+names__18='CheckRestoreAccessPerms'
+names__19='LoggingFile'
+names__20='VarDirectory'
+names__21='ClientIdentifier'
+names__22='LockFile'
+names__23='EncryptionKeyFile'
+names__24='StartupInfoProgram'
+names__25='InitProgram'
+names__26='ExitProgram'
+names__27='RootDirectory'
+names__28='FilesToSkip'
+names__29='DirsToSkip'
+names__30='ExcludeListFile'
+names__31='FilesystemTypes'
+names__32='WriteChecksums'
+names__33='UseCTime'
+names__34='ReportProgress'
+names__35='NumBackupParts'
+names__36='DirsToBackup'
+names__37='DirsToBackup#num#'
+
+patterns__1='[Bb]ackup[ 	_-]*[Hh]osts?:?[ 	]*'
+patterns__2='[Bb]ackup[ 	_-]*[Pp]orts?:?[ 	]*'
+patterns__3='[Cc]artr?i?d?g?e?[-_ 	]*[Ss]ets?:?'
+patterns__4='[Pp]rint[-_ 	]*[Ss]e?r?ve?r?[-_ 	]*[Mm]e?ss?a?ge?s?:?[ 	]*'
+patterns__5='([Pp]rocess|[Cc]ompress)[-_ 	]*[Cc]o?m?ma?n?d:?[ 	]*'
+patterns__6='([Uu]nprocess|[Uu]ncompress)[-_ 	]*[Cc]o?m?ma?n?d:?[ 	]*'
+patterns__7='[Bb]uilt[-_ 	]*[iI]n[-_ 	]*[Cc]ompre?s?s?i?o?n?[-_ 	]*([Ll]evel)?:?'
+patterns__8='[Ii]ndex[ 	_-]*[Ff]ile[ 	_-]*[Pp]art:?[ 	]*'
+patterns__9='[Ii]ndex[ 	_-]*([Pp]rocess|[Cc]ompress)[-_ 	]*[Cc]o?m?ma?n?d:?[ 	]*'
+patterns__10='[Ii]ndex[ 	_-]*([Uu]nprocess|[Uu]ncompress)[-_ 	]*[Cc]o?m?ma?n?d:?[ 	]*'
+patterns__11='([Pp]rocess|[Cc]ompress)[-_ 	]*[Bb]ackupe?d?[-_ 	]*([Ff]iles)?:?'
+patterns__12='([Pp]rocess|[Cc]ompress)[-_ 	]*([Ll]ogg?i?n?g?[-_ 	]*[Ff]iles?|[Ii]n?d(e?x|i?c)e?s?([Ff]iles?)?):?'
+patterns__13="[Dd]o[-_ 	]*[Nn].?[o]?t[-_ 	]*([Pp]rocess|[Cc]ompress):?[ 	]*"
+patterns__14='[Nn]um[-_ 	]*[Ii]nd(ic|ex)es[-_ 	]*[Tt]o[ 	_-]*[Ss]tore:?'
+patterns__15='[Dd]ays[-_ 	]*[Tt]o[ 	_-]*[Ss]tore[-_ 	]*[Ii]nd(ic|ex)es:?'
+patterns__16='[Nn]um[-_ 	]*[Ii]nd(ic|ex)es[-_ 	]*[Tt]o[ 	_-]*[Ss]can:?'
+patterns__17='[Dd]ays[-_ 	]*[Tt]o[ 	_-]*[Ss]can[-_ 	]*[Ii]nd(ic|ex)es:?'
+patterns__18='[Cc]heck[-_ 	]*[Rr]estore[-_ 	]*[Aa]ccess[-_ 	]*[Pp]ermi?s?s?i?o?n?s?:?'
+patterns__19='[Ll]ogg?i?n?g?[-_ 	]*[Ff]ile:?[ 	]*'
+patterns__20='[Vv][Aa][Rr][-_ 	]*[Dd]ire?c?t?o?r?y?:?[ 	]*'
+patterns__21='([Cc]lient[-_ 	]*)?[Ii]denti(ty|fier):?[ 	]*'
+patterns__22='[Ll]ocki?n?g?[-_ 	]*[Ff]ile:?'
+patterns__23='([Ee]n)?[Cc]rypti?o?n?[ 	_-]*[Kk]ey[ 	_-]*[Ff]ile:?[ 	]*'
+patterns__24='[Ss]tartu?p?[-_ 	]*[Ii]nfo[-_ 	]*[Pp]rogram:?[ 	]*'
+patterns__25='[Ii]nit[-_ 	]*[Pp]rogram:?[ 	]*'
+patterns__26='[Ee]xit[-_ 	]*[Pp]rogram:?[ 	]*'
+patterns__27='[Rr]oot[ 	_-]*[Dd]ire?c?t?o?r?y?:?[ 	]*'
+patterns__28='[Ff]iles[ 	_-]*[Tt]o[ 	_-]*[Ss]kip:?[ 	]*'
+patterns__29='[Dd]ire?c?t?o?r?i?e?s[ 	_-]*[Tt]o[ 	_-]*[Ss]kip:?[ 	]*'
+patterns__30='[Ee]xclu?d?e?[-_ 	]*[Ll]ist[-_ 	]*[Ff]ile[-_ 	]*[Nn]?a?m?e?:?[ 	]*'
+patterns__31='[Ff]i?l?e?[ 	_-]*[Ss]y?s?t?e?m?[ 	_-]*[Tt]ypes:?'
+patterns__32='([Ww]rite)?[Cc]heck[ 	_-]*[Ss]um(s|ming)?:?'
+patterns__33='[Uu]se[-_ 	]*[Cc][-_ 	]*[Tt]ime:?'
+patterns__34='([Rr]e?po?r?t?[-_ 	]*)?[Pp]rogress:?'
+patterns__35='[Nn]um[-_ 	]*[Bb]ackup[-_ 	]*[Pp]arts:?'
+patterns__36='[Dd]ire?c?t?o?r?i?e?s[ 	_-]*[Tt]o[ 	_-]*[Bb]ackup:?[ 	]*'
+patterns__37='[Dd]ire?c?t?o?r?i?e?s[ 	_-]*[Tt]o[ 	_-]*[Bb]ackup[ 	]*#num#[ 	]*:?'
+
+prompts__1=`TN_ "Backup server hostnames:"`
+prompts__2=`TN_ "Backup server port-numbers:"`
+prompts__3=`TN_ "Cartridge-sets to use:"`
+prompts__4=`TN_ "Server message output configuration:"`
+prompts__5=`TN_ "File processing program:"`
+prompts__6=`TN_ "File unprocessing program:"`
+prompts__7=`TN_ "Built-in Compression Level:"`
+prompts__8=`TN_ "Index file part:"`
+prompts__9=`TN_ "Index processing program:"`
+prompts__10=`TN_ "Index unprocessing program:"`
+prompts__11=`TN_ "Process saved files:"`
+prompts__12=`TN_ "Process index files:"`
+prompts__13=`TN_ "Files not to be processed:"`
+prompts__14=`TN_ "Number of saved index files:"`
+prompts__15=`TN_ "Time to keep index files in days:"`
+prompts__16=`TN_ "Number of scanned index files:"`
+prompts__17=`TN_ "Scan index files of previous days:"`
+prompts__18=`TN_ "Test access rights during restore:"`
+prompts__19=`TN_ "Event/error-logging file:"`
+prompts__20=`TN_ "Var-Directory:"`
+prompts__21=`TN_ "Client-Identifier:"`
+prompts__22=`TN_ "Lock-file:"`
+prompts__23=`TN_ "Encryption-Key-File:"`
+prompts__24=`TN_ "Startup info logging program:"`
+prompts__25=`TN_ "Program to run before backup:"`
+prompts__26=`TN_ "Program to run at exit:"`
+prompts__27=`TN_ "Working directory:"`
+prompts__28=`TN_ "Names of files to skip:"`
+prompts__29=`TN_ "Names of directories to skip:"`
+prompts__30=`TN_ "File with names to skip:"`
+prompts__31=`TN_ "Filesystem types to save/skip:"`
+prompts__32=`TN_ "Write CRC32 checksums:"`
+prompts__33=`TN_ "Evaluate also the ctime:"`
+prompts__34=`TN_ "Report Progress to file:"`
+prompts__35=`TN_ "Number of full backup parts:"`
+prompts__36=`TN_ "Directories to backup:"`
+prompts__37=`TN_ "Directories to backup, part #num#:"`
+
+promptlen=35
+
+helps__1=`TN_ "These are the hostnames of the machines where a server side of the backup service resides. Some kind of streamer device must be connected to these machines. The files and directories, that should be saved, are packed, eventually processed somehow, and then sent to the named machines, who writes them to the connected device. The named machines are tested for service availability. If a server is busy, the next one is tried. BackupPorts can be configured in the same order as the host entries supplied here. The servers in this list may be separated by whitespace and/or commas. If the backup server is the same host as the client, the use of the name localhost is recommended."`
+helps__2=`TN_ "These are the port numbers on the backup server machines, where the backup server processes listen. The default is 2988 or the number found in the file /etc/services (or in NIS if it is configured). Several ports can be supplied, positionally according to the backup server hosts supplied in the BackupHosts parameter. The numbers can be separated by whitespace and/or commas. If fewer numbers are supplied than backup servers, the default port 2988 applies for the rest. If more port numbers are given, the superfluous ones are ignored."`
+helps__3=`TN_ "The cartridge sets on the server side to use for backups. They must be legal numbers between 1 and the number of cartridge sets configured on the appropriate server side. Several sets can be supplied, positionally according to the backup server hosts supplied in the BackupHosts parameter. The numbers can be separated by whitespace and/or commas. If fewer numbers are supplied than backup servers, the default set # 1 applies for the rest. If more cartridge set numbers are given, the superfluous ones are ignored."`
+helps__4=`TN_ "By default the server sends messages about current problems or required actions to a maintainer or, if determinable and configured, to the user on the client side. They cannot be seen as output on the client side. When this parameter is set, these messages are also output on the client side. The first word must consist of the letters b, v, r and c i.e. messages are output during backup, verify, restore, and/or copy-tape, depending on what letters appear. The next fields must name the respective single stream server ports or service names according to the configured ports in (2), i.e. wherever a multi stream port appears in the configuration in (2), here the respective single stream service must be named. If not given the values default to the ones configured in (2). If this parameter is not properly configured, the messages might not be seen on the client side for technical reasons."`
+helps__5=`TN_ "If you want your files to be processed during save (e.g. compressed), you can supply the name of the program that should perform the desired processing here. If you do so, you MUST also supply the appropriate unprocess- program. Note that this program may be specified with options but no shell-like constructions such as pipes, variables or wildcards. This program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"`
+helps__6=`TN_ "The counterpart to the processing program. You must either supply both process- and unprocess-program or neither of them. Like the process program, the unprocess-program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"`
+helps__7=`TN_ "A number, that specifies the level of built-in compression, if present, otherwise no built-in compression will be performed. If a process program is also specified, the order of processing is: First the data is piped through the external program and then built-in compression is done. Uncompressing works the other way round."`
+helps__8=`TN_ "The name of the file where the names of the saved files are stored. The current number is appended to this filename. The number is incremented each time a full backup starts. For pattern replacements see LoggingFile (19)."`
+helps__9=`TN_ "The program to preprocess the index file, in most cases some kind of compression. If this parameter is not set, it defaults to the setting of the ProcessCmd (5). If you set it, you MUST also supply the appropriate unprocess- program. Note that this program may be specified with options but no shell-like constructions such as pipes, variables or wildcards. This program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"`
+helps__10=`TN_ "The counterpart to the index processing program. If not given, it defaults to the setting of the UnprocessCmd (6). You must either supply both process- and unprocess-program or neither of them. Like the index process program, the unprocess-program must read standard input and write to standard output. For pattern replacements see LoggingFile (19)"`
+helps__11=`TN_ "This flag specifies, whether the files, that are saved, should be processed by the configured program."`
+helps__12=`TN_ "This flag specifies, whether the filename logging files (i.e. the index files) should be processed by the configured program."`
+helps__13=`TN_ "These patterns or filenames specify files, that no processing is attempted on. Normally this is done for all files. This might be unefficient, e.g. compressing files, that are already compressed, so their compression can be suppressed with this parameter. The value of this parameter must be a list separated by whitespace. Double quotes may enclose list elements."`
+helps__14=`TN_ "This number determines how many log files of previous full backups are saved. These files may serve for the restore of older files than those present in the current backup. Of course there must be sufficient space to hold all the backups. It doesn't help to save all the saved filenames but not to have them available on tape."`
+helps__15=`TN_ "Instead of the number of index files to be kept (previous parameter), their maximum age can be configured in days (floating point number allowed). Older index files will be automatically removed. If this parameter is configured and the previous one at the same time, the longer duration will be applied to avoid accidental removal of indexes on configuration errors."`
+helps__16=`TN_ "This is the maximum number of index files, that will be scanned during restore. This can be helpful, if it takes too much time to scan through all index files, what is done, if restrictions are given, such as before time, after time or certain tapes. This parameter can be overridden by option -N of afrestore."`
+helps__17=`TN_ "Instead of configuring the maximum number of index files to be scanned (previous parameter), their maximum age in days can be configured (floating point number allowed). This parameter can be overridden by option -O of afrestore."`
+helps__18=`TN_ "When this flag is set, during restore started by a normal user (not the superuser) it is checked, whether the user has sufficient access permissions in the directory, where the files are recovered. When relocating using option -C this is default behaviour. With this flag set it will be enforced also when not relocating. This has pros and cons. It might be desirable, that users can also restore their own files in directories owned by root (e.g. at-job files or the CDE calendar stuff). On the other side this might be considered a security problem."`
+helps__19=`TN_ "The name of a file error messages or other notable events are written to. A dash - stands for no logging. The pattern %V will be replaced with the full path to the var-directory, %B with the bin directory, %L with the lib directory, %C with the configuration directory and %I with the logging directory (usually == %V)"`
+helps__20=`TN_ "The directory, where varying files should be put in. These files must not be deleted. The information they contain is necessary for restore."`
+helps__21=`TN_ "The identifier for the client. Default: The official hostname. This entry is required, it several afbackup clients reside on one host. In this case the multi stream server must be able to distinguish the clients to distribute the pieces of backup data on tape correctly. Otherwise the data would be mixed up and be unusable by the reading client."`
+helps__22=`TN_ "To prevent client programs from being started several times a lock file is created and this is it's name. For pattern replacements see LoggingFile (19)."`
+helps__23=`TN_ "The file containing the encryption key for authenticating the backup client to the server. This file must contain at least 5 characters and must not have read permission for group or world. For pattern replacements see LoggingFile (19)."`
+helps__24=`TN_ "This is the (shell-) command to run to save the startup information of an incremental or full backup, sometimes called bootstrap information. This program should read the standard input and do something reasonable with it, e.g. append it to some file. The produced information can be used to recover from a hard crash, when the files are lost, that are containing the names of the saved files. Therefore this information should not be saved locally on the client host, but e.g. on an NFS-mounted filesystem, a floppy disc or in a mail-file (then this command should be sth. like: mail someuser). For pattern replacements see LoggingFile (19)"`
+helps__25=`TN_ "A (shell-) command to be run before a backup is attempted. If this program returns an exit status unequal to 0, no backup is performed. This parameter makes only sense when backup is started remotely, cause in that case no shell-command can be supplied. If backup is started locally, there is no problem to run whatever is necessery before the backup explicitly. For pattern replacements see LoggingFile (19)"`
+helps__26=`TN_ "This parameter may specify a (shell-) command to run at exit time of a full or incremental backup. The following patterns are replaced as explained:\n %l  by the name of the file containing the filelists\n %r  by the name of the file containing statistics (this\n     file is automatically removed after execution of this\n     program)\n %e  by the overall exit status\n %i  with the minimum restore information.\nFor more pattern replacements see LoggingFile (19)"`
+helps__27=`TN_ "This is the directory, the backup client changes to before packing the files and directories. Their names should be supplied relative to this directory, e.g. ./home ."`
+helps__28=`TN_ "These are the names of files, that should not be saved. Wildcards in the usual manner are allowed (shell-style or glob-style, furthermore path-patterns in the style of GNU's find program with option -path. Note, that wildcards also match directory separators i.e. slashes, e.g. a*d matches ab/cd). E.g. it does not usually make much sense to back up object files, as they can be easily reproduced from existing program sources."`
+helps__29=`TN_ "These are the names of directories, that should not be saved. Wildcards in the usual manner are allowed (shell-style or glob-style, furthermore path-patterns in the style of GNU's find program with option -path. Note, that wildcards also match directory separators i.e. slashes, e.g. a*d matches ab/cd). E.g. it does not usually make much sense to back up the lost+found directory or such only containing object files, as they can be easily reproduced from existing program sources."`
+helps__30=`TN_ "A file with the name supplied here can be present in any directory. It should contain a list of file-/directory-names (or glob-style patterns), that should be skipped during backup. Each entry must be in an own line. The given names/patterns are valid only in the same directory, where the file resides. Thus each directory can have it's individual exclusion list."`
+helps__31=`TN_ "A list of filesystem types, separated by whitespace and/or commas. The type names can be prefixed with a plus, what is identical with no prefix, with a dash - or a slash / . No prefix or a plus means, that only files in filesystems of the given type are saved, no others. A dash (e.g. -autofs ) means, files in a filesystem of the named type are not saved, nonetheless such filesystems are traversed to search for filesystems of other types probably mounted underneath. The slash means, that such filesystems are not even entered or traversed"`
+helps__32=`TN_ "This flag specifies, whether CRC32 checksums are written to the backup or not. Checksumming costs performance but might be desired to achieve additional safety, that the recovered files are intact"`
+helps__33=`TN_ "When this flag is set, not only a filesystem entry's modification time (mtime) is evaluated when selecting objects to store during incremental or a level X backup, but also the inode change time (ctime). In this mode a filesystem entry's access time (atime) is not restored to the value it had before saving it, because that would again change the ctime, thus each incremental backup would result in a full backup"`
+helps__34=`TN_ "Write the current progress to the file progress located in the directory with the varying files (see: VarDirectory). The first number in this file is the sum of file sizes currently written to backup plus an estimate for the packer overhead. The second number is the total sum of file sizes to be written to backup plus estimated overhead, determined in advance before doing the real backup. The third number is the percentage of backup volume written up to now. All the numbers do NOT include the volume of any command output to be written to backup, because it would be necessary to run the command(s) twice then, what is normally not desired. Using this option requires the backup client to run over all configured directories to be saved to determine the backup volume in advance before doing the real backup, what might be considered a waste of time and/or fileserver load"`
+helps__35=`TN_ "If you have to backup a large amount of files and the full backup can't be done during one run (e.g. over a weekend), you can divide the full backup into pieces. This number determines, how many pieces you need. If this number is not equal to 1, you have to supply which files and directories you want to save in which piece. You do so by setting the additional parameters appearing when you set this parameter greater than 1."`
+helps__36=`TN_ "These are the names of files and diretories, that should be saved. Wildcards in the usual manner are allowed (shell- style or glob-style). They should be supplied relative to the working directory, the client changes to when starting. Descending into directories can be limited to the current filesystem by preceding the filename with the four characters .//. or the option -m (and a space). The prefix .//. is stripped off the name before saving. Supplying a filename preceded with the four characters /../ (what makes no sense normally) or the option -r (and a space) forces the file contents to be saved regardless of the file type. This way raw partitions or similar things can be saved. The prefix /../ is stripped off the name before saving. These file contents are by default never processed for safety reasons. If you want to force processing nonetheless, use //../ as prefix or precede the name with the option -R (and a space). To save the output of a command, supply (in double quotes) a triple bar |||, followed by a space and the command. Another triple bar must follow, after that another command doing the opposite of the first one. This command gets the data written by the first one as input at restore time. A triple sharp ### and a comment may follow.\nA command can be supplied here, whose output is read and used as if it were written here literally. If this is desired, the entry must start with a bar |, followed by a mandatory space and the shell-command to execute. If the pattern %T appears in this command, it is replaced with a specifier for the type of backup: F, if it's a full backup; F<N>, if the full backup is split into several parts with <N> being the part number, e.g. F2; I, if it's an incremental backup; L<N> for a level <N> backup e.g. L5"`
+helps__37=`TN_ "These are the names of files and diretories, that should be saved as part #num#. Wildcards in the usual manner are allowed (shell-style or glob-style). They should be supplied relative to the working directory the client changes to when starting. Descending into directories can be limited to the current filesystem by preceding the filename with the four characters .//. or the option -m (and a space). The prefix .//. is stripped off the name before saving. Supplying a filename preceded with the four characters /../ (what makes no sense normally) forces the file contents to be saved regardless of the file type. This way raw partitions or similar things can be saved. The prefix /../ is stripped off the name before saving. These file contents are by default never processed for safety reasons. If you want to force processing nonetheless, use //../ as prefix or precede the name with the option -R (and a space). To save the output of a command, supply (in double quotes) a triple bar |||, followed by a space and the command. Another triple bar must follow, after that another command doing the opposite of the first one. This command gets the data written by the first one as input at restore time. A triple sharp ### and a comment may follow.\nA command can be supplied here, whose output is read and used as if it were written here literally. If this is desired, the entry must start with a bar |, followed by a mandatory space and the shell-command to execute. If the pattern %T appears in this command, it is replaced with a specifier for the type of backup: F, if it's a full backup; F<N>, if the full backup is split into several parts with <N> being the part number, e.g. F2; I, if it's an incremental backup; L<N> for a level <N> backup e.g. L5"`
+
+#
+# end configurable part
+#
+
+var_param_idx=`expr $num_fix_params + 2`
+
+echo_n `T_ "Reading current settings"`' '
+i=1
+while [ $i -le $num_fix_params ] ; do
+  eval pattern='"$'patterns__$i'"'
+  parvalue=`getparam "$pattern"`
+  eval values__"$i"='"$'parvalue'"'
+  echo_n .
+  i=`expr $i + 1`
+done
+set_var_params
+if [ $num_var_params -gt 1 ] ; then
+  j=1
+  while [ $j -le $num_var_params ] ; do
+    eval parname='"$'patterns__$var_param_idx'"'
+    parname=`echo "$parname"|sed 's/#num#/'$j/g`
+    parvalue=`getparam "$parname"`
+    eval values__"$i"='"$'parvalue'"'
+    j=`expr $j + 1`
+    i=`expr $i + 1`
+    echo_n .
+  done
+else
+  eval parname='"$'patterns__$first_var_param'"'
+  parvalue=`getparam "$parname"`
+  eval values__"$first_var_param"='"$'parvalue'"'
+  echo_n .
+fi
+
+echo ' '`T_ "done"`
+
+while true ; do
+  set_var_params
+  clear
+  
+  trap cleantmp 2
+  trap cleantmp 15
+  trap cleantmp 1
+  
+  i=1
+ (
+  echo ' '
+  while [ $i -le $num_fix_params ] ; do
+    eval text='"$'prompts__$i'"'
+    eval value='"$'values__$i'"'
+    text=`T_ ''"$text"`
+    text=`spcext "$text" $promptlen`
+    head=`spcext "  [$i]" 6`
+    echo "$head ""$text"" $value"
+    i=`expr $i + 1`
+  done
+  j=1
+  if [ $num_var_params -gt 1 ] ; then
+    while [ $i -le $num_total_params ] ; do
+      eval text='"$'prompts__$var_param_idx'"'
+      text=`T_ ''"$text" | sed 's/#num#/'$j/g`
+      text=`spcext "$text" $promptlen`
+      eval value='"$'values__$i'"'
+      head=`spcext "  [$i]" 6`
+      echo "$head ""$text"" $value"
+      j=`expr $j + 1`
+      i=`expr $i + 1`
+    done
+  else
+    if [ $num_var_params -gt 0 ] ; then
+      eval text='"$'prompts__$first_var_param'"'
+      text=`T_ ''"$text"`
+      text=`spcext "$text" $promptlen`
+      eval value='"$'values__$first_var_param'"'
+      head=`spcext "  [$first_var_param]" 6`
+      echo "$head ""$text"" $value"
+    fi
+  fi
+
+  echo ' '
+  T_ "Please enter the number of the parameter you would like to modify. Then, if you want to clear the entry, hit the Space- and the Return-key. To get help enter: help, and the number of the parameter you need help on. To exit and write out the changes enter: ok. To exit without making any changes, enter: exit." | fmt_output | awk '{printf "  %s\n",$0}'
+ ) 2>/dev/null | $PAGER
+
+  c=blub
+  while [ `matches "$c" '^([1-9][0-9]*|help *[1-9][0-9]*|exit|quit|ok)$'` -eq 0 ] ; do
+    echo " "
+    echo_n `T_ "Your choice:"`' '
+    read c
+    if [ `matches "$c" '^([1-9][0-9]*|help *[1-9][0-9]*|exit|quit|ok)$'` -eq 0 ] ; then
+      echo " "
+      echo `T_ "Invalid choice. Please try again."`
+      continue
+    fi
+    if [ `matches "$c" '^[1-9][0-9]*$'` -gt 0 ] ; then
+      if [ $c -gt $num_total_params -o $c -lt 1 ] ; then
+	echo " "
+	echo `T_ "Invalid choice. Please try again."`
+	c=blub
+      else
+	break
+      fi
+    fi
+  done
+  
+  if [ `matches "$c" '^[1-9]'` -gt 0 ] ; then
+    echo ' '
+    if [ $c -gt $num_fix_params ] ; then
+      i=`expr $c - $num_fix_params`
+      if [ $num_var_params -gt 1 ] ; then
+	eval text='"$'prompts__$var_param_idx'"'
+	text=`T_ ''"$text"|sed 's/#num#/'"$i"'/g'`
+      else
+	eval text='"$'prompts__$first_var_param'"'
+	text=`T_ ''"$text"`
+      fi
+    else
+      eval text='"$'prompts__$c'"'
+      text=`T_ ''"$text"`
+    fi
+    eval value='"$'values__$c'"'
+    echo `echo $text | repl_backsl_seq`" $value"
+    echo_n `T_ "Please enter new value:"`' '
+    i=`awk '{print ; exit}'`
+    if [ _"$i" != _ ] ; then
+      eval values__"$c"='"'"$i"'"'
+    fi
+
+    continue
+  fi
+  
+  if [ `matches "$c" quit` -gt 0 -o `matches "$c" exit` -gt 0 ] ; then
+    exit 0
+  fi
+  
+  if [ `matches "$c" ok` -gt 0 ] ; then
+    /bin/rm -f $configfile
+    touch $configfile
+    i=1
+    while [ $i -le $num_total_params ] ; do
+      eval value='"$'values__$i'"'
+      eval comment='"$'comments__$i'"'
+      eval name='"$'names__$i'"'
+      comment=`echo "$comment" | repl_backsl_seq`
+      if [ $i -le $num_fix_params ] ; then
+	T_ ''"$comment" | awk '{printf "# %s\n",$0}' >> $configfile
+	if [ `echo "$value"|wc -w` -eq 0 ] ; then
+	  echo "#$name":"		$value" >> $configfile
+	else
+	  echo "$name":"		$value" >> $configfile
+	fi
+      else
+	j=`expr $i - $num_fix_params`
+	if [ $num_var_params -gt 1 ] ; then
+	  eval comment='"$'comments__$var_param_idx'"'
+	  eval name='"$'names__$var_param_idx'"'
+	  comment=`echo "$comment" | repl_backsl_seq`
+	  T_ ''"$comment" | sed 's/#num#/'$j/g | awk '{printf "# %s\n",$0}' >> $configfile
+	  if [ `echo "$value"|wc -w` -eq 0 ] ; then
+	    echo "#$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  else
+	    echo "$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  fi
+	else
+	  eval comment='"$'comments__$first_var_param'"'
+	  eval name='"$'names__$first_var_param'"'
+	  comment=`echo "$comment" | repl_backsl_seq`
+	  T_ ''"$comment" | awk '{printf "# %s\n",$0}' >> $configfile
+	  if [ `echo "$values[$i]"|wc -w` -eq 0 ] ; then
+	    echo "#$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  else
+	    echo "$name":"		$value" | \
+				  sed 's/#num#/'"$j"'/g' >> $configfile
+	  fi
+	fi
+      fi
+      i=`expr $i + 1`
+    done
+    exit 0
+  fi
+  
+  if [ `matches "$c" help` -gt 0 ] ; then
+    num=`echo "$c"|cut -c5-|awk '{print $1}'`
+    if [ $num -le $num_fix_params ] ; then
+      eval help='"$'helps__$num'"'
+      help=`echo "$help" | repl_backsl_seq`
+      T_ ''"$help" | fmt_output | awk '{printf "  %s\n",$0}' | $PAGER
+    else
+      if [ $num_var_params -gt 1 ] ; then
+	j=`expr $num - $num_fix_params`
+	eval help='"$'helps__$var_param_idx'"'
+	help=`echo "$help" | repl_backsl_seq`
+	T_ ''"$help" | sed 's/#num#/'$j/g | fmt_output | awk '{printf "  %s\n",$0}' | $PAGER
+      else
+	eval help='"$'helps__$first_var_param'"'
+	help=`echo "$help" | repl_backsl_seq`
+	T_ ''"$help" | sed 's/#num#/'"$c"'/g' | fmt_output | awk '{printf "  %s\n",$0}' | $PAGER
+      fi
+    fi
+    echo " "
+    echo `T_ "Hit Return, when done."`
+    read d
+  fi
+  
+done

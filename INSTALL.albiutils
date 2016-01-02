@@ -1,0 +1,116 @@
+
+  Building and installing Albi's binary utilities
+  ===============================================
+
+
+Build Albi's utilities
+----------------------
+
+Before running make, the GNU gods have put the configure step.
+It's essentially the same like for building afbackup, except,
+that probably the installation prefix is desired to be different.
+
+To get the required packages linked properly, several directories
+must be supplied correctly. The configure line must usually look
+like this (backslashes are indicating continuation lines):
+
+./configure -prefix=/desired/installation/path \
+	[ --with-des-include=/path/to/dir/with/des/header \
+	  --with-des-libdir=/path/to/dir/with/des/library ]
+
+The /path/to/dir/with/des/header and /path/to/dir/with/des/library
+must be both the directory, where the des library has been built,
+if it is not available anyway e.g. with openssl. In this case the
+--with-des-libdir can be left off, as it defaults to the directory
+supplied with --with-des-include . The des related arguments can
+be left off completely, if openssl can be found in the default
+compiler paths.
+
+Now run
+
+make albiutils
+
+and to install the programs to the configured installation directory
+
+make albiutils.install
+
+
+RPM packages
+------------
+
+You are probably used to build RPMs from source RPMs (SRPMS).
+To create such an SRPM or build RPMs with fixed paths can be
+done using the file albiutils.spec.rh for creating RPMS for
+typical RedHat-like Linux systems adhering to the LSB.
+With this way to create RPMs it is hardly possible to change
+anything, because no options can be passed to the configure or
+make step.
+
+To build such an SRPM with predefined paths, put the original
+sources afbackup-X.Y.Z.tar.gz file into a directory named SOURCES.
+Aside of SOURCES, in the same parent directory <parentdir> ,
+another directory SRPMS must exist. Then run:
+
+ rpmbuild -bs --define='_topdir <parentdir>' path/to/albiutils.spec.rh
+
+The SRPM will be created in <parentdir>/SRPMS . To build the
+final RPMs pass the option -bb instead of -bs in the command
+above. The following additional subdirectories must esist in
+<parentdir> for this step: BUILD RPMS/`uname -i`
+
+By doing the configure step, another RPM spec file albiutils.spec
+is created, that reflects all the settings and findings performed
+by configure. In the generated Makefile, there is a target for
+building RPMs, so after the configure step it is immediately
+possible to run:
+
+make albiutils.rpms
+
+The RPM is created in the subdirectory RPM:
+albiutils-<version>.<arch>.rpm
+
+In this file all paths are set as specified during configure.
+
+
+Solaris package
+---------------
+
+By doing the configure step, a prototype file albiutils.proto is
+created, that reflects all the settings and findings performed
+by configure. In the generated Makefile, there is a target for
+building a Solaris package, so after the configure step it is
+immediately possible to run:
+
+make albiutils.solpkg
+
+The package file is created in the subdirectory pkgs:
+albiutils.pkg
+
+In this file all paths are set as specified during configure.
+
+
+Debian packages
+---------------
+
+You are probably used to build Debian packages from source tarballs
+using the fancy Debian package builder infrastructure. Doing it this
+way implies ending up with paths, that cannot be changed, especially
+not reflecting any setting one usually wants to modify during the
+configure step.
+
+Another thing is, that this build infrastructure is imo complex to
+handle (though they state it's not). When it comes to building several
+packages from one set of sources, it gets even more complicated and
+having different configuration files or init scripts requires writing
+a thesis about Debian packaging in advance (at least i did not find
+a really simpler way, frankly).
+
+To build Debian packages, after having run configure, type:
+
+make albiutils.debs
+
+Please note, that the .deb package files will be created in the
+parent directory, what is the usual way Debian packaging is done.
+Hope, this is ok for your needs. A different way to obtain Debian
+packages is currently not supported.
+

@@ -1,0 +1,76 @@
+# RPM for Redhat Enterprise 3 and above.
+%define	parentpkg afbackup
+
+Summary: AF's utilities
+Name: albiutils
+Version: 3.5.8.12
+Release: 1
+Source0: http://dl.sourceforge.net/sourceforge/%{parentpkg}/%{parentpkg}-%{version}.tar.gz
+URL: http://sourceforge.net/projects/%{parentpkg}/
+License: GPL
+Packager: Albert Fluegel (af@muc.de)
+Group: Applications/Misc
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Group: Applications/Misc
+Requires: openssl zlib
+BuildRequires: openssl zlib openssl-devel
+
+%description
+
+%prep
+%setup -q -n %{parentpkg}-%{version}
+
+./configure -prefix=/usr --with-x_utils-include=/usr/include
+
+%build
+echo 'DefaultEncryptPhrase0815' | make %{name}
+
+%install
+test $RPM_BUILD_ROOT != / && rm -rf $RPM_BUILD_ROOT
+
+make %{name}.install %{name}.install.doc \
+		INSTTOP=$RPM_BUILD_ROOT \
+		MANDIR=$RPM_BUILD_ROOT/%{_mandir}
+
+# currently no i18n
+#%find_lang %name
+
+%clean
+test $RPM_BUILD_ROOT != / && rm -rf $RPM_BUILD_ROOT
+
+%files
+# -f %{name}.lang
+%defattr(-,root,root)
+%doc README INSTALL LICENSE ChangeLog
+%{_bindir}/af-lockfile
+%{_bindir}/bufrate
+%{_bindir}/choice
+%if "@DESCRPT@"
+%{_bindir}/descrypt
+%endif
+%{_bindir}/get_ent
+%{_bindir}/numset
+%{_bindir}/rotor
+%{_bindir}/ssu
+%{_bindir}/ttywrap
+%{_bindir}/udf
+%{_bindir}/base64enc
+%{_bindir}/base64dec
+%{_bindir}/datebysec
+%{_bindir}/secbydate
+%{_mandir}/man8/af-lockfile.8*
+%{_mandir}/man8/bufrate.8*
+%{_mandir}/man8/choice.8*
+%if "@DESCRPT@"
+%{_mandir}/man8/descrypt.8*
+%endif
+%{_mandir}/man8/numset.8*
+%{_mandir}/man8/rotor.8*
+%{_mandir}/man8/ssu.8*
+%{_mandir}/man8/ttywrap.8*
+%{_mandir}/man8/udf.8*
+
+
+%changelog
+* Fri Dec 18 2011 Albert Fluegel <af@muc.de> 1.1
+- Re-lauch of spec file for redhat-like linux systems
