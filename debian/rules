@@ -38,6 +38,7 @@ DEB_MAKE_INSTALL_TARGET := install.client install.server \
 	   CLIENTVARDIR=`pwd`/debian/afbackup-client/var/lib/afbackup \
 	   SERVERBINDIR=`pwd`/debian/afbackup/usr/sbin \
 	   SERVERCONFDIR=`pwd`/debian/afbackup/etc/afbackup \
+	   SERVERINITDIR=`pwd`/debian/afbackup/etc/init.d \
 	   SERVERMANDIR=`pwd`/debian/afbackup/usr/share/man \
 	   SERVERVARDIR=`pwd`/debian/afbackup/var/lib/afbackup \
 	   COMMONDIR=`pwd`/debian/afbackup-common/usr/lib/afbackup \
