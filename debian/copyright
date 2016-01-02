@@ -1,0 +1,28 @@
+This package was debianized by Christian Meder
+<meder@control.toronto.edu> on Thu, 3 Apr 1997 00:22:23 -0500. It is now
+maintained by Torsten Werner <twerner@debian.org> and co-maintained by
+Tomas Pospisek <tpo@sourcepole.ch>.
+
+The homepage of afbackup is http://www.afbackup.org/
+
+Copyright:
+afbackup is Copyright (C) 1997, 1998 Albert Fluegel <af@muc.de>
+
+afbackup is licensed under the GNU General Public License version 2 or
+higher. On Debian systems the full text of the licence can be found in
+/usr/share/common-licenses/GPL files.
+
+The original LICENSE file from the afbackup distribution:
+
+This software comes under the GNU-GPL with one small
+restriction stated at the end of this file. This
+file must not be removed from the distribution nor is
+it allowed to change it or the file "COPYING", that
+is attached and contains the unmodified GNU general
+public license.
+
+The following term applies for all versions of this
+backup system up to and including version 2.10., not
+for any higher version until explicitly revoked:
+The server side of this backup system must not be
+ported to any Microsoft-based "operating-system".

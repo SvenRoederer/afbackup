@@ -1,0 +1,59 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/autotools.mk
+include /usr/share/cdbs/1/rules/patchsys-quilt.mk
+
+export EXTERNAL_INCLUDES := -DAFB_SERVER_SHOW_BUFFER_STATUS
+export EXTERNAL_LDFLAGS  := -Wl,--as-needed
+
+DEB_CONFIGURE_EXTRA_FLAGS := --without-prefixext \
+	   --with-serverbindir=/usr/sbin \
+	   --with-serverconfdir=/etc/afbackup \
+	   --with-servervardir=/var/lib/afbackup \
+	   --with-serverlogdir=/var/log/afbackup \
+	   --with-clientbindir=/usr/sbin \
+	   --with-clientconfdir=/etc/afbackup \
+	   --with-clientvardir=/var/lib/afbackup \
+	   --with-clientlogdir=/var/log/afbackup \
+	   --with-rexecdir=/usr/lib/afbackup/rexec \
+	   --with-clientconf=client.conf \
+	   --with-serverconf=server.conf \
+	   --with-servermandir=/usr/share/man \
+	   --with-clientmandir=/usr/share/man \
+	   --with-commondir=/usr/lib/afbackup \
+	   --with-commondatadir=/usr/share/afbackup \
+	   --with-commonshlibdir=/usr/share/afbackup \
+	   --with-zlib \
+	   --with-zlib-include=/usr/include/ \
+	   --with-zlib-libdir=/usr/lib/ \
+	   --with-des --with-des-ldflag='-lcrypto -lz' \
+	   --with-des-include=/usr/include/openssl/ \
+	   --with-strip=no
+
+DEB_MAKE_INSTALL_TARGET := install.client install.server \
+	   CLIENTBINDIR=`pwd`/debian/afbackup-client/usr/sbin \
+	   CLIENTCONFDIR=`pwd`/debian/afbackup-client/etc/afbackup \
+	   CLIENTMANDIR=`pwd`/debian/afbackup-client/usr/share/man \
+	   CLIENTVARDIR=`pwd`/debian/afbackup-client/var/lib/afbackup \
+	   SERVERBINDIR=`pwd`/debian/afbackup/usr/sbin \
+	   SERVERCONFDIR=`pwd`/debian/afbackup/etc/afbackup \
+	   SERVERMANDIR=`pwd`/debian/afbackup/usr/share/man \
+	   SERVERVARDIR=`pwd`/debian/afbackup/var/lib/afbackup \
+	   COMMONDIR=`pwd`/debian/afbackup-common/usr/lib/afbackup \
+	   COMMONDATADIR=`pwd`/debian/afbackup-common/usr/share/afbackup \
+	   COMMONSHLIBDIR=`pwd`/debian/afbackup-common/usr/share/afbackup
+
+DEB_INSTALL_DOCS_ALL :=
+
+# make must be invoked twice because of different CLIENTBINDIR!
+install/afbackup-client::
+	make install.rexeclinks \
+	   CLIENTBINDIR=../../../sbin \
+	   SERVERREXECDIR=`pwd`/debian/afbackup-client/usr/lib/afbackup/rexec
+	-$(RM) debian/afbackup/var/lib/afbackup/readonly_tapes
+
+get-orig-source:
+	dh_testdir
+	wget -O ../afbackup_$(DEB_UPSTREAM_VERSION).orig.tar.gz http://heanet.dl.sourceforge.net/sourceforge/afbackup/afbackup-$(DEB_UPSTREAM_VERSION).tar.gz
+

@@ -1,0 +1,44 @@
+.\" 
+.\" 
+.TH "__DESCRPT" "1" "2007 Jun 7" "Debian Project" ""
+.SH "NAME"
+\fB__descrpt\fB \- Program to encrypt data using a DES\-algorithm
+.SH "SYNOPSIS"
+.B __descrpt
+.RI { \-e | [ \-d ] }[ \-w ] [ \-k <crypkeyfile> ]
+.br 
+
+.SH "DESCRIPTION"
+This program encrypts or decrypts the standard input to standard output.
+.br 
+The used key is derived from the string supplied at compile time or
+read from the given cryptkeyfile.
+
+.br 
+\fBThis program is part of afbackup\-client\fB
+.SH "OPTIONS"
+.PP 
+This is a Few Description on the main options for __descrpt
+ 
+.IP "\fB\-e\fP" 10
+\fBOptional\fR, either if is supplied or not __descrpt It will use the Default 128 Bit DES encryption method
+
+.IP "\fB\-w\fP" 10
+This Option Overwrite \fB\-e\fB option, if the option is supplied, the program will use 64 Bit DES encryption method
+
+
+.IP "\fB\-w criptkeyfile\fP" 10
+Read a criptkeyfile to override the one supplied at the compile time
+.SH "SEE ALSO"
+\fBafclient(8)\fB, \fBxafclientconfig(8)\fB, \fBfull_backup(8)\fB, \fBincr_backup(8)\fB, \fBafverify(8)\fB, \fBafrestore(8)\fB, \fBxafrestore(8)\fB, \fBafserver(8)\fB, \fBafmserver(8)\fB, \fBcopy_tape(8)\fB, \fBafclient.conf(8)\fB,
+\fBupdate_indexes(8)\fB
+.SH "AUTHOR"
+.PP 
+This manual page was written by Rene Mayorga <rmayorga@debian.org.sv> for 
+the \fBDebian\fP system (but may be used by others).  Permission is 
+granted to copy, distribute and/or modify this document under 
+the terms of the GNU General Public License, Version 2 any later version published by the Free Software Foundation. 
+ 
+.PP 
+On Debian systems, the complete text of the GNU General Public 
+License can be found in /usr/share/common\-licenses/GPL. 

@@ -1,0 +1,8 @@
+#! /bin/sh -e
+[ -d /var/log/afbackup/. ] || exit 0
+umask 026
+cd /var/log/afbackup
+if [ -f client.backup.log -a -s client.backup.log ]
+then
+  savelog -c 4 -p -t client.backup.log > /dev/null
+fi

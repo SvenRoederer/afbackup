@@ -1,0 +1,5 @@
+debian/man/__inc_link.8
+debian/man/__mt.8
+debian/man/__numset.8
+debian/man/cartagehandler.8
+debian/man/xafserverstatus.8

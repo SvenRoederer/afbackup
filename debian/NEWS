@@ -1,0 +1,7 @@
+afbackup (3.5.1-2) experimental; urgency=low
+
+  Starting with this version update-inetd is called only if the recommended
+  package update-inetd is installed. Otherwise you have to setup your inetd
+  for yourself.
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 13 Jan 2007 17:58:11 +0100

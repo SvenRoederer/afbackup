@@ -1,0 +1,9 @@
+usr/share/man/man8/afclient.conf.8 usr/share/man/man8/afclientconfig.8
+usr/share/man/man8/afclient.conf.8 usr/share/man/man8/xafclientconfig.8
+usr/share/man/man8/afclient.conf.8 usr/share/man/man8/clientconfig.8
+usr/share/man/man8/afclient.conf.8 usr/share/man/man8/xclientconfig.8
+usr/share/man/man8/afclient.8 usr/share/man/man8/afbackout.8
+usr/share/man/man8/afclient.8 usr/share/man/man8/afbackup.8
+usr/share/man/man8/afrestore.8 usr/share/man/man8/xrestore.8
+usr/share/doc/afbackup-common usr/share/doc/afbackup-client/common
+

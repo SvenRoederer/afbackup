@@ -1,0 +1,28 @@
+#!/bin/sh
+
+case "$1" in
+  purge)
+	rm -f /var/log/afbackup/client.backup.log*
+	rm -f /var/lib/afbackup/backup_log.*
+	rm -f /var/lib/afbackup/num
+	rm -f /var/lib/afbackup/oldmark
+	if [ ! -f /var/lib/afbackup/tapepos ]; then
+	    rm -rf /var/lib/afbackup
+	fi
+	if [ ! -f /etc/afbackup/server.conf ]; then
+	    rm -rf /etc/afbackup
+	fi
+	if [ ! -f /var/log/afbackup/server.backup.log ]; then
+	    rm -rf /var/log/afbackup
+	fi
+  ;;
+
+  remove|upgrade|deconfigure|failed-upgrade)
+  ;;
+                
+  *)
+	echo "unknown argument --> $1" >&2
+	exit 0
+  ;;
+esac
+#DEBHELPER#

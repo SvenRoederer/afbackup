@@ -1,0 +1,41 @@
+.TH "__INC_LINK" "8" "2007 Jun 7" "Debian Project" ""
+.SH "NAME"
+\fB__inc_link\fB \- modify a symlink to point to the next file in sequence
+
+.br 
+\fBThis program is part of afbackup\fB
+.SH "SYNOPSIS"
+\fB__inc_link\fB [ \fB\-s\fB ] <symlink> <increment>
+.SH "DESCRIPTION"
+the sequence will be determined, to what the given symlink points. The integer number at the end of this filesystem entry will be increased by the given increment (may be negative).
+
+The symlink will be removed and a new one created pointing to the resulting filesystem entry. If there is no filesystem entry with the resulting name exists, an error message is printed. 
+If the new symlink cannot be created or the old one cannot be removed an error messages are printed. 
+If everything works fine and the \-s flag (silent) is not supplied, the name of the filesystem entry to that the new symlink points, is printed. 
+If any error occurs the original symlink remains unchanged. 
+.SH "EXAMPLES"
+.TP 
+if ls \-l  reports:
+.IP 
+\fBlrwxrwxrwx  1  af  user  13  Oct  8 14:00  the_link \-> file.number.4\fB
+.IP 
+and the command  \fB__inc_link\fB the_link 2 
+is entered, 
+the result of a following  ls \-l  will be:
+.IP 
+\fBlrwxrwxrwx  1  af  user  13  Oct  8 14:00  the_link \-> file.number.6\fB
+.IP 
+and some more (file.number.6 must exist)
+.SH "SEE ALSO"
+\fBafclient(8)\fB, \fBxafclientconfig(8)\fB, \fBfull_backup(8)\fB, \fBincr_backup(8)\fB, \fBafverify(8)\fB, \fBafrestore(8)\fB, \fBxafrestore(8)\fB, \fBafserver(8)\fB, \fBafmserver(8)\fB, \fBcopy_tape(8)\fB, \fBafclient.conf(8)\fB,
+\fBupdate_indexes(8)\fB
+.SH "AUTHOR"
+.PP 
+This manual page was written by Rene Mayorga <rmayorga@debian.org.sv> for 
+the \fBDebian\fP system (but may be used by others).  Permission is 
+granted to copy, distribute and/or modify this document under 
+the terms of the GNU General Public License, Version 2 any later version published by the Free Software Foundation. 
+ 
+.PP 
+On Debian systems, the complete text of the GNU General Public 
+License can be found in /usr/share/common\-licenses/GPL. 

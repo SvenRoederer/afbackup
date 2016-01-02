@@ -1,0 +1,43 @@
+Configure your backup server with 
+
+   afserverconfig /etc/afbackup/server.conf
+
+or 
+
+   xafserverconfig /etc/afbackup/server.conf
+
+and / or configure your backup client with 
+
+   afclientconfig /etc/afbackup/client.conf
+
+or 
+
+   xafclientconfig /etc/afbackup/client.conf
+
+Explanations of the different parameters can be found in CONFIG. Now the
+server and/or client is ready for your backups. Some example
+configuration files and helper tools have been installed in the examples
+subdirectory. They are provided upstream but not tested by me.
+
+If you use the afclient command directly, be aware that the command does
+NOT read the client configuration file. You have to supply all
+parameters on the commandline (e.g. backuphost, location of the
+cryptkey, etc.). The configuration files are read only by full_backup
+and incr_backup.
+
+The file /etc/afbackup/cryptkey is automatically created from
+/dev/urandom. If that file already exists
+/etc/afbackup/cryptkey.dpkg-dist is created. If your cryptkey is smaller
+than 21 bytes it is recommended to rename cryptkey.dpkg-dist to
+cryptkey. Do not forget that the cryptkey file must be the same on
+client and server.
+
+WARNING:
+
+Starting with version 3.3.7-1 the Debian package is built with DES
+encryption support which is more secure but incompatible with older
+versions. That is why you have to upgrade all your machines.
+
+--
+Torsten Werner <twerner@debian.org>
+

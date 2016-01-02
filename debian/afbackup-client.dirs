@@ -1,0 +1,4 @@
+usr/lib/afbackup/rexec
+usr/sbin
+etc/afbackup
+var/log/afbackup

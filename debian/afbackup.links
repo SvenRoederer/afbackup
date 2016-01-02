@@ -1,0 +1,7 @@
+usr/share/man/man8/afserver.conf.8 usr/share/man/man8/afserverconfig.8
+usr/share/man/man8/afserver.conf.8 usr/share/man/man8/xafserverconfig.8
+usr/share/man/man8/afserver.conf.8 usr/share/man/man8/serverconfig.8
+usr/share/man/man8/afserver.conf.8 usr/share/man/man8/xserverconfig.8
+usr/share/doc/afbackup-common usr/share/doc/afbackup/common
+usr/share/man/man8/cartready.8 usr/share/man/man8/changerready.8
+usr/share/man/man8/xafserverstatus.8 usr/share/man/man8/xserverstatus.8

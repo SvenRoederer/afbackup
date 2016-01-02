@@ -1,0 +1,558 @@
+afbackup (3.5.3-3) unstable; urgency=low
+
+  * QA upload.
+  * No longer support upgrading from ancient versions:
+    - do not try to fix /etc/services (Closes: #552669),
+    - do not prompt for upgrade abort if incompatible version (Closes: #553273).
+    Instead just unconditionally abort upgrade if that old version is detected.
+  * Update debian/compat to 6, since 4 is depricated now. No changes needed.
+    - Build-Depend on debhelper (>= 6).
+  * Use qa.debian.org SourceForge redirector in debian/watch.
+  * Add Depends: ${misc:Depends} to afbackup-common in debian/control.
+
+ -- Nikita V. Youshchenko <yoush@debian.org>  Mon, 23 Nov 2009 09:56:05 +0300
+
+afbackup (3.5.3-2) unstable; urgency=low
+
+  * Orphan package.
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 17 Feb 2009 20:32:48 +0100
+
+afbackup (3.5.3-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 07 Oct 2008 20:29:11 +0200
+
+afbackup (3.5.2.2-1) unstable; urgency=low
+
+  * new upstream release
+  * Bump up Standards-Version: 3.8.0 (no changes needed).
+
+ -- Torsten Werner <twerner@debian.org>  Sun, 24 Aug 2008 23:06:56 +0200
+
+afbackup (3.5.2.1-1) unstable; urgency=low
+
+  * new upstream release (Closes: #369946)
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 21 Jul 2008 21:00:45 +0200
+
+afbackup (3.5.2-1) unstable; urgency=low
+
+  * new upstream release (Closes: #485048)
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 11 Jun 2008 21:35:22 +0200
+
+afbackup (3.5.1pl2-4) unstable; urgency=low
+
+  * Fix debian/watch.
+  * Update Homepage and Vcs headers in debian/control.
+  * Change Standards-Version: 3.7.3.
+  * Make the status more informative when new tape is expected.
+    (Closes: #227896)
+  * Set LDFLAGS=-Wl,--as-needed to reduce library dependencies.
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 25 Dec 2007 13:34:10 +0100
+
+afbackup (3.5.1pl2-3) unstable; urgency=low
+
+  * Never strip binaries during the build process. Let dh_strip and cdbs do
+    the job correctly. (Closes: #436377)
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 18 Sep 2007 20:19:09 +0200
+
+afbackup (3.5.1pl2-2) unstable; urgency=low
+
+  * Removed dependencis from netbase
+  * Update dependencies from update-inetd to openbsd-inetd | inet-superserver
+  * debian/rules - adding $(STRIP)=no/yes to be able to handle
+    DEB_BUILD_OPTIONS=nostrip (Closes: #436377)
+    
+
+ -- Rene Mayorga <rmayorga@debian.org.sv>  Sat, 28 Jul 2007 19:20:26 -0600
+
+afbackup (3.5.1pl2-1) unstable; urgency=low
+
+  [ Rene Mayorga ]
+  * New Maintainer (Closes: Closes: #427872)
+  * New upstream release
+   Minors bugs fixing
+  * Added inet-update to dependencies
+  * Added missing manpages, in order to keep lintian happy
+
+  [ Torsten Werner ]
+  * Add myself to Uploaders.
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 12 Jun 2007 00:13:20 +0200
+
+afbackup (3.5.1-3) unstable; urgency=low
+
+  * Do not call update-inetd when purging, call it when removing.
+  * Close the bug that has been fixed in the last revision. (Closes: #416640)
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 10 Apr 2007 11:08:20 +0200
+
+afbackup (3.5.1-2) experimental; urgency=low
+
+  * Add Recommends: update-inetd.
+  * Call update-inetd only if it is installed and document that change in
+    debian/NEWS.
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 13 Jan 2007 17:57:14 +0100
+
+afbackup (3.5.1-1) experimental; urgency=low
+
+  * new upstream version
+  * Remove every patch but 50-debian.diff because they have been applied
+    upstream.
+
+ -- Torsten Werner <twerner@debian.org>  Fri,  5 Jan 2007 20:58:16 +0100
+
+afbackup (3.5-1) experimental; urgency=low
+
+  * New upstream release.
+  * Move patches directory into debian directory.
+  * Add XS-X-Vcs-Svn header.
+  * Refreshed FreeBSD patch.
+  * Upstream has removed its own debian/ directory because I have requested
+    that.
+  * Add patch no_trigraph.diff which removes invalid trigraphs.
+  * Document all patches.
+
+ -- Torsten Werner <twerner@debian.org>  Thu, 14 Dec 2006 23:01:40 +0100
+
+afbackup (3.4-3) unstable; urgency=low
+
+  * add debian/watch
+  * implemented get-orig-source in debian/rules
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 14 Jul 2006 23:57:04 +0200
+
+afbackup (3.4-2) unstable; urgency=low
+
+  * add '--group OTHER' to the call of update-inetd in postrm, closes: #373156
+  * moved one patch from 50-debian.diff into separate cflags.diff
+  * reworked the cflags.diff to be compatible with non GNU kinds of make
+  * updated Standards-Version to 3.7.2, no changes needed
+  * fixed afclient man page
+
+ -- Torsten Werner <twerner@debian.org>  Sun,  9 Jul 2006 23:00:39 +0200
+
+afbackup (3.4-1) unstable; urgency=low
+
+  * New upstream release
+  * removed any changes to po/de.po because I think they have been fully
+    integrated upstream
+  * fixed syntax errors in debian/changelog and removed very old entries
+    because of unfixable syntax errors to make lintian happy
+  * switched to quilt to manage the patches for Debian and GNU/kFreeBSD
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 19 Jun 2006 21:35:30 +0200
+
+afbackup (3.3.8.1final-2) unstable; urgency=low
+
+  * fix in README.Debian thanks to Paul Haesler
+  * applied patch from Aurelien Jarno for building on GNU/kFreeBSD,
+    closes: #345200
+  * removed circular Depends: from afbackup-common, closes: #340183
+
+ -- Torsten Werner <twerner@debian.org>  Mon,  1 May 2006 20:13:25 +0200
+
+afbackup (3.3.8.1final-1) unstable; urgency=low
+
+  * new upstream version
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 19 Dec 2005 21:04:42 +0100
+
+afbackup (3.3.8.1beta2-3) unstable; urgency=low
+
+  * updated german translation, thanks to Jens Seidel
+    <jensseidel@users.sf.net>, closes: #314137
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 12 Jul 2005 12:19:58 +0200
+
+afbackup (3.3.8.1beta2-2) unstable; urgency=low
+
+  * upload to unstable
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 26 Feb 2005 22:44:18 +0100
+
+afbackup (3.3.8.1beta2-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Torsten Werner <twerner@debian.org>  Thu, 13 Jan 2005 21:11:16 +0100
+
+afbackup (3.3.8pl3-1) unstable; urgency=medium
+
+  * New upstream release, that fixes afmserver's segfault, closes: #286830
+
+ -- Torsten Werner <twerner@debian.org>  Fri,  7 Jan 2005 06:16:38 +0100
+
+afbackup (3.3.8-1) unstable; urgency=low
+
+  * new upstream version, closes: #277162
+  * changed Build-Depends: csh | c-shell, closes: #249568
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 22 Oct 2004 17:17:24 +0200
+
+afbackup (3.3.7.beta4-2) unstable; urgency=low
+
+  * workaround for newer cdbs calling dh_link to late, closes: #264668
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 10 Aug 2004 21:59:57 +0200
+
+afbackup (3.3.7.beta4-1) unstable; urgency=low
+
+  * new upstream version
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 15 Jun 2004 20:52:37 +0200
+
+afbackup (3.3.7.beta1-1) unstable; urgency=low
+
+  * new upstream (called 3.3.8beta1), some of my former patches might have
+    been lost though, sorry
+  * removed work around in debian/rules because upstream source are cleaner
+    now
+
+ -- Torsten Werner <twerner@debian.org>  Thu, 13 May 2004 20:51:54 +0200
+
+afbackup (3.3.7pl6-7) unstable; urgency=low
+
+  * applied patch from sourceforge's forum, hopefully closes: #240985
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 26 Apr 2004 23:18:54 +0200
+
+afbackup (3.3.7pl6-6) unstable; urgency=low
+
+  * added /devpts /usbdevfs /sysfs /tmpfs to FilesystemTypes in client.conf to
+    avoid backing up such filesystems, closes: #235314
+
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 28 Feb 2004 19:51:08 +0100
+
+afbackup (3.3.7pl6-5) unstable; urgency=low
+
+  * afbackup is now 64bit clean
+  * removed /var/lib/afbackup/readonly_tapes, closes: #223771
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 17 Dec 2003 20:43:54 +0100
+
+afbackup (3.3.7pl6-4) unstable; urgency=low
+
+  * send mails on acceptable tapes correctly, thanks to Arthur Korn,
+  closes: #212637
+  * converted to cdbs
+
+ -- Torsten Werner <twerner@debian.org>  Sun, 19 Oct 2003 19:10:31 +0200
+
+afbackup (3.3.7pl6-3) unstable; urgency=low
+
+  * applied small patch from Arthur Korn, closes: #189248
+  * recompiled with newer libssl-dev, closes: #189830
+  * updated debian/rules, changed Standard-Version to 3.5.7
+
+ -- Torsten Werner <twerner@debian.org>  Sun, 20 Apr 2003 15:28:39 +0200
+
+afbackup (3.3.7pl6-2) unstable; urgency=low
+
+  * installed more files to /usr/share/doc/examples
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 12 Mar 2003 08:39:13 +0100
+
+afbackup (3.3.7pl6-1) unstable; urgency=low
+
+  * new upstream
+  * added simple_tape_barcodes.pl to examples
+  * converted to Colin's build system (CBS)
+
+ -- Torsten Werner <twerner@debian.org>  Sat,  8 Mar 2003 14:37:48 +0100
+
+afbackup (3.3.7pl5-1) unstable; urgency=low
+
+  * new upstream, hopefully closes: #164507
+
+ -- Torsten Werner <twerner@debian.org>  Thu, 16 Jan 2003 22:08:46 +0100
+
+afbackup (3.3.7pl4-6) unstable; urgency=low
+
+  * fixed binary arch only build
+
+ -- Torsten Werner <twerner@debian.org>  Thu,  9 Jan 2003 13:29:15 +0100
+
+afbackup (3.3.7pl4-5) unstable; urgency=low
+
+  * added gettext to Build-Deps
+  * override COMMONDATADIR for 'make install', closes: #173009
+
+ -- Torsten Werner <twerner@debian.org>  Sun,  5 Jan 2003 12:28:21 +0100
+
+afbackup (3.3.7pl4-4) unstable; urgency=low
+
+  * really include aftcllib.tcl in afbackup-common
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 11 Dec 2002 19:07:41 +0100
+
+afbackup (3.3.7pl4-3) unstable; urgency=low
+
+  * introduced new package afbackup-common with files that are needed both by
+    server and client, closes: #168756
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 22 Nov 2002 09:01:34 +0100
+
+afbackup (3.3.7pl4-2) unstable; urgency=low
+
+  * cleaned the install scripts, closes: #167394
+  * /etc/afbackup/cryptkey (or cryptkey.dpkg-dist) is automatically created
+    from /dev/urandom now
+
+ -- Torsten Werner <twerner@debian.org>  Thu,  7 Nov 2002 10:31:32 +0100
+
+afbackup (3.3.7pl4-1) unstable; urgency=low
+
+  * new upstream
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 29 Oct 2002 08:50:34 +0100
+
+afbackup (3.3.7pl3-1) unstable; urgency=high
+
+  * new upstream, older version can cause data loss, upgrade is strongly
+    recommended
+  * uncommented Encryption-Key-File in {client,server}.conf.in,
+    closes: #159647
+
+ -- Torsten Werner <twerner@debian.org>  Fri,  4 Oct 2002 15:58:53 +0200
+
+afbackup (3.3.7pl2-1) unstable; urgency=low
+
+  * new upstream release that fixes a server crash bug,
+    closes: #154548, #156797
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 19 Aug 2002 13:04:29 +0200
+
+afbackup (3.3.7-3) unstable; urgency=low
+
+  * removed bashism from preinst thanks to Andreas Bombe, closes: #151451
+
+ -- Torsten Werner <twerner@debian.org>  Wed,  3 Jul 2002 09:31:05 +0200
+
+afbackup (3.3.7-2) unstable; urgency=low
+
+  * added a warning to README.Debian about upgrading from incompatible
+    versions
+  * added a question to preinst about aborting the upgrade,
+    closes: #150736
+  * clean up *.bak files during build
+  * switched to version 4 of debhelper
+  * some minor enhancements in debian/rules
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 25 Jun 2002 12:20:51 +0200
+
+afbackup (3.3.7-1) unstable; urgency=low
+
+  * new upstream
+  * uses openssl now
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 17 Jun 2002 17:32:15 +0200
+
+afbackup (3.3.6pl6-1) unstable; urgency=low
+
+  * new upstream
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 15 May 2002 10:45:07 +0200
+
+afbackup (3.3.6pl4-1) unstable; urgency=low
+
+  * new upstream
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 20 Mar 2002 23:04:03 +0100
+
+afbackup (3.3.6pl3-1) unstable; urgency=low
+
+  * new upstream
+  * changed c-shell dependency into tcsh | c-shell
+  * removed awk dependency because mawk is of priority 'required'
+
+ -- Torsten Werner <twerner@debian.org>  Fri,  8 Mar 2002 14:51:10 +0100
+
+afbackup (3.3.5.1pl3-1) unstable; urgency=low
+
+  * new upstream version
+  * fixed afclient.8.in thanks to Nakano Takeo <nakano@apm.seikei.ac.jp>,
+    closes: #110968
+  * some lintian related fixes
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 15 Feb 2002 15:37:13 +0100
+
+afbackup (3.3.5.1pl2-1) unstable; urgency=low
+
+  * new upstream
+  * set DH_COMPAT=3 in debian/rules, closes: #132797
+
+ -- Torsten Werner <twerner@debian.org>  Fri,  8 Feb 2002 16:25:28 +0100
+
+afbackup (3.3.5.1pl1-1) unstable; urgency=low
+
+  * new upstream
+  * emptied afbackup-client.undocumented, really closes: #126468
+  * spelling error fixed, closes: #89758
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 28 Dec 2001 13:05:47 +0100
+
+afbackup (3.3.5.1-3) unstable; urgency=low
+
+  * removed last hot fix, because it fixed nothing
+  * do not echo cryptkey during postinst
+  * replaced undocumented by empty file, closes: #126468
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 25 Dec 2001 01:07:34 +0100
+
+afbackup (3.3.5.1-2) unstable; urgency=low
+
+  * changed maintainer, closes: #97584
+  * updated copyright file
+  * added Suggests: sharutils to the client, closes: #100611
+  * installs the files PROGRAMS and UPDATE into doc/ directory
+  * removed debian/undocumented, closes: #126281
+  * hot fix for postrm to not delete wrong files during purging the server
+    only, closes: #78439
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 24 Dec 2001 16:25:55 +0100
+
+afbackup (3.3.5.1-1) unstable; urgency=low
+
+  * NMU, planning to become maintainer if nobody objects
+  * new upstream
+  * closes: #77189, #124406, #113456
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 19 Dec 2001 23:55:33 +0100
+
+afbackup (3.3.3-1.1) unstable; urgency=low
+
+  * NMU
+  * Fix configure in debian/rules to use zlib.h correctly.  Closes: #104617.
+
+ -- LaMont Jones <lamont@smallone.fc.hp.com>  Fri, 20 Jul 2001 21:17:25 -0600
+
+afbackup (3.3.3-1) unstable; urgency=low
+
+  * new upstream, closes: #80124
+  * changed stable->unstable, thanks a lot to Colin Watson for pointing me
+  * to the right place, closes: #100141, #100467
+  * closes: #97816,
+  * upstream has changed to GPL, closes: #100455
+
+ -- Tomas Pospisek <tpo_deb@sourcepole.ch>  Mon, 11 Jun 2001 12:54:05 +0200
+
+afbackup (3.3.3beta3-1) stable; urgency=low
+
+  * new upstream
+  * upstream has integrated most of my fixes :-)
+  * fixed Build-Dependency (thanks to NAKANO Takeo!)
+  * fixed server.conf file
+
+ -- Tomas Pospisek <tpo_deb@sourcepole.ch>  Thu, 31 May 2001 19:13:04 +0200
+
+afbackup (3.3.2-4) stable; urgency=low
+
+  * fixed server.conf file
+
+ -- Tomas Pospisek <tpo_deb@sourcepole.ch>  Thu, 21 May 2001 20:40:03 +0200
+
+afbackup (3.3.2-3) stable; urgency=low
+
+  * put dh_undocumented back in
+  * use a subject line for mails
+  * fixed /usr/bin paths in various files
+  * included compression support
+
+ -- Tomas Pospisek <tpo_deb@sourcepole.ch>  Thu, 21 May 2001 18:14:02 +0200
+
+afbackup (3.3.2-2) stable; urgency=low
+
+  * fixed path in x(af)restore
+  * fixed os recognition
+
+ -- Tomas Pospisek <tpo_deb@sourcepole.ch>  Thu, 17 May 2001 20:07:01 +0200
+
+afbackup (3.3.2-1) stable; urgency=low
+
+  * NMU
+  * tpo closes: #39657, #94653 (merged with upstream)
+  * tpo closes: #70203, #84588 (Build-Depends)
+  * upstream closes: #24696 (missing slash in rules)
+  * upstream closes: #96388 (Alpha fixes)
+  * upstream closes: #40774 (problem with /tmp, IMO fixed)
+  * paul closes: #28405 (by Paul Slootman, see below)
+  * paul: debian/tmp and debian/afbackup-client were not removed in clean
+  * paul: no need for links to undocumented.7.gz
+  * arthur closes: #91107 (/usr/man)
+
+ -- Tomas Pospisek <tpo_deb@sourcepole.ch>  Wed, 16 May 2001 16:11:00 +0200
+
+afbackup (3.3.1-1) stable; urgency=low
+
+  * see ChangeLog file of the distribution
+
+ -- Albert Fluegel <af@muc.de>  Mon, 12 Feb 2001 18:49:38 +0100
+
+afbackup (3.1beta1-1.2) unstable; urgency=low
+
+  * NMU
+  * rebuilt with current debhelper, closes: #91370, #91380, #91374, #91386
+  * while at it, did /usr/man -> /usr/share/man transition too.
+  * added dh_link, fixes absolute links.
+  * fixed paths in 'install' rule of debian/rules.
+
+ -- Arthur Korn <arthur@korn.ch>  Fri, 13 Apr 2001 22:36:45 +0200
+
+afbackup (3.1beta1-1.1) unstable; urgency=low
+
+  * NMU
+  * fix initializer not constant bugs with glibc-2.1
+  * included extra patch from Christian Meder
+  * closes: #31932
+  * fixes: #33230
+
+ -- Hartmut Koptein <koptein@debian.org>  Fri,  9 Jul 1999 09:48:39 +0200
+
+afbackup (3.1beta1-1) unstable; urgency=low
+
+  * new upstream version
+  * split in afbackup and afbackup-i packages with cryptographic code
+
+ -- Christian Meder <meder@isr.uni-stuttgart.de>  Wed,  9 Sep 1998 01:44:08 +0200
+
+afbackup (2.11.5-5) frozen unstable; urgency=low
+
+  * security bugfix for important bug #23250: insecure use of /tmp/*$$*
+    by using tempfile instead of /tmp/afbucf.$$
+
+ -- Christian Meder <meder@isr.uni-stuttgart.de>  Thu, 11 Jun 1998 00:23:37 +0200
+
+afbackup (2.11.5-4) frozen unstable; urgency=low
+
+  * added dependency on c-shell for the client package (reported by lintian;
+    it's needed for the afclientconfig script)
+  * included snippet of debian/rules in README.server.Debian to show the
+    configuration of the package if you want to build for a non-Debian
+    machine; suggested by Ossama Othman othman@astrosun.tn.cornell.edu
+  * changed default configuration files to include [Afbackup]: in the 
+    header of afbackup mails; suggested by Christophe Broult 
+    christophe.broult@info.unicaen.fr
+  * state in README.client.Debian under which circumstances the configuration
+    files in /etc are used
+
+ -- Christian Meder <meder@isr.uni-stuttgart.de>  Thu, 30 Apr 1998 02:56:19 +0200
+
+afbackup (2.11.5-3) frozen unstable; urgency=low
+
+  * fixed default server conffile; fixes second half of bug #20331
+
+ -- Christian Meder <meder@isr.uni-stuttgart.de>  Mon,  6 Apr 1998 23:50:56 +0200
+
+afbackup (2.11.5-2) frozen unstable; urgency=low
+
+  * fixed filenames in rexec directory; fixes bug #20331
+
+ -- Christian Meder <meder@isr.uni-stuttgart.de>  Mon,  6 Apr 1998 00:50:01 +0200

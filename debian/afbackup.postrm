@@ -1,0 +1,31 @@
+#!/bin/sh
+
+case "$1" in
+  remove)
+	if [ -x /usr/sbin/update-inetd ]; then
+           update-inetd --group OTHER --remove "^afbackup"
+	fi
+  ;;
+  purge)
+	rm -f /var/log/afbackup/server.backup.log*
+	rm -f /var/lib/afbackup/tapepos
+	if [ ! -f /var/lib/afbackup/num ]; then
+	    rm -rf /var/lib/afbackup
+	fi
+	if [ ! -f /etc/afbackup/client.conf ]; then
+	    rm -rf /etc/afbackup
+	fi
+	if [ ! -f /var/log/afbackup/client.backup.log ]; then
+	    rm -rf /var/log/afbackup
+	fi
+  ;;
+
+  upgrade|deconfigure|failed-upgrade)
+  ;;
+                
+  *)
+	echo "unknown argument --> $1" >&2
+	exit 0
+  ;;
+esac
+#DEBHELPER#

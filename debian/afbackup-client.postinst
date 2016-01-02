@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+fix_cruft ()
+{
+   DOC=/usr/share/doc/afbackup-client
+   test -d $DOC && rm -rf $DOC && ln -s afbackup-common $DOC
+   case "$1" in
+      2.6*)
+	 echo "Moving state files to new location!"
+	 (
+	    cd /var/log/afbackup/
+	    mv part num oldmark newmark oldmark.org backup_log.* \
+	       /var/lib/afbackup > /dev/null 2>&1
+	 )
+      ;;
+   esac    
+}
+
+cryptkey ()
+{
+   FILE=/etc/afbackup/cryptkey
+   if [ -f $FILE ]; then
+      FILE=$FILE.dpkg-dist
+   fi
+   dd if=/dev/urandom of=$FILE bs=21 count=1 2> /dev/null
+   chmod 600 $FILE
+}
+
+case "$1" in
+    configure)
+        fix_cruft $2
+        cryptkey
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 0
+    ;;
+esac
+
+
+#DEBHELPER#

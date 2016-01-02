@@ -1,0 +1,93 @@
+Source: afbackup
+Build-Depends: cdbs, debhelper (>= 6), csh | c-shell, zlib1g-dev, libssl-dev, gettext, quilt
+Section: utils
+Priority: optional
+Maintainer: Debian QA Group <packages@qa.debian.org>
+Standards-Version: 3.8.0
+Homepage: http://sourceforge.net/projects/afbackup/
+Vcs-Svn: svn+ssh://svn.debian.org/svn/collab-maint/deb-maint/afbackup/trunk
+Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/afbackup/trunk/
+
+Package: afbackup-common
+Architecture: all
+Suggests: wish
+Depends: ${misc:Depends}
+Conflicts: afbackup-i, afbackup-client-i
+Description: Client-Server Backup System (common files)
+ This is a client-server backup system offering several workstations a
+ centralized backup to a special backup server. Backing up only one
+ computer is easily possible, too. Any streaming device can be used
+ for writing the data to it, usually this will be a tape
+ device. Writing backups is normally done sequentially: The next
+ writing to tape goes to the end of the previous write no matter where
+ you have restored from in the meantime. 
+ .
+  Features:
+  - Authentication of the client is performed before it can take over control 
+  - Access restriction for the streamer device -> security
+  - Client-side per-file compression -> reliability
+  - Data stream is written to tape in pieces -> fast finding of files 
+  - Tape position logging for each file
+  - Tape capacity is fully used
+  - Full / incremental backups
+  - Raw partitions can be backed up
+  - Client and Server buffering for maximal throughput is done
+ .
+ Note: Tk is required if you want to use the graphical configuration
+ tool instead of the text configuration tool.   
+
+Package: afbackup
+Architecture: any
+Depends: afbackup-common, tcsh | c-shell, debianutils (>= 1.6), openbsd-inetd | inet-superserver,  ${shlibs:Depends}, ${misc:Depends}
+Suggests: afbackup-client
+Description: Client-Server Backup System (Server side)
+ This is a client-server backup system offering several workstations a
+ centralized backup to a special backup server. Backing up only one
+ computer is easily possible, too. Any streaming device can be used
+ for writing the data to it, usually this will be a tape
+ device. Writing backups is normally done sequentially: The next
+ writing to tape goes to the end of the previous write no matter where
+ you have restored from in the meantime. 
+ .
+  Features:
+  - Authentication of the client is performed before it can take over control 
+  - Access restriction for the streamer device -> security
+  - Client-side per-file compression -> reliability
+  - Data stream is written to tape in pieces -> fast finding of files 
+  - Tape position logging for each file
+  - Tape capacity is fully used
+  - Full / incremental backups
+  - Raw partitions can be backed up
+  - Client and Server buffering for maximal throughput is done
+ .
+ Note: Tk is required if you want to use the graphical configuration
+ tool instead of the text configuration tool.   
+
+Package: afbackup-client
+Architecture: any
+Replaces: afbackup-client-i
+Depends: afbackup-common, tcsh | c-shell, debianutils (>= 1.6), ${shlibs:Depends}, ${misc:Depends}
+Suggests: afbackup, sharutils
+Description: Client-Server Backup System (Client side)
+ This is a client-server backup system offering several workstations a
+ centralized backup to a special backup server. Backing up only one
+ computer is easily possible, too. Any streaming device can be used
+ for writing the data to it, usually this will be a tape
+ device. Writing backups is normally done sequentially: The next
+ writing to tape goes to the end of the previous write no matter where
+ you have restored from in the meantime. THIS IS ONLY THE CLIENT, YOU
+ NEED TO HAVE A SERVER RUNNING ON EITHER THIS OR ANOTHER HOST.
+ .
+  Features:
+  - Authentication of the client is performed before it can take over control 
+  - Access restriction for the streamer device -> security
+  - Client-side per-file compression -> reliability
+  - Data stream is written to tape in pieces -> fast finding of files 
+  - Tape position logging for each file
+  - Tape capacity is fully used
+  - Full / incremental backups
+  - Raw partitions can be backed up
+  - Client and Server buffering for maximal throughput is done 
+ .
+ Note: Tk is required if you want to use the graphical configuration
+ tool instead of the text configuration tool.   

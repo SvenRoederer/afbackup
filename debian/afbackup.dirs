@@ -1,0 +1,4 @@
+usr/sbin
+etc/afbackup
+var/log/afbackup
+var/lib/afbackup

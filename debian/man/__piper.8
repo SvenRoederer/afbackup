@@ -1,0 +1,40 @@
+.TH "__PIPER" "8" "2007 Jun 7" "Debian Project" ""
+.SH "NAME"
+\fB__piper\fB \- create commands pipes without the overhead of shells
+.br 
+
+\fBThis program has no potential use for administrators or users\fB
+.br 
+This program is part of \fBafbackup\-client\fB
+.SH "SYNOPSIS"
+\fB__piper\fB [ command [ args ] [ "|" command [ args ] [ "|" ... ] ] ]
+.SH "DESCRIPTION"
+This program simply gets one or more commands separated by the pipe symbol "|" as arguments. When called from a shell command line or in any situation, where the whole command is interpreted by a shell, the bar "|" has to be escaped from interpretation, either by preceding
+it with a backslash "\" or putting it into single quotes.
+
+.br 
+\fBThis program is part of afbackup\-client\fB
+
+.SH "EXAMPLES"
+The arguments are chained (separated by single spaces each) and then separated at word boundaries. 
+If an argument should contain whitespace, it must be double\-quoted. The whole command pipeline may be put into one single argument, so in a shell the following is ok:
+
+
+\fB__piper 'echo "Hello    lots of space" | sed "s/ts of/st in/g"'\fB
+
+Double quotes, the pipe symbol and the backslash itself may be escaped by a preceding backslash "\".
+The advantage using this program instead of a shell with the \-c option should be a much faster startup of the whole pipeline. 
+This is useful in the process\- and uncrosses commands of the client side of afbackup.
+.SH "SEE ALSO"
+\fBafclient(8)\fB, \fBxafclientconfig(8)\fB, \fBfull_backup(8)\fB, \fBincr_backup(8)\fB, \fBafverify(8)\fB, \fBafrestore(8)\fB, \fBxafrestore(8)\fB, \fBafserver(8)\fB, \fBafmserver(8)\fB, \fBcopy_tape(8)\fB, \fBafclient.conf(8)\fB,
+\fBupdate_indexes(8)\fB
+.SH "AUTHOR"
+.PP 
+This manual page was written by Rene Mayorga <rmayorga@debian.org.sv> for 
+the \fBDebian\fP system (but may be used by others).  Permission is 
+granted to copy, distribute and/or modify this document under 
+the terms of the GNU General Public License, Version 2 any later version published by the Free Software Foundation. 
+ 
+.PP 
+On Debian systems, the complete text of the GNU General Public 
+License can be found in /usr/share/common\-licenses/GPL. 

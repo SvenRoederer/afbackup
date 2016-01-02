@@ -1,0 +1,67 @@
+.TH "__numset" "8" "2007 Jun 8" "Debian Project" ""
+.SH "NAME"
+\fB__numset\fB \- deals with number-sets
+.br 
+\fBThis program is part of afbackup\fB
+.SH "SYNOPSIS"
+\fB__numset\fB <set\-1\-specifier> { + | \- | in} <set\-2\-specifier>
+.SH "DESCRIPTION"
+This Program deals with set of numbers and can either remove elements of one set that exists in another set, or merge two sets.
+
+If the second argument is a +, then the two sets are merged. 
+If the second argument is \-, the elements in set2 are removed from set1. 
+
+If the second argument is the word "in", then it is tested, whether elements of set 1 are also contained in set 2.
+ 
+The number of common elements will be the result in that case. 
+
+If the first argument is the character # (must be escaped in shell scripts, e.g. write '#'), the result is the number of elements in the set given as second argument. 
+Number set specifiers should not contain whitespace and may consist of numbers, commas and dashes.
+.SH "EXAMPLES"
+.TP 
+Examples how to use __numset and the results:
+
+
+.LP 
+prompt# \fB__numset\fB 1\-3,5\-9,14 + 10\-12
+.IP 
+The output will be:
+.IP 
+1\-3,5\-12,14
+
+
+.LP 
+prompt# \fB__numset\fB 1\-3,5\-9,14 \- 5\-13
+.IP 
+The output will be:
+.IP 
+1\-3,14
+
+
+.LP 
+prompt# \fB__numset\fB 3 \- ""
+.IP 
+The output will be:
+.IP 
+3
+
+.TP 
+\fBIn this cases, it gives no output\fB
+prompt# \fB__numset\fB "" \- 4,6,8
+
+prompt# \fB__numset\fB 3 \- 3\-5
+
+prompt# \fB__numset\fB # 4\-9
+.SH "SEE ALSO"
+\fBafclient(8)\fB, \fBxafclientconfig(8)\fB, \fBfull_backup(8)\fB, \fBincr_backup(8)\fB, \fBafverify(8)\fB, \fBafrestore(8)\fB, \fBxafrestore(8)\fB, \fBafserver(8)\fB, \fBafmserver(8)\fB, \fBcopy_tape(8)\fB, \fBafclient.conf(8)\fB,
+\fBupdate_indexes(8)\fB
+.SH "AUTHOR"
+.PP 
+This manual page was written by Rene Mayorga <rmayorga@debian.org.sv> for 
+the \fBDebian\fP system (but may be used by others).  Permission is 
+granted to copy, distribute and/or modify this document under 
+the terms of the GNU General Public License, Version 2 any later version published by the Free Software Foundation. 
+ 
+.PP 
+On Debian systems, the complete text of the GNU General Public 
+License can be found in /usr/share/common\-licenses/GPL. 
