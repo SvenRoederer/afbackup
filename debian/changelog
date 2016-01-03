@@ -1,8 +1,8 @@
-afbackup (3.5.8.12) UNRELEASED; urgency=medium
+afbackup (3.5.8.12-1) stable; urgency=medium
 
   * update to new upstream for jessie
 
- -- Sven Roederer <devel-sven@geroedel.de>  Sun, 03 Jan 2016 00:36:28 +0100
+ -- Sven Roederer <devel-sven@geroedel.de>  Sun, 03 Jan 2016 02:35:44 +0100
 
 afbackup (3.5.3-3) unstable; urgency=low
 
