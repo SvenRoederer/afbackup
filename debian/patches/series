@@ -1,1 +1,2 @@
 50-debian.diff
+60-Makefile_do-not-remove-debian-folder.diff
