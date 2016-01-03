@@ -1,14 +1,5 @@
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -283,7 +283,7 @@
- 	$(CC) -o __z __z.o $(LDFLAGS)
- 
- $(CRYPTKEY):	ask_for_key
--	@sh ./ask_for_key < debian/cryptkey
-+	@sh ./ask_for_key
- 
- potfiles: intllibs
- 	(cd po && $(MAKE) datadir=\"$(datadir)\" all)
 @@ -777,7 +777,7 @@
  	- rm -f $(CRYPTKEY) Install.cache aclocal.m4 libtool configure.lineno
  	- rm -f `/bin/ls *.in|sed 's/[.]in$$//g'|grep -v configure` confdefs.h
