@@ -52,7 +52,7 @@ DEB_INSTALL_DOCS_ALL :=
 # make must be invoked twice because of different CLIENTBINDIR!
 install/afbackup-client::
 	make install.rexeclinks \
-	   CLIENTBINDIR=../../../sbin \
+	   CLIENTBINDIR=`pwd`/debian/afbackup-client/usr/sbin \
 	   SERVERREXECDIR=`pwd`/debian/afbackup-client/usr/lib/afbackup/rexec
 	-$(RM) debian/afbackup/var/lib/afbackup/readonly_tapes
 
