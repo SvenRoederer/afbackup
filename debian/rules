@@ -37,10 +37,12 @@ DEB_MAKE_INSTALL_TARGET := install.client install.server \
 	   CLIENTMANDIR=`pwd`/debian/afbackup-client/usr/share/man \
 	   CLIENTVARDIR=`pwd`/debian/afbackup-client/var/lib/afbackup \
 	   SERVERBINDIR=`pwd`/debian/afbackup/usr/sbin \
+	   SERVERLIBDIR=`pwd`/debian/afbackup/usr/lib/afbackup \
 	   SERVERCONFDIR=`pwd`/debian/afbackup/etc/afbackup \
 	   SERVERINITDIR=`pwd`/debian/afbackup/etc/init.d \
 	   SERVERMANDIR=`pwd`/debian/afbackup/usr/share/man \
 	   SERVERVARDIR=`pwd`/debian/afbackup/var/lib/afbackup \
+	   SERVERREXECDIR=`pwd`/debian/afbackup/usr/lib/afbackup \
 	   COMMONDIR=`pwd`/debian/afbackup-common/usr/lib/afbackup \
 	   COMMONDATADIR=`pwd`/debian/afbackup-common/usr/share/afbackup \
 	   COMMONSHLIBDIR=`pwd`/debian/afbackup-common/usr/share/afbackup
@@ -53,6 +55,15 @@ install/afbackup-client::
 	   CLIENTBINDIR=../../../sbin \
 	   SERVERREXECDIR=`pwd`/debian/afbackup-client/usr/lib/afbackup/rexec
 	-$(RM) debian/afbackup/var/lib/afbackup/readonly_tapes
+
+# some files need to be moved
+install/afbackup::
+	mv debian/afbackup-client/etc/afbackup/.preremove debian/afbackup/usr/lib/afbackup
+	mv debian/afbackup-client/etc/afbackup/.postinstall debian/afbackup/usr/lib/afbackup
+	#rm debian/afbackup-client/etc/afbackup/.preremove
+	#rm debian/afbackup-client/etc/afbackup/.postinstall
+
+
 
 get-orig-source:
 	dh_testdir
