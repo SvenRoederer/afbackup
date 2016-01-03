@@ -777,7 +777,7 @@ distclean: veryclean
 	- rm -f $(CRYPTKEY) Install.cache aclocal.m4 libtool configure.lineno
 	- rm -f `/bin/ls *.in|sed 's/[.]in$$//g'|grep -v configure` confdefs.h
 	- rm -f conftest.* config.status.lineno debian.tmpl/conffiles*
-	- rm -rf autom4te.cache root RPM pkgs debian po/debian
+	- rm -rf autom4te.cache root RPM pkgs po/debian
 	@/bin/cp -p @PACKAGE@.spec.rh @PACKAGE@.spec.rh.tmp \
 		&& sed 's/^Version: .*$$/Version: '"`pwd | sed 's/^.*-//g'`"/g @PACKAGE@.spec.rh > @PACKAGE@.spec.rh.tmp \
 		&& mv @PACKAGE@.spec.rh.tmp @PACKAGE@.spec.rh
