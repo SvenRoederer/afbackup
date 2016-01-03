@@ -283,7 +283,7 @@ __z:	__z.o $(BACKUPLIB)
 	$(CC) -o __z __z.o $(LDFLAGS)
 
 $(CRYPTKEY):	ask_for_key
-	@sh ./ask_for_key < debian/cryptkey
+	@sh ./ask_for_key
 
 potfiles: intllibs
 	(cd po && $(MAKE) datadir=\"$(datadir)\" all)
